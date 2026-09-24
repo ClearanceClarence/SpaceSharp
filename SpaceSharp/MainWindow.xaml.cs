@@ -65,7 +65,39 @@ public partial class MainWindow : Window
         // Started with a folder argument (e.g. after "Restart as administrator"): scan it right away.
         if (App.StartupScanPath is { } startPath)
             Loaded += async (_, _) => await StartScanAsync(startPath);
+
+        Loaded += async (_, _) => await CheckForUpdatesAsync();
     }
+
+    // =============================================================== updates
+
+    private async Task CheckForUpdatesAsync()
+    {
+        if (!_settings.CheckForUpdates || !Updater.Instance.IsInstalled) return;
+        await Task.Delay(TimeSpan.FromSeconds(4)); // let the window settle first
+        if (await Updater.Instance.CheckAsync() is null) return;
+
+        UpdateText.Text = $"SpaceSharp {Updater.Instance.AvailableVersion} is available. You're on {Updater.Instance.CurrentVersion}.";
+        InstallUpdateButton.IsEnabled = true;
+        UpdateBar.Visibility = Visibility.Visible;
+    }
+
+    private async void InstallUpdate_Click(object sender, RoutedEventArgs e)
+    {
+        InstallUpdateButton.IsEnabled = false;
+        try
+        {
+            await Updater.Instance.InstallAndRestartAsync(percent =>
+                Dispatcher.BeginInvoke(() => UpdateText.Text = $"Downloading update… {percent}%"));
+        }
+        catch (Exception ex)
+        {
+            UpdateText.Text = $"The update could not be installed: {ex.Message}";
+            InstallUpdateButton.IsEnabled = true;
+        }
+    }
+
+    private void CloseUpdateBar_Click(object sender, RoutedEventArgs e) => UpdateBar.Visibility = Visibility.Collapsed;
 
     private static bool IsElevated
     {

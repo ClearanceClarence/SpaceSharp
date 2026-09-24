@@ -14,8 +14,12 @@
             <DockPanel>
                 <Button DockPanel.Dock="Right" Style="{StaticResource AccentButton}" Content="Close"
                         IsDefault="True" IsCancel="True" Click="Close_Click" />
-                <Button Style="{StaticResource ToolButton}" Tag="&#xE8C8;" Content="Copy version info"
-                        HorizontalAlignment="Left" Click="CopyInfo_Click" />
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
+                    <Button Style="{StaticResource ToolButton}" Tag="&#xE8C8;" Content="Copy version info"
+                            Click="CopyInfo_Click" />
+                    <Button x:Name="UpdateButton" Style="{StaticResource ToolButton}" Tag="&#xE895;"
+                            Content="Check for updates" Margin="6,0,0,0" Click="CheckUpdates_Click" />
+                </StackPanel>
             </DockPanel>
         </Border>
 

@@ -95,7 +95,13 @@ It's a single, portable `.exe` with no installer and no dependencies.
 
 ## Download
 
-Grab `SpaceSharp.exe` from the [Releases](../../releases) page. It runs on any 64-bit Windows 10 or 11 PC, including Windows on ARM through x64 emulation. Nothing needs to be installed.
+Two options on the [Releases](../../releases) page, both for 64-bit Windows 10 and 11 (Windows on ARM works through x64 emulation):
+
+| Download | Best for |
+|---|---|
+| **SpaceSharp-win-x64.msi** | A regular Windows installer where you **choose the install folder** and whether to install for you or for everyone. Adds a Start menu entry and **updates itself**. |
+| **SpaceSharp-win-Setup.exe** | One-click install to your user profile (`%LocalAppData%\SpaceSharp`), no questions asked, no admin rights. Also updates itself. Run it as `SpaceSharp-win-Setup.exe --installto "D:\Apps\SpaceSharp"` to pick another folder. |
+| **SpaceSharp.exe** | A single portable file. Nothing to install, but you update it by downloading the new version yourself. |
 
 > [!NOTE]
 > The exe isn't code-signed, so Windows SmartScreen may show "Windows protected your PC" the first time you run it. Click **More info**, then **Run anyway**.
@@ -129,6 +135,7 @@ The gear button in the toolbar (or Ctrl+,) opens the settings window. Every chan
 | **Include hidden and system files** | Off leaves out Hidden and System items such as `pagefile.sys`. Applies to the next scan. |
 | **Count hard links once** | Reads every file's link count so data with several names (Windows keeps thousands in `WinSxS`) is counted once. Slower on big drives, off by default, applies to the next scan. |
 | **Confirm before moving to the Recycle Bin** | Ask before deleting. |
+| **Check for updates on startup** | Installed copies look for a new release on GitHub a few seconds after launch. The portable exe can't update itself. |
 
 **Reset to defaults** puts everything back. When folders couldn't be read, a notice appears under the toolbar with a **Restart as administrator** button; SpaceSharp restarts elevated and scans the same drive again.
 
@@ -188,11 +195,11 @@ The gear button in the toolbar (or Ctrl+,) opens the settings window. Every chan
 dotnet run --project .\SpaceSharp\SpaceSharp.csproj
 ```
 
-The project has no NuGet dependencies; everything comes from .NET and WPF.
+The only NuGet dependency is Velopack, used for the installer and updates.
 
 ## Publishing an exe
 
-Two publish profiles are included in `SpaceSharp/Properties/PublishProfiles`.
+Three publish profiles are included in `SpaceSharp/Properties/PublishProfiles`.
 
 **Portable**: one exe with .NET built in. Runs on any 64-bit Windows 10/11 PC. About 30–40 MB.
 
@@ -206,7 +213,19 @@ dotnet publish .\SpaceSharp\SpaceSharp.csproj -p:PublishProfile=Portable
 dotnet publish .\SpaceSharp\SpaceSharp.csproj -p:PublishProfile=Small
 ```
 
-The exes are written to `publish\portable\` and `publish\small\`. In Rider, both profiles also show up as run configurations.
+**Installer with auto-update** (Velopack). Install the packaging tool once with `dotnet tool install -g vpk`, then:
+
+```powershell
+dotnet publish .\SpaceSharp\SpaceSharp.csproj -p:PublishProfile=Velopack
+vpk download github --repoUrl https://github.com/ClearanceClarence/SpaceSharp
+vpk pack --packId SpaceSharp --packVersion 1.1.1 --packDir .\publish\velopack --mainExe SpaceSharp.exe --packTitle SpaceSharp --packAuthors ClearanceClarence --icon .\SpaceSharp\Assets\SpaceSharp.ico --splashImage .\SpaceSharp\Assets\SpaceSharp-256.png --msi --instLocation Either --instWelcome .\installer\welcome.md --instLicense .\installer\license.txt --instConclusion .\installer\conclusion.md --msiBanner .\installer\banner.bmp --msiLogo .\installer\logo.bmp
+```
+
+`--msi` also builds a Windows Installer package (via WiX, downloaded by vpk on first use). `--instLocation Either` lets the user pick per-user or per-machine and the folder during setup. The `installer` folder holds the wizard's welcome, license and finish pages and the two dialog images (`banner.bmp` 493×58, `logo.bmp` 493×312).
+
+`vpk download` fetches the previous release so a small delta package can be built; skip it for the very first release. The output lands in `Releases\`: `SpaceSharp-win-Setup.exe`, the `.msi`, `SpaceSharp-win-Portable.zip`, the `.nupkg` update packages and `releases.win.json`. Upload **all of them** to the GitHub release, because installed copies read `releases.win.json` and the `.nupkg` files to update. `vpk upload github --repoUrl https://github.com/ClearanceClarence/SpaceSharp --token <PAT> --publish --releaseName "SpaceSharp 1.1.1"` does the upload for you.
+
+The plain exes are written to `publish\portable\` and `publish\small\`. In Rider, all profiles also show up as run configurations.
 
 ## How it works
 
@@ -231,6 +250,9 @@ All control styles are in `Styles.xaml` and reference colors through `DynamicRes
 **Sizes** (`Services/NativeFileInfo.cs`)
 Size on disk comes from `GetCompressedFileSizeW` for compressed, sparse, offline and cloud-placeholder files and from the plain length for everything else, rounded up to the volume's cluster size (`GetDiskFreeSpaceW`). Hard-link detection opens each file for attribute access only and reads its link count and file ID with `GetFileInformationByHandle`; a file whose ID was already seen is kept in the tree but contributes no size.
 
+**Updates** (`Services/Updater.cs`, `Program.cs`)
+The Velopack `Setup.exe` installs SpaceSharp per user and creates shortcuts; the `.msi` lets the user choose the folder and scope. Both update the same way afterwards. On startup `Program.Main` runs Velopack's hooks before WPF loads. When installed that way, SpaceSharp checks GitHub Releases a few seconds after launch (Settings → Updates), and offers a one-click "Install and restart" that downloads a delta package and swaps in the new version. The portable exe reports itself as not installed and never updates on its own.
+
 **Deleting** (`Services/RecycleBin.cs`)
 Items are sent to the Recycle Bin through the Windows shell (`SHFileOperation` with undo enabled). Windows warns you if an item is too big for the Recycle Bin. After a successful delete, the node is removed from the tree and its size is subtracted from every parent.
 
@@ -249,7 +271,9 @@ SpaceSharp/
 │   └── Squarify.cs               squarified treemap algorithm
 ├── Models/
 │   └── FsNode.cs                 file/folder tree
+├── Program.cs                    entry point running Velopack before WPF
 ├── Services/
+│   ├── Updater.cs                GitHub Releases update check and install
 │   ├── DiskScanner.cs            background scanner with progress, size on disk, hard links
 │   ├── NativeFileInfo.cs         Win32 calls for cluster size, compressed size and file IDs
 │   └── RecycleBin.cs             undoable delete through the Windows shell
@@ -268,9 +292,10 @@ SpaceSharp/
 │   ├── SpaceSharp-small.svg      simplified icon for 16–24 px
 │   ├── SpaceSharp.ico            icon with all Windows sizes (16–256 px)
 │   └── SpaceSharp-256.png        icon used in the app UI
-├── Properties/PublishProfiles/   Portable and Small publish profiles
+├── Properties/PublishProfiles/   Portable, Small and Velopack publish profiles
 ├── app.manifest                  DPI and long-path awareness
 └── SpaceSharp.csproj
+installer/                        MSI wizard pages (welcome, license, finish) and dialog images
 ```
 
 ## Customizing
@@ -338,6 +363,11 @@ Made by ClearanceClarence.
 
 ## Changelog
 
+### 1.1.1
+- Installers: a Windows Installer (`.msi`) where you choose the folder and install scope, and a one-click `Setup.exe`, both with automatic updates via Velopack
+- Update notice in the app, "Check for updates" in the About window, and an update setting
+- Branded installer pages and images
+
 ### 1.1.0
 - Size on disk as an alternative measure
 - Optional hard-link detection
@@ -346,6 +376,7 @@ Made by ClearanceClarence.
 - Cushion shading
 - Small items grouped into one "N files" box instead of grids of tiny boxes
 - Settings window (Ctrl+,) with all options, including new ones: merge single-folder chains, animate zoom, include hidden files, confirm before delete
+- Shortcuts: C toggles cushion shading, G toggles grouping
 
 ### 1.0.0
 - First release

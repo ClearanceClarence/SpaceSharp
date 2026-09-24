@@ -11,12 +11,14 @@
     <ApplicationIcon>Assets\SpaceSharp.ico</ApplicationIcon>
     <AssemblyName>SpaceSharp</AssemblyName>
     <RootNamespace>SpaceSharp</RootNamespace>
+    <!-- Program.Main runs Velopack's install/update hooks before WPF starts. -->
+    <StartupObject>SpaceSharp.Program</StartupObject>
     <!-- Only ship English framework resources (keeps the published exe smaller). -->
     <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
 
     <!-- Shown in the About window and in the .exe's file properties. -->
     <Product>SpaceSharp</Product>
-    <Version>1.1.0</Version>
+    <Version>1.1.1</Version>
     <Authors>ClearanceClarence</Authors>
     <Copyright>© 2026 ClearanceClarence</Copyright>
     <Description>See where your disk space went. SpaceSharp maps every file and folder as a box sized by the space it uses, so the biggest ones stand out.</Description>
@@ -26,6 +28,11 @@
     <!-- WPF projects drop System.IO from the implicit usings (it clashes with
          System.Windows.Shapes.Path), so add it back globally. -->
     <Using Include="System.IO" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Installer and auto-update framework. -->
+    <PackageReference Include="Velopack" Version="*" />
   </ItemGroup>
 
   <ItemGroup>

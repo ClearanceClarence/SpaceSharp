@@ -3,6 +3,7 @@ using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
+using SpaceSharp.Services;
 using SpaceSharp.Util;
 
 namespace SpaceSharp;
@@ -40,7 +41,8 @@ public partial class AboutWindow : Window
         int plus = _version.IndexOf('+'); // the SDK appends "+<commit>" when built from git
         if (plus >= 0) _version = _version[..plus];
 
-        VersionText.Text = $"Version {_version}";
+        VersionText.Text = $"Version {_version}" + (Updater.Instance.IsInstalled ? string.Empty : "  ·  portable");
+        UpdateButton.Visibility = Updater.Instance.IsInstalled ? Visibility.Visible : Visibility.Collapsed;
         DescriptionText.Text = assembly.GetCustomAttribute<AssemblyDescriptionAttribute>()?.Description ?? string.Empty;
         CopyrightText.Text = assembly.GetCustomAttribute<AssemblyCopyrightAttribute>()?.Copyright ?? string.Empty;
         SystemText.Text = SystemDescription();
@@ -101,6 +103,35 @@ public partial class AboutWindow : Window
         {
             MessageBox.Show(this, ex.Message, "Copy failed", MessageBoxButton.OK, MessageBoxImage.Warning);
         }
+    }
+
+    private async void CheckUpdates_Click(object sender, RoutedEventArgs e)
+    {
+        UpdateButton.IsEnabled = false;
+        UpdateButton.Content = "Checking…";
+        var update = await Updater.Instance.CheckAsync();
+        if (update is null)
+        {
+            UpdateButton.Content = "You're up to date";
+            return;
+        }
+
+        UpdateButton.Content = $"Install {Updater.Instance.AvailableVersion} and restart";
+        UpdateButton.IsEnabled = true;
+        UpdateButton.Click -= CheckUpdates_Click;
+        UpdateButton.Click += async (_, _) =>
+        {
+            UpdateButton.IsEnabled = false;
+            try
+            {
+                await Updater.Instance.InstallAndRestartAsync(p => Dispatcher.BeginInvoke(() => UpdateButton.Content = $"Downloading… {p}%"));
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(this, ex.Message, "Update failed", MessageBoxButton.OK, MessageBoxImage.Error);
+                UpdateButton.IsEnabled = true;
+            }
+        };
     }
 
     private void Close_Click(object sender, RoutedEventArgs e) => Close();

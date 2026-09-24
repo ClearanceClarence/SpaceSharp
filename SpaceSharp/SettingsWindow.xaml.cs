@@ -1,6 +1,7 @@
 using System.Windows;
 using System.Windows.Controls;
 using SpaceSharp.Controls;
+using SpaceSharp.Services;
 using SpaceSharp.Util;
 
 namespace SpaceSharp;
@@ -57,6 +58,12 @@ public partial class SettingsWindow : Window
             Switch(_settings.IncludeHidden, v => _settings.IncludeHidden = v));
         Row("Count hard links once", "Reads every file's link count so data with several names, such as Windows' WinSxS folder, is counted once. Slower on large drives.",
             Switch(_settings.DetectHardLinks, v => _settings.DetectHardLinks = v));
+
+        Section("Updates");
+        Row("Check for updates on startup", Updater.Instance.IsInstalled
+                ? "Looks for a new version on GitHub a few seconds after SpaceSharp starts, and offers to install it."
+                : "Only available when SpaceSharp was installed with the setup program. The portable exe doesn't update itself.",
+            Switch(_settings.CheckForUpdates, v => _settings.CheckForUpdates = v));
 
         Section("Safety");
         Row("Confirm before moving to the Recycle Bin", "Ask before deleting. Deleted items can always be restored from the Recycle Bin.",

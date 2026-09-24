@@ -25,6 +25,7 @@ internal sealed class AppSettings
     public bool IncludeHidden { get; set; } = true;
     public bool DetectHardLinks { get; set; }
     public bool ConfirmDelete { get; set; } = true;
+    public bool CheckForUpdates { get; set; } = true;
 
     public void ResetToDefaults()
     {
@@ -41,6 +42,7 @@ internal sealed class AppSettings
         IncludeHidden = d.IncludeHidden;
         DetectHardLinks = d.DetectHardLinks;
         ConfirmDelete = d.ConfirmDelete;
+        CheckForUpdates = d.CheckForUpdates;
     }
 
     private static AppSettings Load()

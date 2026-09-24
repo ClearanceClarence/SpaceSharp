@@ -97,6 +97,18 @@
             </DockPanel>
         </Border>
 
+        <!-- ============================================================ update notice -->
+        <Border x:Name="UpdateBar" DockPanel.Dock="Top" Visibility="Collapsed" Background="{DynamicResource Panel}"
+                BorderBrush="{DynamicResource Accent}" BorderThickness="4,0,0,1" Padding="12,6">
+            <DockPanel>
+                <Button DockPanel.Dock="Right" Style="{StaticResource ToolButton}" Tag="&#xE711;" Height="28"
+                        ToolTip="Not now" Click="CloseUpdateBar_Click" />
+                <Button x:Name="InstallUpdateButton" DockPanel.Dock="Right" Style="{StaticResource AccentButton}" Height="28"
+                        Margin="12,0,6,0" Tag="&#xE896;" Content="Install and restart" Click="InstallUpdate_Click" />
+                <TextBlock x:Name="UpdateText" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+            </DockPanel>
+        </Border>
+
         <!-- ============================================================ breadcrumb -->
         <Border DockPanel.Dock="Top" Background="{DynamicResource Bg}" BorderBrush="{DynamicResource Stroke}"
                 BorderThickness="0,0,0,1" Padding="6,4" MinHeight="36">
