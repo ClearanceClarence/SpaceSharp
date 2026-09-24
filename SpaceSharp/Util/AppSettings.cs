@@ -16,6 +16,32 @@ internal sealed class AppSettings
     public string? Palette { get; set; }
     public string? ColorMode { get; set; }
     public string? Theme { get; set; }
+    public bool SizeOnDisk { get; set; }
+    public bool ShowFreeSpace { get; set; }
+    public bool Cushion { get; set; } = true;
+    public bool MergeChains { get; set; } = true;
+    public bool GroupSmallItems { get; set; } = true;
+    public bool AnimateZoom { get; set; } = true;
+    public bool IncludeHidden { get; set; } = true;
+    public bool DetectHardLinks { get; set; }
+    public bool ConfirmDelete { get; set; } = true;
+
+    public void ResetToDefaults()
+    {
+        var d = new AppSettings();
+        Palette = d.Palette;
+        ColorMode = d.ColorMode;
+        Theme = d.Theme;
+        SizeOnDisk = d.SizeOnDisk;
+        ShowFreeSpace = d.ShowFreeSpace;
+        Cushion = d.Cushion;
+        MergeChains = d.MergeChains;
+        GroupSmallItems = d.GroupSmallItems;
+        AnimateZoom = d.AnimateZoom;
+        IncludeHidden = d.IncludeHidden;
+        DetectHardLinks = d.DetectHardLinks;
+        ConfirmDelete = d.ConfirmDelete;
+    }
 
     private static AppSettings Load()
     {

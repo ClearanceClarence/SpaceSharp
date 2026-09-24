@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:controls="clr-namespace:SpaceSharp.Controls"
         Title="SpaceSharp"
-        Width="1400" Height="880" MinWidth="980" MinHeight="460"
+        Width="1400" Height="880" MinWidth="1040" MinHeight="460"
         WindowStartupLocation="CenterScreen"
         Icon="/Assets/SpaceSharp.ico"
         Background="{DynamicResource Bg}" Foreground="{DynamicResource Text}"
@@ -49,6 +49,8 @@
                         </ComboBox.ItemTemplate>
                     </ComboBox>
                     <Border Style="{StaticResource ToolDivider}" />
+                    <Button Style="{StaticResource ToolButton}" Tag="&#xE713;"
+                            ToolTip="Settings (Ctrl+,)" Click="SettingsButton_Click" />
                     <Button x:Name="ThemeButton" Style="{StaticResource ToolButton}" Tag="&#xE708;"
                             ToolTip="Theme" Click="ThemeButton_Click" />
                     <Button Style="{StaticResource ToolButton}" Tag="&#xE946;" ToolTip="About SpaceSharp (F1)"
@@ -60,7 +62,7 @@
                     <Button x:Name="ScanDriveButton" Style="{StaticResource AccentButton}" Margin="8,0,0,0"
                             Tag="&#xEDA2;" Content="Scan drive" Click="ScanDrive_Click" />
                     <Button x:Name="ScanFolderButton" Style="{StaticResource ToolButton}" Margin="4,0,0,0"
-                            Tag="&#xE838;" Content="Scan folder…" Click="ScanFolder_Click" />
+                            Tag="&#xE838;" Content="Scan folder" Click="ScanFolder_Click" />
                     <Button x:Name="RescanButton" Style="{StaticResource ToolButton}"
                             Tag="&#xE72C;" ToolTip="Rescan (F5)" Click="Rescan_Click" />
 
@@ -80,6 +82,18 @@
                     <Button x:Name="ZoomInButton" Style="{StaticResource ToolButton}"
                             Tag="&#xE8A3;" ToolTip="Zoom in (mouse wheel / +)" Click="ZoomIn_Click" />
                 </StackPanel>
+            </DockPanel>
+        </Border>
+
+        <!-- ============================================================ protected folders notice -->
+        <Border x:Name="AccessBar" DockPanel.Dock="Top" Visibility="Collapsed" Background="{DynamicResource Panel}"
+                BorderBrush="{DynamicResource Accent}" BorderThickness="4,0,0,1" Padding="12,6">
+            <DockPanel>
+                <Button DockPanel.Dock="Right" Style="{StaticResource ToolButton}" Tag="&#xE711;" Height="28"
+                        ToolTip="Dismiss" Click="CloseAccessBar_Click" />
+                <Button DockPanel.Dock="Right" Style="{StaticResource AccentButton}" Height="28" Margin="12,0,6,0"
+                        Tag="&#xE7EF;" Content="Restart as administrator" Click="RestartElevated_Click" />
+                <TextBlock x:Name="AccessText" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
             </DockPanel>
         </Border>
 

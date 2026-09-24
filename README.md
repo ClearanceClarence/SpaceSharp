@@ -54,14 +54,19 @@ It's a single, portable `.exe` with no installer and no dependencies.
 - Scan a whole drive or any folder, with live counts of files, folders and bytes while it runs
 - Parallel scanning of the top folder levels, which is noticeably faster on SSDs
 - Includes hidden and system files; skips junctions and symbolic links to avoid loops and double counting
-- Folders that can't be read are flagged instead of stopping the scan
+- Folders that can't be read are flagged instead of stopping the scan, and a notice offers to restart as administrator
+- Measures **file size** or **size on disk** (compressed size rounded to whole clusters), switchable at any time
+- Optional hard-link detection so data with several names (like `WinSxS`) is counted once
 - Cancel at any time with Esc
 
 **The map**
 - Squarified treemap layout, which keeps boxes close to square so sizes are easy to compare
 - Nested folders with title bars showing name and size
 - Chains of folders that only contain one folder (like `Users › adria › AppData › Local`) are merged into a single box with a combined title, instead of a stack of thin frames
+- Folders with hundreds of small files (a photo shoot, a cache) show one "312 files" box instead of a grid of specks; zooming in reveals them individually
 - Boxes too small to see are left out, so the map stays clean instead of turning into noise
+- Cushion shading on every box (can be turned off), which makes sizes easier to compare than flat fills
+- A gray "Free space" block when scanning a whole drive, so the map shows the entire disk
 
 **Zoom and navigation**
 - Double-click a folder and the view flies in until it fills the window
@@ -86,7 +91,7 @@ It's a single, portable `.exe` with no installer and no dependencies.
 - Status bar shows the full path, size, share of the current folder and file count for whatever is under the mouse
 - About window with version, shortcuts and system info
 - Per-monitor DPI aware and long-path aware
-- Remembers your palette, color mode and theme
+- Settings window with theme, palette, size measure, free space, shading, scanning and safety options, all remembered
 
 ## Download
 
@@ -106,6 +111,26 @@ The first launch is a little slower than the ones after it, because the portable
 5. Right-click a file or folder to open it, find it in Explorer, or move it to the Recycle Bin.
 
 To see protected system folders, run SpaceSharp as administrator. Otherwise those folders are skipped and marked as unreadable.
+
+### Settings
+
+The gear button in the toolbar (or Ctrl+,) opens the settings window. Every change applies immediately and is saved.
+
+| Setting | What it does |
+|---|---|
+| **Theme** | Match Windows, Light or Dark. |
+| **Palette** and **Color by** | The same choices as in the toolbar. |
+| **Cushion shading** | Soft light-to-dark shading on each box. |
+| **Size measure** | File size, or size on disk: the compressed size of compressed, sparse and cloud files, rounded up to whole clusters, like Explorer's "Size on disk". |
+| **Show free space** | Adds a gray block for the drive's unused space when a whole drive is scanned. Off by default. |
+| **Merge single-folder chains** | Draw folders that only contain one folder as a single box with a combined title. |
+| **Group small items** | Replace children that would be smaller than about 30 × 22 px with a single "N files" box. |
+| **Animate zoom** | Fly into folders instead of jumping. |
+| **Include hidden and system files** | Off leaves out Hidden and System items such as `pagefile.sys`. Applies to the next scan. |
+| **Count hard links once** | Reads every file's link count so data with several names (Windows keeps thousands in `WinSxS`) is counted once. Slower on big drives, off by default, applies to the next scan. |
+| **Confirm before moving to the Recycle Bin** | Ask before deleting. |
+
+**Reset to defaults** puts everything back. When folders couldn't be read, a notice appears under the toolbar with a **Restart as administrator** button; SpaceSharp restarts elevated and scans the same drive again.
 
 ### Color modes
 
@@ -139,7 +164,10 @@ To see protected system folders, run SpaceSharp as administrator. Otherwise thos
 | Home, Ctrl+0 | Show the whole map |
 | F5 | Rescan |
 | Ctrl+C | Copy the selected item's path |
+| Ctrl+, | Settings |
 | Del | Move the selected item to the Recycle Bin |
+| C | Toggle cushion shading |
+| G | Toggle grouping of small items |
 | Esc | Cancel a scan |
 | F1 | About |
 
@@ -200,6 +228,9 @@ Hover and selection outlines live on a separate overlay, so moving the mouse doe
 **Themes** (`Util/ThemeManager.cs`, `Themes/`)
 All control styles are in `Styles.xaml` and reference colors through `DynamicResource`. Switching themes swaps `Dark.xaml` for `Light.xaml`, and every open window recolors immediately. In "Match Windows" mode, SpaceSharp reads the Windows app theme from the registry and listens for changes.
 
+**Sizes** (`Services/NativeFileInfo.cs`)
+Size on disk comes from `GetCompressedFileSizeW` for compressed, sparse, offline and cloud-placeholder files and from the plain length for everything else, rounded up to the volume's cluster size (`GetDiskFreeSpaceW`). Hard-link detection opens each file for attribute access only and reads its link count and file ID with `GetFileInformationByHandle`; a file whose ID was already seen is kept in the tree but contributes no size.
+
 **Deleting** (`Services/RecycleBin.cs`)
 Items are sent to the Recycle Bin through the Windows shell (`SHFileOperation` with undo enabled). Windows warns you if an item is too big for the Recycle Bin. After a successful delete, the node is removed from the tree and its size is subtracted from every parent.
 
@@ -211,6 +242,7 @@ SpaceSharp/
 ├── App.xaml(.cs)                 startup, theme setup, error dialog
 ├── MainWindow.xaml(.cs)          main UI: toolbar, breadcrumb, map, status bar
 ├── AboutWindow.xaml(.cs)         About window
+├── SettingsWindow.xaml(.cs)      settings window
 ├── Controls/
 │   └── TreemapControl.cs         map rendering, zoom camera, hit testing, input
 ├── Layout/
@@ -218,7 +250,8 @@ SpaceSharp/
 ├── Models/
 │   └── FsNode.cs                 file/folder tree
 ├── Services/
-│   ├── DiskScanner.cs            background scanner with progress
+│   ├── DiskScanner.cs            background scanner with progress, size on disk, hard links
+│   ├── NativeFileInfo.cs         Win32 calls for cluster size, compressed size and file IDs
 │   └── RecycleBin.cs             undoable delete through the Windows shell
 ├── Util/
 │   ├── Palette.cs                color palettes and file-type categories
@@ -277,18 +310,17 @@ Delete the file to go back to the defaults.
 ## Known limitations
 
 - **Windows only.** SpaceSharp is built on WPF.
-- **Logical sizes.** Sizes are file sizes, not size on disk, so compressed and sparse files can appear bigger than the space they really use.
-- **Hard links count once per link.** System folders like `C:\Windows\WinSxS` use hard links heavily and look bigger than they are.
+- **Size on disk is an estimate** for files stored inside the MFT (very small files) and for alternate data streams, which aren't counted.
+- **Hard links** are counted once per name unless "Count hard links once" is on, so `C:\Windows\WinSxS` can look bigger than it is by default.
 - **Links aren't followed.** Junctions and symbolic links to folders are skipped on purpose; the target is counted where it really lives.
 - **Protected folders** need administrator rights to be read.
-- **Cloud placeholders.** OneDrive files that are online-only report their full size even though they use almost no local space.
+- **Cloud placeholders.** In file-size mode, online-only OneDrive files show their full size. Switch to size on disk to see the local footprint.
 
 ## Ideas for the future
 
-- A "free space" block when scanning a whole drive, like SpaceMonger
-- Showing size on disk alongside file size
-- A "restart as administrator" button
-- Filtering by file type, size or age
+- Filtering and highlighting by name, file type, size or age
+- Top lists: largest files, largest folders, space by file type
+- Saving scans so reopening the app is instant
 - Exporting the scan as CSV
 
 ## Credits
@@ -303,3 +335,17 @@ Delete the file to go back to the defaults.
 SpaceSharp is released under the [MIT License](LICENSE). You're free to use, modify and share it, including in commercial projects, as long as the copyright notice is kept.
 
 Made by ClearanceClarence.
+
+## Changelog
+
+### 1.1.0
+- Size on disk as an alternative measure
+- Optional hard-link detection
+- Free-space block for whole-drive scans, updated when you delete files
+- Notice for protected folders with one-click restart as administrator
+- Cushion shading
+- Small items grouped into one "N files" box instead of grids of tiny boxes
+- Settings window (Ctrl+,) with all options, including new ones: merge single-folder chains, animate zoom, include hidden files, confirm before delete
+
+### 1.0.0
+- First release

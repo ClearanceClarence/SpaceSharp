@@ -19,7 +19,10 @@ public partial class AboutWindow : Window
         ("F5", "Rescan"),
         ("Ctrl+C", "Copy the selected item's path"),
         ("Del", "Move the selected item to the Recycle Bin"),
+        ("C", "Toggle cushion shading"),
+        ("G", "Toggle grouping of small items"),
         ("Esc", "Cancel a scan"),
+        ("Ctrl+,", "Settings"),
         ("F1", "Open this window")
     };
 

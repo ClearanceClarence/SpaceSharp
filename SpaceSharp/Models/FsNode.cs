@@ -3,7 +3,20 @@ namespace SpaceSharp.Models;
 public enum NodeKind
 {
     File,
-    Directory
+    Directory,
+    /// <summary>Pseudo node for the unused space of a drive.</summary>
+    FreeSpace,
+    /// <summary>Transient pseudo node standing in for many small children of a folder.</summary>
+    Group
+}
+
+/// <summary>Which size drives the layout and labels.</summary>
+public enum SizeMeasure
+{
+    /// <summary>Logical file size.</summary>
+    FileSize,
+    /// <summary>Space actually taken on the volume: compressed size rounded up to whole clusters.</summary>
+    SizeOnDisk
 }
 
 /// <summary>A file or folder in the scanned tree.</summary>
@@ -25,36 +38,108 @@ public sealed class FsNode
     /// <summary>Logical size in bytes (recursive for folders).</summary>
     public long Size { get; internal set; }
 
+    /// <summary>Size on disk in bytes (recursive for folders).</summary>
+    public long Allocated { get; internal set; }
+
     /// <summary>Number of files contained (recursive). 1 for a file.</summary>
     public int FileCount { get; internal set; }
 
     /// <summary>True if the folder (or part of it) could not be read.</summary>
     public bool AccessDenied { get; internal set; }
 
-    /// <summary>Children sorted by size, largest first.</summary>
+    /// <summary>
+    /// True for a hard link whose data was already counted under another name. Its
+    /// <see cref="Size"/> and <see cref="Allocated"/> are 0; <see cref="LinkedSize"/> holds the real size.
+    /// </summary>
+    public bool IsHardLinkDuplicate { get; internal set; }
+
+    public long LinkedSize { get; internal set; }
+
+    /// <summary>Children sorted by the current measure, largest first.</summary>
     public List<FsNode> Children { get; } = new();
 
+    /// <summary>The "Free space" pseudo node, only on the root of a whole-drive scan.</summary>
+    public FsNode? FreeSpaceNode { get; private set; }
+
+    /// <summary>Unused bytes on the drive; shown through <see cref="FreeSpaceNode"/> when visible.</summary>
+    public long FreeBytes { get; private set; }
+
+    public bool FreeSpaceVisible { get; private set; } = true;
+
     public bool IsDirectory => Kind == NodeKind.Directory;
+    public bool IsFreeSpace => Kind == NodeKind.FreeSpace;
+    public bool IsGroup => Kind == NodeKind.Group;
+    /// <summary>True for a real file or folder on disk (not free space or a group).</summary>
+    public bool IsReal => Kind is NodeKind.File or NodeKind.Directory;
 
     public string Extension => IsDirectory ? string.Empty : Path.GetExtension(Name).ToLowerInvariant();
 
+    public long SizeFor(SizeMeasure measure) => measure == SizeMeasure.SizeOnDisk ? Allocated : Size;
+
     internal void FinishDirectory()
     {
-        long size = 0;
+        long size = 0, allocated = 0;
         int files = 0;
         foreach (var child in Children)
         {
             size += child.Size;
+            allocated += child.Allocated;
             files += child.FileCount;
         }
 
         Size = size;
+        Allocated = allocated;
         FileCount = files;
         Children.Sort(static (a, b) => b.Size.CompareTo(a.Size));
     }
 
-    /// <summary>Detaches this node and subtracts its size from every ancestor.</summary>
-    public void RemoveFromTree()
+    /// <summary>Re-sorts the whole subtree by the given measure, largest first.</summary>
+    public void SortBy(SizeMeasure measure)
+    {
+        if (!IsDirectory) return;
+        Children.Sort((a, b) => b.SizeFor(measure).CompareTo(a.SizeFor(measure)));
+        foreach (var child in Children) child.SortBy(measure);
+    }
+
+    /// <summary>Adds the "Free space" pseudo node (root of a drive scan only).</summary>
+    internal void AddFreeSpace(long freeBytes)
+    {
+        FreeBytes = Math.Max(0, freeBytes);
+        FreeSpaceNode = new FsNode("Free space", FullPath, NodeKind.FreeSpace, this)
+        {
+            Size = FreeBytes,
+            Allocated = FreeBytes
+        };
+        Children.Add(FreeSpaceNode);
+        Size += FreeBytes;
+        Allocated += FreeBytes;
+    }
+
+    /// <summary>Shows or hides the free-space block, keeping the root totals consistent.</summary>
+    public void SetFreeSpaceVisible(bool visible, SizeMeasure measure)
+    {
+        FreeSpaceVisible = visible;
+        if (FreeSpaceNode is null) return;
+
+        long target = visible ? FreeBytes : 0;
+        long delta = target - FreeSpaceNode.Size;
+        FreeSpaceNode.Size = target;
+        FreeSpaceNode.Allocated = target;
+        Size += delta;
+        Allocated += delta;
+        Children.Sort((a, b) => b.SizeFor(measure).CompareTo(a.SizeFor(measure)));
+    }
+
+    /// <summary>Called after a delete: the freed bytes become free space.</summary>
+    public void RegisterFreedSpace(long bytes, SizeMeasure measure)
+    {
+        if (FreeSpaceNode is null) return;
+        FreeBytes += Math.Max(0, bytes);
+        SetFreeSpaceVisible(FreeSpaceVisible, measure);
+    }
+
+    /// <summary>Detaches this node and subtracts its sizes from every ancestor.</summary>
+    public void RemoveFromTree(SizeMeasure measure)
     {
         var parent = Parent ?? throw new InvalidOperationException("The root node cannot be removed.");
         parent.Children.Remove(this);
@@ -62,8 +147,9 @@ public sealed class FsNode
         for (var p = parent; p is not null; p = p.Parent)
         {
             p.Size -= Size;
+            p.Allocated -= Allocated;
             p.FileCount -= FileCount;
-            p.Children.Sort(static (a, b) => b.Size.CompareTo(a.Size));
+            p.Children.Sort((a, b) => b.SizeFor(measure).CompareTo(a.SizeFor(measure)));
         }
 
         Parent = null;

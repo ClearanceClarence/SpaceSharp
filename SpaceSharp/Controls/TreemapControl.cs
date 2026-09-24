@@ -39,7 +39,8 @@ public sealed class TreemapControl : FrameworkElement
     private const double MinHeaderWidth = 60;   // folders smaller than this get no title bar
     private const double MinHeaderHeight = 44;
     private const double MinChildSize = 4;       // smaller children are not drawn (the parent's color shows)
-    private const double MinFolderContent = 12;  // don't subdivide folders with less room than this
+    private const double MinFolderContent = 12;
+    private const double GroupBelowArea = 30 * 22;  // children smaller than this many pixels are grouped  // don't subdivide folders with less room than this
     private const double TextSize = 11;
     private const double WheelStep = 1.25;
     private const double DragThreshold = 4;
@@ -55,6 +56,15 @@ public sealed class TreemapControl : FrameworkElement
     private static readonly Pen BorderPen = Frozen(new Pen(new SolidColorBrush(Color.FromArgb(0xB0, 0x10, 0x10, 0x14)), 1));
     private static readonly Pen HoverPen = Frozen(new Pen(Brushes.White, 2));
     private static readonly Pen HoverOutlinePen = Frozen(new Pen(new SolidColorBrush(Color.FromArgb(0x99, 0, 0, 0)), 4)); // keeps the hover frame visible on light fills
+    private static readonly Brush FreeSpaceBrush = Frozen(new SolidColorBrush(Color.FromRgb(0x4E, 0x4E, 0x5A)));
+    // One relative-coordinate gradient works for every box: WPF stretches it to each rectangle's bounds.
+    private static readonly Brush CushionBrush = Frozen(new LinearGradientBrush(
+        new GradientStopCollection
+        {
+            new(Color.FromArgb(0x48, 0xFF, 0xFF, 0xFF), 0.0),
+            new(Color.FromArgb(0x00, 0x80, 0x80, 0x80), 0.55),
+            new(Color.FromArgb(0x50, 0x00, 0x00, 0x00), 1.0)
+        }, new Point(0, 0), new Point(1, 1)));
     private static readonly Pen SelectionPen = Frozen(new Pen(new SolidColorBrush(Color.FromRgb(0xF5, 0xB8, 0x2E)), 3));
 
     private readonly DrawingVisual _mapVisual = new();
@@ -70,6 +80,10 @@ public sealed class TreemapControl : FrameworkElement
     private FsNode? _selectedNode;
     private ColorMode _colorMode = ColorMode.ByDepth;
     private ColorScheme _scheme = Palette.Default;
+    private SizeMeasure _measure = SizeMeasure.FileSize;
+    private bool _cushion = true;
+    private bool _mergeChains = true;
+    private bool _groupSmall = true;
     private bool _rebuildPending;
 
     // Camera. _offset is the window's top-left on the zoomed canvas, in pixels.
@@ -131,6 +145,7 @@ public sealed class TreemapControl : FrameworkElement
         {
             StopAnimation();
             _root = value;
+            _root?.SortBy(_measure);
             _hoveredNode = null;
             _pinnedFocus = null;
             _zoom = 1;
@@ -167,6 +182,58 @@ public sealed class TreemapControl : FrameworkElement
         }
     }
 
+    /// <summary>Which size the boxes represent. Re-sorts the tree when changed.</summary>
+    public SizeMeasure SizeMode
+    {
+        get => _measure;
+        set
+        {
+            if (_measure == value) return;
+            _measure = value;
+            _root?.SortBy(value);
+            Invalidate();
+        }
+    }
+
+    /// <summary>Soft light-to-dark shading on every box, which makes sizes easier to read than flat fills.</summary>
+    public bool Cushion
+    {
+        get => _cushion;
+        set
+        {
+            if (_cushion == value) return;
+            _cushion = value;
+            Invalidate();
+        }
+    }
+
+    /// <summary>Fly to folders instead of jumping (FocusOn with animate: true).</summary>
+    public bool AnimateZoom { get; set; } = true;
+
+    /// <summary>Draw folders that only contain one folder as a single box with a combined title.</summary>
+    public bool MergeSingleFolderChains
+    {
+        get => _mergeChains;
+        set
+        {
+            if (_mergeChains == value) return;
+            _mergeChains = value;
+            Invalidate();
+        }
+    }
+
+    /// <summary>Replace children too small to see with a single "N files" box.</summary>
+    public bool GroupSmallItems
+    {
+        get => _groupSmall;
+        set
+        {
+            if (_groupSmall == value) return;
+            _groupSmall = value;
+            Invalidate();
+        }
+    }
+
     public ColorMode ColorMode
     {
         get => _colorMode;
@@ -190,7 +257,7 @@ public sealed class TreemapControl : FrameworkElement
         EnsureLayout();
 
         var visible = DeepestLaidOut(folder);
-        if (!animate || visible is null || ActualWidth < 8)
+        if (!animate || !AnimateZoom || visible is null || ActualWidth < 8)
         {
             StopAnimation();
             SnapTo(folder);
@@ -500,7 +567,7 @@ public sealed class TreemapControl : FrameworkElement
         // box with a combined title, instead of a stack of nested frames and title bars.
         FsNode? chainTop = null;
         var shown = node;
-        while (SingleSubfolder(shown) is { } only)
+        while (_mergeChains && SingleSubfolder(shown) is { } only)
         {
             chainTop ??= node;
             shown = only;
@@ -528,20 +595,73 @@ public sealed class TreemapControl : FrameworkElement
         if (contentWidth < MinFolderContent || contentHeight < MinFolderContent) return;
 
         var content = new Rect(bounds.X + inset, bounds.Y + top, contentWidth, contentHeight);
-        Squarify.Layout(shown.Children, content, (child, rect) =>
+        var children = _groupSmall ? GroupSmallChildren(shown, content) : shown.Children;
+        Squarify.Layout(children, content, _measure, (child, rect) =>
         {
             if (rect.Width >= MinChildSize && rect.Height >= MinChildSize)
                 LayoutNode(child, rect, depth + 1);
         });
     }
 
+    /// <summary>
+    /// A folder with hundreds of similar files (a photo shoot, a cache) would become a grid of tiny
+    /// boxes. Children that would get less than <see cref="GroupBelowArea"/> pixels are replaced by one
+    /// "312 files" box. Zooming in gives them more pixels, so they appear individually again.
+    /// </summary>
+    private IReadOnlyList<FsNode> GroupSmallChildren(FsNode folder, Rect content)
+    {
+        var children = folder.Children;
+        double total = 0;
+        foreach (var c in children) total += c.SizeFor(_measure);
+        if (total <= 0) return children;
+
+        double pixelsPerByte = content.Width * content.Height / total;
+        int cutoff = children.Count;
+        for (int i = 0; i < children.Count; i++)
+        {
+            if (children[i].SizeFor(_measure) * pixelsPerByte < GroupBelowArea)
+            {
+                cutoff = i;
+                break;
+            }
+        }
+
+        long size = 0, allocated = 0;
+        int files = 0, count = 0, folders = 0;
+        for (int i = cutoff; i < children.Count; i++)
+        {
+            var c = children[i];
+            if (c.SizeFor(_measure) <= 0) continue;
+            size += c.Size;
+            allocated += c.Allocated;
+            files += c.FileCount;
+            count++;
+            if (c.IsDirectory) folders++;
+        }
+        if (count < 2) return children;
+
+        string kind = folders == 0 ? "files" : folders == count ? "folders" : "items";
+        var group = new FsNode($"{count:N0} {kind}", folder.FullPath, NodeKind.Group, folder)
+        {
+            Size = size,
+            Allocated = allocated,
+            FileCount = files
+        };
+
+        var list = new List<FsNode>(cutoff + 1);
+        for (int i = 0; i < cutoff; i++) list.Add(children[i]);
+        list.Add(group);
+        list.Sort((a, b) => b.SizeFor(_measure).CompareTo(a.SizeFor(_measure)));
+        return list;
+    }
+
     /// <summary>The folder's only non-empty child, if that child is a folder.</summary>
-    private static FsNode? SingleSubfolder(FsNode node)
+    private FsNode? SingleSubfolder(FsNode node)
     {
         if (!node.IsDirectory || node.Children.Count == 0) return null;
         var first = node.Children[0]; // sorted by size, largest first
-        if (!first.IsDirectory || first.Size == 0) return null;
-        return node.Children.Count == 1 || node.Children[1].Size == 0 ? first : null;
+        if (!first.IsDirectory || first.SizeFor(_measure) == 0) return null;
+        return node.Children.Count == 1 || node.Children[1].SizeFor(_measure) == 0 ? first : null;
     }
 
     private void UpdateFocus()
@@ -581,9 +701,12 @@ public sealed class TreemapControl : FrameworkElement
         if (visible.IsEmpty) return;
 
         var node = item.Node;
-        var fill = _scheme.Fill(node, item.Depth, _colorMode);
+        var fill = node.IsFreeSpace ? FreeSpaceBrush : _scheme.Fill(node, item.Depth, _colorMode);
         var textBrush = _scheme.LabelFor(fill);
-        dc.DrawRectangle(fill, BorderPen, visible);
+        dc.DrawRectangle(fill, null, visible);
+        if (_cushion) dc.DrawRectangle(CushionBrush, null, visible);
+        if (node.IsGroup) dc.DrawRectangle(HeaderShade, null, visible); // a shade darker: "many things in here"
+        dc.DrawRectangle(null, BorderPen, visible);
 
         if (node.IsDirectory)
         {
@@ -603,7 +726,7 @@ public sealed class TreemapControl : FrameworkElement
         {
             double y = visible.Y + (visible.Height - 30) / 2;
             DrawLabel(dc, node.Name, NormalFace, textBrush, visible.X + 3, y, textWidth, TextAlignment.Center, pixelsPerDip);
-            DrawLabel(dc, SizeFormatter.Format(node.Size), NormalFace, textBrush, visible.X + 3, y + 15, textWidth, TextAlignment.Center, pixelsPerDip);
+            DrawLabel(dc, SizeFormatter.Format(node.SizeFor(_measure)), NormalFace, textBrush, visible.X + 3, y + 15, textWidth, TextAlignment.Center, pixelsPerDip);
         }
         else
         {
@@ -615,10 +738,10 @@ public sealed class TreemapControl : FrameworkElement
     /// "Users › adria › AppData — 12 GB" for a collapsed chain. When that doesn't fit, leading folders
     /// are dropped ("… › AppData — 12 GB") so the deepest name, the one that matters, stays readable.
     /// </summary>
-    private static string HeaderText(TreemapItem item, double maxWidth, double pixelsPerDip)
+    private string HeaderText(TreemapItem item, double maxWidth, double pixelsPerDip)
     {
         var node = item.Node;
-        string size = SizeFormatter.Format(node.Size);
+        string size = SizeFormatter.Format(node.SizeFor(_measure));
         if (item.ChainTop is null) return $"{node.Name}  —  {size}";
 
         var names = new List<string>();

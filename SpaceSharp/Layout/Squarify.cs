@@ -9,14 +9,14 @@ namespace SpaceSharp.Layout;
 /// </summary>
 public static class Squarify
 {
-    /// <param name="nodes">Nodes sorted by size, largest first. Zero-sized nodes are ignored.</param>
-    public static void Layout(IReadOnlyList<FsNode> nodes, Rect bounds, Action<FsNode, Rect> emit)
+    /// <param name="nodes">Nodes sorted by the measure, largest first. Zero-sized nodes are ignored.</param>
+    public static void Layout(IReadOnlyList<FsNode> nodes, Rect bounds, SizeMeasure measure, Action<FsNode, Rect> emit)
     {
         int count = 0;
         double total = 0;
-        while (count < nodes.Count && nodes[count].Size > 0)
+        while (count < nodes.Count && nodes[count].SizeFor(measure) > 0)
         {
-            total += nodes[count].Size;
+            total += nodes[count].SizeFor(measure);
             count++;
         }
 
@@ -33,12 +33,12 @@ public static class Squarify
 
             double rowSum = 0;
             double worst = double.MaxValue;
-            double largest = nodes[i].Size * scale;
+            double largest = nodes[i].SizeFor(measure) * scale;
             int j = i;
 
             while (j < count)
             {
-                double area = nodes[j].Size * scale;
+                double area = nodes[j].SizeFor(measure) * scale;
                 double newSum = rowSum + area;
                 double newWorst = Worst(largest, area, newSum, side);
                 if (j > i && newWorst > worst) break;
@@ -54,7 +54,7 @@ public static class Squarify
                 double cy = y;
                 for (int k = i; k < j; k++)
                 {
-                    double itemHeight = nodes[k].Size * scale / thickness;
+                    double itemHeight = nodes[k].SizeFor(measure) * scale / thickness;
                     emit(nodes[k], new Rect(x, cy, thickness, itemHeight));
                     cy += itemHeight;
                 }
@@ -68,7 +68,7 @@ public static class Squarify
                 double cx = x;
                 for (int k = i; k < j; k++)
                 {
-                    double itemWidth = nodes[k].Size * scale / thickness;
+                    double itemWidth = nodes[k].SizeFor(measure) * scale / thickness;
                     emit(nodes[k], new Rect(cx, y, itemWidth, thickness));
                     cx += itemWidth;
                 }

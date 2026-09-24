@@ -4,6 +4,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Interop;
+using System.Security.Principal;
 using System.Windows.Media;
 using System.Windows.Threading;
 using Microsoft.Win32;
@@ -53,10 +54,26 @@ public partial class MainWindow : Window
         Treemap.FocusChanged += (_, _) => UpdateNavigation();
         Treemap.ZoomChanged += (_, _) => UpdateZoomControls();
 
-        LoadColorSettings();
+        PaletteCombo.ItemsSource = Palette.Schemes;
+        ApplySettings();
         UpdateThemeButton();
         LoadDrives();
         UpdateNavigation();
+
+        if (IsElevated) Title += "  (Administrator)";
+
+        // Started with a folder argument (e.g. after "Restart as administrator"): scan it right away.
+        if (App.StartupScanPath is { } startPath)
+            Loaded += async (_, _) => await StartScanAsync(startPath);
+    }
+
+    private static bool IsElevated
+    {
+        get
+        {
+            using var identity = WindowsIdentity.GetCurrent();
+            return new WindowsPrincipal(identity).IsInRole(WindowsBuiltInRole.Administrator);
+        }
     }
 
     private bool IsScanning => _scanCts is not null;
@@ -87,28 +104,39 @@ public partial class MainWindow : Window
             DriveCombo.SelectedIndex = 0;
     }
 
-    private void LoadColorSettings()
+    /// <summary>Pushes every saved setting into the UI and the map. Called at startup and by the Settings window.</summary>
+    public void ApplySettings()
     {
-        _applyingSettings = true;
-        PaletteCombo.ItemsSource = Palette.Schemes;
-        PaletteCombo.SelectedItem = Palette.Find(_settings.Palette);
-        ColorCombo.SelectedIndex = _settings.ColorMode == nameof(ColorMode.ByFileType) ? 1 : 0;
-        _applyingSettings = false;
-        ApplyColorSettings();
-    }
+        var scheme = Palette.Find(_settings.Palette);
+        var mode = _settings.ColorMode == nameof(ColorMode.ByFileType) ? ColorMode.ByFileType : ColorMode.ByDepth;
 
-    private void ApplyColorSettings()
-    {
-        var scheme = PaletteCombo.SelectedItem as ColorScheme ?? Palette.Default;
-        var mode = ColorCombo.SelectedIndex == 1 ? ColorMode.ByFileType : ColorMode.ByDepth;
+        _applyingSettings = true;
+        PaletteCombo.SelectedItem = scheme;
+        ColorCombo.SelectedIndex = mode == ColorMode.ByFileType ? 1 : 0;
+        _applyingSettings = false;
 
         Treemap.Scheme = scheme;
         Treemap.ColorMode = mode;
+        Treemap.SizeMode = _settings.SizeOnDisk ? SizeMeasure.SizeOnDisk : SizeMeasure.FileSize;
+        Treemap.Cushion = _settings.Cushion;
+        Treemap.AnimateZoom = _settings.AnimateZoom;
+        Treemap.MergeSingleFolderChains = _settings.MergeChains;
+        Treemap.GroupSmallItems = _settings.GroupSmallItems;
         BuildLegend(scheme);
         LegendPanel.Visibility = mode == ColorMode.ByFileType ? Visibility.Visible : Visibility.Collapsed;
 
-        _settings.Palette = scheme.Name;
-        _settings.ColorMode = mode.ToString();
+        if (_root is not null && _root.FreeSpaceVisible != _settings.ShowFreeSpace)
+        {
+            _root.SetFreeSpaceVisible(_settings.ShowFreeSpace, Treemap.SizeMode);
+            Treemap.Refresh();
+        }
+
+        var theme = Enum.TryParse<AppTheme>(_settings.Theme, out var parsed) ? parsed : AppTheme.System;
+        if (theme != ThemeManager.Choice) ThemeManager.Set(theme);
+
+        _breadcrumbFor = null;
+        UpdateNavigation();
+        ShowNodeInfo(Treemap.SelectedNode);
         _settings.Save();
     }
 
@@ -153,7 +181,13 @@ public partial class MainWindow : Window
 
         try
         {
-            FsNode root = await _scanner.ScanAsync(path, cts.Token);
+            var options = new ScanOptions
+            {
+                DetectHardLinks = _settings.DetectHardLinks,
+                IncludeHidden = _settings.IncludeHidden
+            };
+            FsNode root = await _scanner.ScanAsync(path, options, cts.Token);
+            root.SetFreeSpaceVisible(_settings.ShowFreeSpace, Treemap.SizeMode);
             _root = root;
             _lastScanPath = path;
             Treemap.SelectedNode = null;
@@ -161,7 +195,8 @@ public partial class MainWindow : Window
 
             var progress = _scanner.GetProgress();
             StatusScan.Text = $"{root.FileCount:N0} files · {progress.Directories:N0} folders · " +
-                              $"{SizeFormatter.Format(root.Size)} · {_scanClock.Elapsed.TotalSeconds:0.0} s";
+                              $"{SizeFormatter.Format(progress.Bytes)} · {_scanClock.Elapsed.TotalSeconds:0.0} s";
+            ShowAccessBar(progress.DeniedFolders);
 
             // On a rescan, go back to the folder the user was looking at.
             if (previousFocus is not null && root.FindDescendant(previousFocus) is { } folder && folder != root)
@@ -185,9 +220,32 @@ public partial class MainWindow : Window
         }
     }
 
+    private void ShowAccessBar(long deniedFolders)
+    {
+        bool show = deniedFolders > 0 && !IsElevated;
+        AccessBar.Visibility = show ? Visibility.Visible : Visibility.Collapsed;
+        if (show)
+            AccessText.Text = $"{deniedFolders:N0} protected {(deniedFolders == 1 ? "folder" : "folders")} couldn't be read, so the map is missing their contents.";
+    }
+
+    private void RestartElevated()
+    {
+        if (_lastScanPath is null || Environment.ProcessPath is not { } exe) return;
+        try
+        {
+            Process.Start(new ProcessStartInfo(exe, $"\"{_lastScanPath}\"") { UseShellExecute = true, Verb = "runas" });
+            Application.Current.Shutdown();
+        }
+        catch (System.ComponentModel.Win32Exception)
+        {
+            // The UAC prompt was cancelled; keep running as we are.
+        }
+    }
+
     private void SetScanning(bool scanning)
     {
         ScanOverlay.Visibility = scanning ? Visibility.Visible : Visibility.Collapsed;
+        if (scanning) AccessBar.Visibility = Visibility.Collapsed;
         ScanDriveButton.IsEnabled = !scanning;
         ScanFolderButton.IsEnabled = !scanning;
         DriveCombo.IsEnabled = !scanning;
@@ -314,7 +372,7 @@ public partial class MainWindow : Window
             BreadcrumbPanel.Children.Add(button);
         }
 
-        BreadcrumbInfo.Text = $"{SizeFormatter.Format(focus.Size)} · {focus.FileCount:N0} files";
+        BreadcrumbInfo.Text = $"{SizeFormatter.Format(focus.SizeFor(Treemap.SizeMode))} · {focus.FileCount:N0} files";
     }
 
     private TextBlock CrumbSeparator() => Themed(new TextBlock
@@ -347,6 +405,22 @@ public partial class MainWindow : Window
             _ => $"Theme: Match Windows ({(ThemeManager.IsDark ? "dark" : "light")})"
         };
     }
+
+    private void RestartElevated_Click(object sender, RoutedEventArgs e) => RestartElevated();
+
+    private void SettingsButton_Click(object sender, RoutedEventArgs e) => ShowSettings();
+
+    /// <summary>Flips a boolean setting from a shortcut and confirms it in the status bar.</summary>
+    private void ToggleSetting(Action<bool> set, bool current, string name)
+    {
+        set(!current);
+        ApplySettings();
+        StatusScan.Text = $"{name} {(current ? "off" : "on")}";
+    }
+
+    private void ShowSettings() => new SettingsWindow(this) { Owner = this }.ShowDialog();
+
+    private void CloseAccessBar_Click(object sender, RoutedEventArgs e) => AccessBar.Visibility = Visibility.Collapsed;
 
     private void ThemeButton_Click(object sender, RoutedEventArgs e)
     {
@@ -388,10 +462,32 @@ public partial class MainWindow : Window
             return;
         }
 
+        var measure = Treemap.SizeMode;
         var text = new StringBuilder();
-        text.Append(node.FullPath).Append("    ").Append(SizeFormatter.Format(node.Size));
-        if (Treemap.FocusedFolder is { Size: > 0 } focus && !ReferenceEquals(focus, node))
-            text.Append($"  ({100.0 * node.Size / focus.Size:0.#}% of {focus.Name})");
+
+        if (node.IsGroup)
+        {
+            text.Append(node.Name).Append(" too small to show in ").Append(node.Parent?.FullPath ?? node.FullPath)
+                .Append("    ").Append(SizeFormatter.Format(node.SizeFor(measure))).Append("    zoom in to see them");
+        }
+        else if (node.IsFreeSpace)
+        {
+            text.Append("Free space on ").Append(node.Parent?.FullPath ?? node.FullPath).Append("    ").Append(SizeFormatter.Format(node.Size));
+        }
+        else if (node.IsHardLinkDuplicate)
+        {
+            text.Append(node.FullPath).Append($"    hard link, {SizeFormatter.Format(node.LinkedSize)} already counted elsewhere");
+        }
+        else
+        {
+            text.Append(node.FullPath).Append("    ").Append(SizeFormatter.Format(node.SizeFor(measure)));
+            long other = node.SizeFor(measure == SizeMeasure.FileSize ? SizeMeasure.SizeOnDisk : SizeMeasure.FileSize);
+            if (other != node.SizeFor(measure))
+                text.Append(measure == SizeMeasure.FileSize ? $" ({SizeFormatter.Format(other)} on disk)" : $" ({SizeFormatter.Format(other)} file size)");
+        }
+
+        if (Treemap.FocusedFolder is { } focus && focus.SizeFor(measure) > 0 && !ReferenceEquals(focus, node))
+            text.Append($"  ({100.0 * node.SizeFor(measure) / focus.SizeFor(measure):0.#}% of {focus.Name})");
         if (node.IsDirectory)
             text.Append($"    {node.FileCount:N0} files");
         if (node.AccessDenied)
@@ -403,16 +499,19 @@ public partial class MainWindow : Window
 
     private void DeleteNode(FsNode node)
     {
-        if (IsScanning || node.Parent is null || ReferenceEquals(node, Treemap.Root)) return;
+        if (IsScanning || node.Parent is null || !node.IsReal || ReferenceEquals(node, Treemap.Root)) return;
 
-        string size = SizeFormatter.Format(node.Size);
+        string size = SizeFormatter.Format(node.SizeFor(Treemap.SizeMode));
         string description = node.IsDirectory
             ? $"folder \"{node.Name}\" ({node.FileCount:N0} files, {size})"
             : $"file \"{node.Name}\" ({size})";
 
-        var answer = MessageBox.Show(this, $"Move the {description} to the Recycle Bin?\n\n{node.FullPath}",
-            "Move to Recycle Bin", MessageBoxButton.YesNo, MessageBoxImage.Warning, MessageBoxResult.No);
-        if (answer != MessageBoxResult.Yes) return;
+        if (_settings.ConfirmDelete)
+        {
+            var answer = MessageBox.Show(this, $"Move the {description} to the Recycle Bin?\n\n{node.FullPath}",
+                "Move to Recycle Bin", MessageBoxButton.YesNo, MessageBoxImage.Warning, MessageBoxResult.No);
+            if (answer != MessageBoxResult.Yes) return;
+        }
 
         var owner = new WindowInteropHelper(this).Handle;
         if (!RecycleBin.TrySend(node.FullPath, owner, out var error))
@@ -422,7 +521,9 @@ public partial class MainWindow : Window
             return;
         }
 
-        node.RemoveFromTree();
+        long freed = node.Allocated;
+        node.RemoveFromTree(Treemap.SizeMode);
+        _root?.RegisterFreedSpace(freed, Treemap.SizeMode);
         Treemap.SelectedNode = null;
         Treemap.Refresh();
         ShowNodeInfo(null);
@@ -484,16 +585,19 @@ public partial class MainWindow : Window
     {
         // Also fires during InitializeComponent, before everything exists.
         if (_applyingSettings || Treemap is null || LegendPanel is null || PaletteCombo is null) return;
-        ApplyColorSettings();
+
+        _settings.Palette = (PaletteCombo.SelectedItem as ColorScheme ?? Palette.Default).Name;
+        _settings.ColorMode = (ColorCombo.SelectedIndex == 1 ? ColorMode.ByFileType : ColorMode.ByDepth).ToString();
+        ApplySettings();
     }
 
     private void TreemapMenu_Opened(object sender, RoutedEventArgs e)
     {
         var node = Treemap.SelectedNode;
-        bool hasNode = node is not null && !IsScanning;
+        bool hasNode = node is not null && node.IsReal && !IsScanning;
         var folder = node is null ? null : node.IsDirectory ? node : node.Parent;
 
-        MenuFocus.IsEnabled = hasNode && folder is not null;
+        MenuFocus.IsEnabled = node is not null && !node.IsFreeSpace && !IsScanning && folder is not null;
         MenuUp.IsEnabled = !IsScanning && Treemap.FocusedFolder?.Parent is not null;
         MenuFit.IsEnabled = !IsScanning && Treemap.Root is not null && Treemap.Zoom > 1.0001;
         MenuOpen.IsEnabled = hasNode;
@@ -538,6 +642,9 @@ public partial class MainWindow : Window
             case Key.F1:
                 ShowAbout();
                 break;
+            case Key.OemComma when ctrl:
+                ShowSettings();
+                break;
             case Key.Escape when IsScanning:
                 _scanCts?.Cancel();
                 break;
@@ -565,6 +672,12 @@ public partial class MainWindow : Window
                 break;
             case Key.C when ctrl && Treemap.SelectedNode is { } copyNode:
                 CopyPath(copyNode);
+                break;
+            case Key.C when !ctrl:
+                ToggleSetting(v => _settings.Cushion = v, _settings.Cushion, "Cushion shading");
+                break;
+            case Key.G when !ctrl:
+                ToggleSetting(v => _settings.GroupSmallItems = v, _settings.GroupSmallItems, "Grouping of small items");
                 break;
             default:
                 return;
