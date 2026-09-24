@@ -1,0 +1,9 @@
+# Normalize line endings; keep Windows scripts and solution files as CRLF.
+* text=auto
+*.sln text eol=crlf
+*.csproj text eol=crlf
+*.pubxml text eol=crlf
+
+# Binary assets
+*.png binary
+*.ico binary

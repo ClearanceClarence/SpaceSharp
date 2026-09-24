@@ -1,0 +1,39 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>Assets\SpaceSharp.ico</ApplicationIcon>
+    <AssemblyName>SpaceSharp</AssemblyName>
+    <RootNamespace>SpaceSharp</RootNamespace>
+    <!-- Only ship English framework resources (keeps the published exe smaller). -->
+    <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
+
+    <!-- Shown in the About window and in the .exe's file properties. -->
+    <Product>SpaceSharp</Product>
+    <Version>1.0.0</Version>
+    <Authors>ClearanceClarence</Authors>
+    <Copyright>© 2026 ClearanceClarence</Copyright>
+    <Description>See where your disk space went. SpaceSharp maps every file and folder as a box sized by the space it uses, so the biggest ones stand out.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- WPF projects drop System.IO from the implicit usings (it clashes with
+         System.Windows.Shapes.Path), so add it back globally. -->
+    <Using Include="System.IO" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Icon files embedded for the window icon and the About window. -->
+    <None Remove="Assets\SpaceSharp.ico" />
+    <None Remove="Assets\SpaceSharp-256.png" />
+    <Resource Include="Assets\SpaceSharp.ico" />
+    <Resource Include="Assets\SpaceSharp-256.png" />
+  </ItemGroup>
+
+</Project>

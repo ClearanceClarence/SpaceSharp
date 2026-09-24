@@ -1,0 +1,53 @@
+<Window x:Class="SpaceSharp.AboutWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="About SpaceSharp"
+        Width="560" SizeToContent="Height" ResizeMode="NoResize"
+        WindowStartupLocation="CenterOwner" ShowInTaskbar="False"
+        Icon="/Assets/SpaceSharp.ico"
+        Background="{DynamicResource Bg}" Foreground="{DynamicResource Text}"
+        FontFamily="Segoe UI" FontSize="13" UseLayoutRounding="True">
+
+    <DockPanel>
+        <Border DockPanel.Dock="Bottom" Background="{DynamicResource Panel}" BorderBrush="{DynamicResource Stroke}"
+                BorderThickness="0,1,0,0" Padding="16,12">
+            <DockPanel>
+                <Button DockPanel.Dock="Right" Style="{StaticResource AccentButton}" Content="Close"
+                        IsDefault="True" IsCancel="True" Click="Close_Click" />
+                <Button Style="{StaticResource ToolButton}" Tag="&#xE8C8;" Content="Copy version info"
+                        HorizontalAlignment="Left" Click="CopyInfo_Click" />
+            </DockPanel>
+        </Border>
+
+        <StackPanel Margin="28,26,28,24">
+            <DockPanel>
+                <Image Source="/Assets/SpaceSharp-256.png" Width="96" Height="96" Margin="0,0,22,0"
+                       VerticalAlignment="Top" RenderOptions.BitmapScalingMode="HighQuality" />
+                <StackPanel VerticalAlignment="Center">
+                    <TextBlock Text="SpaceSharp" FontSize="28" FontWeight="SemiBold" />
+                    <TextBlock x:Name="VersionText" Foreground="{DynamicResource TextDim}" Margin="0,2,0,0" />
+                    <TextBlock x:Name="DescriptionText" TextWrapping="Wrap" Margin="0,10,0,0" LineHeight="20" />
+                </StackPanel>
+            </DockPanel>
+
+            <TextBlock Text="Shortcuts" FontSize="15" FontWeight="SemiBold" Margin="0,26,0,8" />
+            <Grid x:Name="ShortcutGrid">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+            </Grid>
+
+            <TextBlock Text="System" FontSize="15" FontWeight="SemiBold" Margin="0,22,0,6" />
+            <TextBlock x:Name="SystemText" Foreground="{DynamicResource TextDim}" TextWrapping="Wrap" />
+
+            <TextBlock Text="Credits" FontSize="15" FontWeight="SemiBold" Margin="0,22,0,6" />
+            <TextBlock Foreground="{DynamicResource TextDim}" TextWrapping="Wrap" LineHeight="20">
+                Squarified treemap layout by Bruls, Huizing and van Wijk (2000). Inspired by SpaceMonger.
+                Interface icons from Segoe Fluent Icons.
+            </TextBlock>
+
+            <TextBlock x:Name="CopyrightText" Foreground="{DynamicResource TextDim}" Margin="0,22,0,0" />
+        </StackPanel>
+    </DockPanel>
+</Window>
