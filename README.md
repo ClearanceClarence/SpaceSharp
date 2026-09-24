@@ -15,6 +15,16 @@
   <img src="https://img.shields.io/badge/.NET-10-8C84D6" alt=".NET 10">
 </p>
 
+<p align="center">
+  <a href="https://github.com/ClearanceClarence/SpaceSharp/releases/latest/download/SpaceSharp.exe"><img src="https://img.shields.io/badge/Download-SpaceSharp.exe-F5B82E?style=for-the-badge" alt="Download SpaceSharp.exe"></a>
+</p>
+
+<p align="center">
+  <img src="docs/screenshot.png" alt="SpaceSharp showing a drive as a treemap, with sample data">
+  <br>
+  <sub>Illustration with sample data</sub>
+</p>
+
 ---
 
 SpaceSharp scans a drive or folder and draws every file and folder as a box whose area matches its size. Folders are boxes with a title bar, and their contents are laid out inside them, so the files and folders eating your space are obvious at a glance. Zoom into any folder, pan around, and send what you don't need to the Recycle Bin without leaving the map.
