@@ -11,6 +11,7 @@
 
 <p align="center">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-F5B82E" alt="MIT License"></a>
+  <img src="https://img.shields.io/badge/version-1.2.0-5C9E6F" alt="Version 1.2.0">
   <img src="https://img.shields.io/badge/platform-Windows%2010%20%7C%2011-74A6CC" alt="Windows 10 and 11">
   <img src="https://img.shields.io/badge/.NET-10-8C84D6" alt=".NET 10">
 </p>
@@ -45,6 +46,7 @@ It's a single, portable `.exe` with no installer and no dependencies.
 - [Settings](#settings)
 - [Known limitations](#known-limitations)
 - [Ideas for the future](#ideas-for-the-future)
+- [Feedback](#feedback)
 - [Credits](#credits)
 - [License](#license)
 
@@ -65,7 +67,8 @@ It's a single, portable `.exe` with no installer and no dependencies.
 - Chains of folders that only contain one folder (like `Users › adria › AppData › Local`) are merged into a single box with a combined title, instead of a stack of thin frames
 - Folders with hundreds of small files (a photo shoot, a cache) show one "312 files" box instead of a grid of specks; zooming in reveals them individually
 - Boxes too small to see are left out, so the map stays clean instead of turning into noise
-- Cushion shading on every box (can be turned off), which makes sizes easier to compare than flat fills
+- Six map styles: Classic (title bars, borders, cushion shading), Tiles, Cards, Bands, Terraces and Soft, switchable from the toolbar; S cycles
+- Readability options: three label sizes and outlined labels that stay legible on any color
 - A gray "Free space" block when scanning a whole drive, so the map shows the entire disk
 
 **Zoom and navigation**
@@ -74,6 +77,13 @@ It's a single, portable `.exe` with no installer and no dependencies.
 - Drag with the left or middle mouse button to pan
 - Clickable breadcrumb path: click any folder in it to zoom there
 - Up one folder, show the whole map, and zoom buttons in the toolbar
+
+**Finding things**
+- Filter box: type `*.mp4`, `>500MB`, `older than 1 year`, `type:video` or part of a name, and everything that doesn't match dims. The layout stays put, so you see *where* the matches are. Terms combine.
+- **Select matches** (Ctrl+A) selects every matching file, and Del sends them all to the Recycle Bin in one go
+- Side panel (L) with all your drives, their usage bars and free space, plus the 200 largest files, the largest folders, and space by file type. Click a drive to scan it, a row to zoom to it, or a type to filter by it
+- Multi-select with Ctrl+click and Shift+click; the status bar shows the combined size
+- Hover details: a small card next to the mouse with size, size on disk, file count, type, last modified and share of the current folder
 
 **Colors and themes**
 - Color boxes by nesting depth or by file type (images, video, audio, archives, programs, documents, code)
@@ -110,7 +120,7 @@ The first launch is a little slower than the ones after it, because the portable
 
 ## Using SpaceSharp
 
-1. Pick a drive from the drop-down and click **Scan drive**, or click **Scan folder…** to choose a folder.
+1. Click a drive in the **Drives** list on the left, or click **Scan folder** to choose a folder. Each drive shows how full it is and how much is free.
 2. When the scan finishes, the whole drive or folder fills the window. The biggest boxes are the biggest space users.
 3. Hover over a box to see its full path and size in the status bar.
 4. Double-click a folder to zoom into it. Use Backspace, the mouse back button, the breadcrumb or the mouse wheel to zoom back out.
@@ -126,11 +136,16 @@ The gear button in the toolbar (or Ctrl+,) opens the settings window. Every chan
 |---|---|
 | **Theme** | Match Windows, Light or Dark. |
 | **Palette** and **Color by** | The same choices as in the toolbar. |
-| **Cushion shading** | Soft light-to-dark shading on each box. |
+| **Map style** | Classic, Tiles, Cards, Bands, Terraces or Soft. Same layout, different look; S cycles. |
+| **Label size** | Normal, Large or Larger text on the map. Title bars grow to match. |
+| **Outlined labels** | A thin contrasting outline around every label. Recommended if the map is hard to read. |
+| **Cushion shading** | Soft light-to-dark shading on each box in the Classic style. |
 | **Size measure** | File size, or size on disk: the compressed size of compressed, sparse and cloud files, rounded up to whole clusters, like Explorer's "Size on disk". |
 | **Show free space** | Adds a gray block for the drive's unused space when a whole drive is scanned. Off by default. |
 | **Merge single-folder chains** | Draw folders that only contain one folder as a single box with a combined title. |
 | **Group small items** | Replace children that would be smaller than about 30 × 22 px with a single "N files" box. |
+| **Hover details** | The info card next to the mouse. |
+| **Show side panel** | The panel on the left with your drives and the largest items. |
 | **Animate zoom** | Fly into folders instead of jumping. |
 | **Include hidden and system files** | Off leaves out Hidden and System items such as `pagefile.sys`. Applies to the next scan. |
 | **Count hard links once** | Reads every file's link count so data with several names (Windows keeps thousands in `WinSxS`) is counted once. Slower on big drives, off by default, applies to the next scan. |
@@ -138,6 +153,26 @@ The gear button in the toolbar (or Ctrl+,) opens the settings window. Every chan
 | **Check for updates on startup** | Installed copies look for a new release on GitHub a few seconds after launch. The portable exe can't update itself. |
 
 **Reset to defaults** puts everything back. When folders couldn't be read, a notice appears under the toolbar with a **Restart as administrator** button; SpaceSharp restarts elevated and scans the same drive again.
+
+### Filtering
+
+Press Ctrl+F or click the filter box above the map. Everything that doesn't match is dimmed; the layout stays put so you can see where the matches are.
+
+**The easy way:** click the funnel button in the box. A panel opens with quick filters ("Large files", "Big videos", "Untouched for 2 years"…), a name field, file type chips, size and age drop-downs, and a files/folders switch. It writes the filter text for you, so you can also learn the syntax from it.
+
+**The fast way:** type it. Plain language works: `videos over 500MB not touched in 2 years`, `photos larger than 10 MB`, `.iso`, `installer`. Everything you type must match. The parts it understands:
+
+| You can type | Meaning |
+|---|---|
+| `*.mp4 *.mkv`, `.iso`, `report` | Name patterns (OR-ed), an extension, or text the name contains |
+| `videos`, `photos`, `music`, `archives`, `programs`, `documents`, `code`, `type:video,audio` | File type |
+| `>1GB`, `over 500 MB`, `larger than 2 GB`, `at least 100MB` | Minimum size (a bare number means MB) |
+| `<10MB`, `under 1 GB`, `smaller than 500MB` | Maximum size |
+| `older than 2 years`, `not modified in 6 months`, `unused for 1 year`, `over 3 years old` | Not changed for that long |
+| `newer than 30 days`, `modified in the last week`, `last 2 months` | Changed recently |
+| `files`, `folders`, `is:file`, `is:folder` | Only files or only folders |
+
+The bar then shows how many files match and their total size. **Select matches** (Ctrl+A) selects all of them, and Del sends them to the Recycle Bin in one go.
 
 ### Color modes
 
@@ -170,9 +205,14 @@ The gear button in the toolbar (or Ctrl+,) opens the settings window. Every chan
 | Backspace, mouse back button | Up one folder |
 | Home, Ctrl+0 | Show the whole map |
 | F5 | Rescan |
-| Ctrl+C | Copy the selected item's path |
+| Ctrl+C | Copy the selected paths |
+| Ctrl+click, Shift+click | Select several items |
+| Ctrl+F | Filter the map |
+| Ctrl+A | Select every file matching the filter |
+| L | Largest files, folders and types panel |
 | Ctrl+, | Settings |
-| Del | Move the selected item to the Recycle Bin |
+| Del | Move the selected items to the Recycle Bin |
+| S | Next map style |
 | C | Toggle cushion shading |
 | G | Toggle grouping of small items |
 | Esc | Cancel a scan |
@@ -250,6 +290,12 @@ All control styles are in `Styles.xaml` and reference colors through `DynamicRes
 **Sizes** (`Services/NativeFileInfo.cs`)
 Size on disk comes from `GetCompressedFileSizeW` for compressed, sparse, offline and cloud-placeholder files and from the plain length for everything else, rounded up to the volume's cluster size (`GetDiskFreeSpaceW`). Hard-link detection opens each file for attribute access only and reads its link count and file ID with `GetFileInformationByHandle`; a file whose ID was already seen is kept in the tree but contributes no size.
 
+**Filtering** (`Services/FileFilter.cs`)
+The filter text is parsed into a list of conditions. The whole tree is evaluated once per change (a few milliseconds per hundred thousand files); files match on their own, and a folder is kept lit when anything inside it matches, so the path to every hit stays visible. The map then draws non-matching boxes blended toward the background, without changing the layout.
+
+**Top lists** (`Services/TopLists.cs`)
+The largest files and folders are found with a priority queue in one pass over the tree, so the panel is instant even on millions of files. Space by type aggregates files by extension.
+
 **Updates** (`Services/Updater.cs`, `Program.cs`)
 The Velopack `Setup.exe` installs SpaceSharp per user and creates shortcuts; the `.msi` lets the user choose the folder and scope. Both update the same way afterwards. On startup `Program.Main` runs Velopack's hooks before WPF loads. When installed that way, SpaceSharp checks GitHub Releases a few seconds after launch (Settings → Updates), and offers a one-click "Install and restart" that downloads a delta package and swaps in the new version. The portable exe reports itself as not installed and never updates on its own.
 
@@ -273,6 +319,8 @@ SpaceSharp/
 │   └── FsNode.cs                 file/folder tree
 ├── Program.cs                    entry point running Velopack before WPF
 ├── Services/
+│   ├── FileFilter.cs             filter text parser and tree evaluation
+│   ├── TopLists.cs               largest files/folders and space by type
 │   ├── Updater.cs                GitHub Releases update check and install
 │   ├── DiskScanner.cs            background scanner with progress, size on disk, hard links
 │   ├── NativeFileInfo.cs         Win32 calls for cluster size, compressed size and file IDs
@@ -343,10 +391,16 @@ Delete the file to go back to the defaults.
 
 ## Ideas for the future
 
-- Filtering and highlighting by name, file type, size or age
-- Top lists: largest files, largest folders, space by file type
 - Saving scans so reopening the app is instant
+- Rescan a single folder from the right-click menu
+- Export the current folder or the filter results to CSV
 - Exporting the scan as CSV
+
+## Feedback
+
+- **Found a bug?** [Report it](https://github.com/ClearanceClarence/SpaceSharp/issues/new?template=bug_report.yml). The About window (F1) has a **Report a bug** button that opens the same form with your version and Windows details already filled in.
+- **Have an idea?** [Suggest a feature](https://github.com/ClearanceClarence/SpaceSharp/issues/new?template=feature_request.yml).
+- Anything else: open a [blank issue](https://github.com/ClearanceClarence/SpaceSharp/issues/new).
 
 ## Credits
 
@@ -363,20 +417,4 @@ Made by ClearanceClarence.
 
 ## Changelog
 
-### 1.1.1
-- Installers: a Windows Installer (`.msi`) where you choose the folder and install scope, and a one-click `Setup.exe`, both with automatic updates via Velopack
-- Update notice in the app, "Check for updates" in the About window, and an update setting
-- Branded installer pages and images
-
-### 1.1.0
-- Size on disk as an alternative measure
-- Optional hard-link detection
-- Free-space block for whole-drive scans, updated when you delete files
-- Notice for protected folders with one-click restart as administrator
-- Cushion shading
-- Small items grouped into one "N files" box instead of grids of tiny boxes
-- Settings window (Ctrl+,) with all options, including new ones: merge single-folder chains, animate zoom, include hidden files, confirm before delete
-- Shortcuts: C toggles cushion shading, G toggles grouping
-
-### 1.0.0
-- First release
+All changes can be found documented in the [Changelog.md](changelog.md).

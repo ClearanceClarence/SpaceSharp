@@ -169,6 +169,7 @@ public sealed class DiskScanner
             Size = size,
             Allocated = allocated,
             FileCount = 1,
+            LastWriteUtc = file.LastWriteTimeUtc,
             IsHardLinkDuplicate = duplicate,
             LinkedSize = duplicate ? length : 0
         };

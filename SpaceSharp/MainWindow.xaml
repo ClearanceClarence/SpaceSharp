@@ -17,15 +17,25 @@
                 BorderThickness="0,0,0,1" Padding="10,8">
             <DockPanel>
                 <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
-                    <TextBlock Text="Color by" Foreground="{DynamicResource TextDim}" VerticalAlignment="Center"
+                    <TextBlock Text="Style" Foreground="{DynamicResource TextDim}" VerticalAlignment="Center"
                                Margin="0,0,8,0" />
+                    <ComboBox x:Name="StyleCombo" Width="118" SelectionChanged="ColorSettings_Changed">
+                        <ComboBoxItem Content="Classic" />
+                        <ComboBoxItem Content="Tiles" />
+                        <ComboBoxItem Content="Cards" />
+                        <ComboBoxItem Content="Bands" />
+                        <ComboBoxItem Content="Terraces" />
+                        <ComboBoxItem Content="Soft" />
+                    </ComboBox>
+                    <TextBlock Text="Color by" Foreground="{DynamicResource TextDim}" VerticalAlignment="Center"
+                               Margin="14,0,8,0" />
                     <ComboBox x:Name="ColorCombo" Width="120" SelectionChanged="ColorSettings_Changed">
                         <ComboBoxItem Content="Depth" />
                         <ComboBoxItem Content="File type" />
                     </ComboBox>
                     <TextBlock Text="Palette" Foreground="{DynamicResource TextDim}" VerticalAlignment="Center"
                                Margin="14,0,8,0" />
-                    <ComboBox x:Name="PaletteCombo" Width="200" MaxDropDownHeight="480"
+                    <ComboBox x:Name="PaletteCombo" Width="180" MaxDropDownHeight="480"
                               SelectionChanged="ColorSettings_Changed">
                         <ComboBox.ItemTemplate>
                             <DataTemplate>
@@ -58,10 +68,7 @@
                 </StackPanel>
 
                 <StackPanel Orientation="Horizontal">
-                    <ComboBox x:Name="DriveCombo" Width="260" />
-                    <Button x:Name="ScanDriveButton" Style="{StaticResource AccentButton}" Margin="8,0,0,0"
-                            Tag="&#xEDA2;" Content="Scan drive" Click="ScanDrive_Click" />
-                    <Button x:Name="ScanFolderButton" Style="{StaticResource ToolButton}" Margin="4,0,0,0"
+                    <Button x:Name="ScanFolderButton" Style="{StaticResource AccentButton}"
                             Tag="&#xE838;" Content="Scan folder" Click="ScanFolder_Click" />
                     <Button x:Name="RescanButton" Style="{StaticResource ToolButton}"
                             Tag="&#xE72C;" ToolTip="Rescan (F5)" Click="Rescan_Click" />
@@ -72,6 +79,8 @@
                             Tag="&#xE74A;" ToolTip="Up one folder (Backspace / mouse back)" Click="Up_Click" />
                     <Button x:Name="FitButton" Style="{StaticResource ToolButton}"
                             Tag="&#xE80F;" ToolTip="Show whole map (Home / Ctrl+0)" Click="Fit_Click" />
+                    <Button x:Name="ListsButton" Style="{StaticResource ToolButton}"
+                            Tag="&#xE90A;" ToolTip="Drives and largest items panel (L)" Click="Lists_Click" />
 
                     <Border Style="{StaticResource ToolDivider}" />
 
@@ -113,6 +122,33 @@
         <Border DockPanel.Dock="Top" Background="{DynamicResource Bg}" BorderBrush="{DynamicResource Stroke}"
                 BorderThickness="0,0,0,1" Padding="6,4" MinHeight="36">
             <DockPanel>
+                <Grid DockPanel.Dock="Right" Width="360" Margin="12,0,4,0" VerticalAlignment="Center">
+                    <TextBox x:Name="FilterBox" Style="{StaticResource FilterBox}" Height="28" Padding="30,0,56,0"
+                             Tag="Filter, e.g. videos over 500MB older than 1 year"
+                             TextChanged="FilterBox_TextChanged" PreviewKeyDown="FilterBox_PreviewKeyDown" />
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,0,3,0">
+                        <Button x:Name="ClearFilterButton" Style="{StaticResource ToolButton}" Tag="&#xE711;" Height="22"
+                                MinWidth="22" Padding="4,0" Visibility="Collapsed" ToolTip="Clear filter (Esc)"
+                                Click="ClearFilter_Click" />
+                        <Button x:Name="FilterPanelButton" Style="{StaticResource ToolButton}" Tag="&#xE71C;" Height="22"
+                                MinWidth="22" Padding="4,0" ToolTip="Filter options" Click="FilterPanel_Click" />
+                    </StackPanel>
+                    <Popup x:Name="FilterPopup" PlacementTarget="{Binding ElementName=FilterBox}" Placement="Bottom"
+                           StaysOpen="False" AllowsTransparency="True" PopupAnimation="Fade" VerticalOffset="6">
+                        <Border Background="{DynamicResource MenuBg}" BorderBrush="{DynamicResource Stroke}" BorderThickness="1"
+                                CornerRadius="10" Padding="16,14" Margin="0,0,12,12" Width="400">
+                            <Border.Effect>
+                                <DropShadowEffect BlurRadius="18" ShadowDepth="4" Opacity="0.5" Color="Black" />
+                            </Border.Effect>
+                            <StackPanel x:Name="FilterPanelBody" />
+                        </Border>
+                    </Popup>
+                </Grid>
+                <Button x:Name="SelectMatchesButton" DockPanel.Dock="Right" Style="{StaticResource ToolButton}" Height="28"
+                        Tag="&#xE8B3;" Content="Select matches" Visibility="Collapsed" Margin="8,0,0,0"
+                        ToolTip="Select every matching file (Ctrl+A), then Del to recycle them" Click="SelectMatches_Click" />
+                <TextBlock x:Name="FilterInfo" DockPanel.Dock="Right" Foreground="{DynamicResource Accent}"
+                           VerticalAlignment="Center" Margin="12,0,0,0" Visibility="Collapsed" />
                 <WrapPanel x:Name="LegendPanel" DockPanel.Dock="Right" Visibility="Collapsed"
                            VerticalAlignment="Center" Margin="12,0,4,0" />
                 <TextBlock x:Name="BreadcrumbInfo" DockPanel.Dock="Right" Foreground="{DynamicResource TextDim}"
@@ -129,6 +165,84 @@
                 <TextBlock x:Name="StatusScan" DockPanel.Dock="Right" Foreground="{DynamicResource TextDim}"
                            Margin="16,0,0,0" />
                 <TextBlock x:Name="StatusHover" TextTrimming="CharacterEllipsis" />
+            </DockPanel>
+        </Border>
+
+        <!-- ============================================================ side panel: top lists -->
+        <Border x:Name="SidePanel" DockPanel.Dock="Left" Width="340"
+                Background="{DynamicResource Panel}" BorderBrush="{DynamicResource Stroke}" BorderThickness="0,0,1,0">
+            <DockPanel>
+                <!-- drives -->
+                <TextBlock DockPanel.Dock="Top" Text="Drives" FontSize="15" FontWeight="SemiBold" Margin="14,12,14,4" />
+                <TextBlock DockPanel.Dock="Top" Text="Click a drive to scan it." Foreground="{DynamicResource TextDim}"
+                           FontSize="12" Margin="14,0,14,4" />
+                <ListBox x:Name="DriveList" DockPanel.Dock="Top" MaxHeight="320" SelectionChanged="DriveList_SelectionChanged">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <Grid Margin="2,3">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="&#xEDA2;" FontFamily="{StaticResource IconFont}" FontSize="16"
+                                           Foreground="{DynamicResource TextDim}" Margin="0,1,10,0" VerticalAlignment="Center" />
+                                <TextBlock Grid.Column="1" Text="{Binding Name}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"
+                                           VerticalAlignment="Center" />
+                                <TextBlock Grid.Column="2" Text="{Binding FreeText}" Foreground="{DynamicResource TextDim}"
+                                           Margin="10,0,0,0" VerticalAlignment="Center" />
+                                <Grid Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" Height="6" Margin="0,7,0,5">
+                                    <Border Background="{DynamicResource Control}" CornerRadius="3" />
+                                    <Border HorizontalAlignment="Left" Width="{Binding BarWidth}" CornerRadius="3"
+                                            Background="{DynamicResource Accent}" Opacity="0.9" />
+                                </Grid>
+                                <TextBlock Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="2" Text="{Binding Detail}"
+                                           Foreground="{DynamicResource TextDim}" FontSize="11" TextTrimming="CharacterEllipsis" />
+                            </Grid>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+                <Border DockPanel.Dock="Top" Height="1" Background="{DynamicResource Stroke}" Margin="14,8,14,6" />
+
+                <!-- largest items -->
+                <TextBlock DockPanel.Dock="Top" Text="Largest items" FontSize="15" FontWeight="SemiBold" Margin="14,4,14,2" />
+                <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="10,4,10,4">
+                    <Button x:Name="TabFiles" Style="{StaticResource TabButton}" Content="Files" Click="Tab_Click" />
+                    <Button x:Name="TabFolders" Style="{StaticResource TabButton}" Content="Folders" Click="Tab_Click" />
+                    <Button x:Name="TabTypes" Style="{StaticResource TabButton}" Content="Types" Click="Tab_Click" />
+                </StackPanel>
+                <TextBlock x:Name="ListHint" DockPanel.Dock="Top" Foreground="{DynamicResource TextDim}" FontSize="12"
+                           Margin="14,0,14,6" TextTrimming="CharacterEllipsis" />
+                <ListBox x:Name="TopList" SelectionChanged="TopList_SelectionChanged">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <Border Grid.ColumnSpan="3" HorizontalAlignment="Left" Width="{Binding BarWidth}" Height="3"
+                                        VerticalAlignment="Bottom" Margin="0,0,0,-4" CornerRadius="2"
+                                        Background="{DynamicResource Accent}" Opacity="0.55" />
+                                <Border Width="10" Height="10" CornerRadius="3" Margin="0,0,8,0" VerticalAlignment="Center"
+                                        Background="{Binding Swatch}" />
+                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding Name}" TextTrimming="CharacterEllipsis" />
+                                    <TextBlock Text="{Binding Detail}" TextTrimming="CharacterEllipsis" FontSize="11"
+                                               Foreground="{DynamicResource TextDim}" />
+                                </StackPanel>
+                                <TextBlock Grid.Column="2" Text="{Binding SizeText}" Margin="10,0,0,0"
+                                           VerticalAlignment="Center" FontWeight="SemiBold" />
+                            </Grid>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
             </DockPanel>
         </Border>
 
@@ -187,26 +301,107 @@
                         HorizontalAlignment="Center" VerticalAlignment="Center">
                 <Image Source="/Assets/SpaceSharp-256.png" Width="88" Height="88" HorizontalAlignment="Center"
                        RenderOptions.BitmapScalingMode="HighQuality" />
-                <TextBlock Text="Pick a drive and press Scan drive, or choose a folder."
+                <TextBlock Text="Click a drive on the left, or choose a folder to scan."
                            Foreground="{DynamicResource TextDim}" FontSize="15" Margin="0,14,0,0" />
             </StackPanel>
 
+            <Popup x:Name="HoverTip" Placement="Relative" PlacementTarget="{Binding ElementName=Treemap}"
+                   AllowsTransparency="True" IsHitTestVisible="False" StaysOpen="True" Focusable="False">
+                <Border Background="{DynamicResource MenuBg}" BorderBrush="{DynamicResource Stroke}" BorderThickness="1"
+                        CornerRadius="8" Padding="12,9" Margin="0,0,10,10" MaxWidth="420">
+                    <Border.Effect>
+                        <DropShadowEffect BlurRadius="14" ShadowDepth="3" Opacity="0.45" Color="Black" />
+                    </Border.Effect>
+                    <StackPanel>
+                        <TextBlock x:Name="TipName" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"
+                                   Foreground="{DynamicResource Text}" />
+                        <TextBlock x:Name="TipPath" FontSize="11" TextTrimming="CharacterEllipsis"
+                                   Foreground="{DynamicResource TextDim}" Margin="0,1,0,6" />
+                        <Grid x:Name="TipRows">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+            </Popup>
+
             <Grid x:Name="ScanOverlay" Background="{DynamicResource Scrim}" Visibility="Collapsed">
-                <Border Width="560" Padding="24" CornerRadius="10" Background="{DynamicResource Panel}"
+                <Border Width="620" Padding="28,24,28,22" CornerRadius="12" Background="{DynamicResource Panel}"
                         BorderBrush="{DynamicResource Stroke}" BorderThickness="1"
                         HorizontalAlignment="Center" VerticalAlignment="Center">
                     <Border.Effect>
-                        <DropShadowEffect BlurRadius="24" ShadowDepth="6" Opacity="0.5" Color="Black" />
+                        <DropShadowEffect BlurRadius="28" ShadowDepth="8" Opacity="0.5" Color="Black" />
                     </Border.Effect>
                     <StackPanel>
-                        <TextBlock Text="Scanning…" FontSize="20" FontWeight="SemiBold" Margin="0,0,0,14" />
-                        <ProgressBar IsIndeterminate="True" Height="4" Margin="0,0,0,14" />
-                        <TextBlock x:Name="ScanProgressText" FontSize="14" />
-                        <TextBlock x:Name="ScanPathText" Foreground="{DynamicResource TextDim}" FontSize="12"
-                                   Margin="0,6,0,0" TextTrimming="CharacterEllipsis" />
+                        <!-- title -->
+                        <DockPanel>
+                            <Image DockPanel.Dock="Left" Source="/Assets/SpaceSharp-256.png" Width="44" Height="44"
+                                   Margin="0,0,16,0" VerticalAlignment="Top" RenderOptions.BitmapScalingMode="HighQuality" />
+                            <StackPanel VerticalAlignment="Center">
+                                <TextBlock x:Name="ScanTitle" Text="Scanning…" FontSize="20" FontWeight="SemiBold" />
+                                <TextBlock x:Name="ScanSubtitle" Foreground="{DynamicResource TextDim}" Margin="0,2,0,0"
+                                           Text="Reading the folder tree. The map appears when it's done." />
+                            </StackPanel>
+                        </DockPanel>
+
+                        <!-- counters -->
+                        <Grid Margin="0,22,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition />
+                                <ColumnDefinition Width="10" />
+                                <ColumnDefinition />
+                                <ColumnDefinition Width="10" />
+                                <ColumnDefinition />
+                            </Grid.ColumnDefinitions>
+                            <Border Grid.Column="0" Background="{DynamicResource Control}" CornerRadius="8" Padding="14,10">
+                                <StackPanel>
+                                    <TextBlock x:Name="ScanSizeText" Text="0 B" FontSize="24" FontWeight="SemiBold" />
+                                    <TextBlock Text="found so far" Foreground="{DynamicResource TextDim}" FontSize="12" />
+                                </StackPanel>
+                            </Border>
+                            <Border Grid.Column="2" Background="{DynamicResource Control}" CornerRadius="8" Padding="14,10">
+                                <StackPanel>
+                                    <TextBlock x:Name="ScanFilesText" Text="0" FontSize="24" FontWeight="SemiBold" />
+                                    <TextBlock Text="files" Foreground="{DynamicResource TextDim}" FontSize="12" />
+                                </StackPanel>
+                            </Border>
+                            <Border Grid.Column="4" Background="{DynamicResource Control}" CornerRadius="8" Padding="14,10">
+                                <StackPanel>
+                                    <TextBlock x:Name="ScanFoldersText" Text="0" FontSize="24" FontWeight="SemiBold" />
+                                    <TextBlock Text="folders" Foreground="{DynamicResource TextDim}" FontSize="12" />
+                                </StackPanel>
+                            </Border>
+                        </Grid>
+
+                        <!-- progress bar: determinate for whole drives, sweeping for folders -->
+                        <Grid x:Name="ScanBar" Height="6" Margin="0,20,0,8" ClipToBounds="True">
+                            <Border Background="{DynamicResource Control}" CornerRadius="3" />
+                            <Border x:Name="ScanBarFill" Background="{DynamicResource Accent}" CornerRadius="3"
+                                    HorizontalAlignment="Left" Width="160">
+                                <Border.RenderTransform>
+                                    <TranslateTransform x:Name="ScanBarSweep" />
+                                </Border.RenderTransform>
+                            </Border>
+                        </Grid>
+                        <DockPanel>
+                            <TextBlock x:Name="ScanElapsedText" DockPanel.Dock="Right" Foreground="{DynamicResource TextDim}" FontSize="12" />
+                            <TextBlock x:Name="ScanRateText" Foreground="{DynamicResource TextDim}" FontSize="12" />
+                        </DockPanel>
+
+                        <!-- current folder -->
+                        <Border Margin="0,16,0,0" Padding="10,7" CornerRadius="6" Background="{DynamicResource Control}">
+                            <DockPanel>
+                                <TextBlock DockPanel.Dock="Left" Text="&#xE8B7;" FontFamily="{StaticResource IconFont}" FontSize="13"
+                                           Foreground="{DynamicResource TextDim}" Margin="0,1,8,0" VerticalAlignment="Center" />
+                                <TextBlock x:Name="ScanPathText" Foreground="{DynamicResource TextDim}" FontSize="12"
+                                           TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
+                            </DockPanel>
+                        </Border>
+
                         <Button x:Name="CancelButton" Style="{StaticResource ToolButton}" Tag="&#xE711;"
-                                Content="Cancel  (Esc)" HorizontalAlignment="Right" Margin="0,16,0,0"
-                                Click="Cancel_Click" />
+                                Content="Cancel  (Esc)" HorizontalAlignment="Right" Margin="0,16,0,0" Click="Cancel_Click" />
                     </StackPanel>
                 </Border>
             </Grid>

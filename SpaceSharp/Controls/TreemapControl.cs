@@ -18,7 +18,25 @@ public enum ColorMode
 
 /// <param name="Node">The node drawn in this box (the deepest folder of a collapsed chain).</param>
 /// <param name="ChainTop">First folder of a collapsed single-child chain, or null.</param>
-public readonly record struct TreemapItem(FsNode Node, Rect Bounds, int Depth, bool HasHeader, FsNode? ChainTop);
+/// <summary>How boxes are drawn. Same layout, different visual treatment.</summary>
+public enum MapStyle
+{
+    /// <summary>Title bars, 1 px borders, cushion shading.</summary>
+    Classic,
+    /// <summary>Flat colors, small gaps, softly rounded, folder names as captions.</summary>
+    Tiles,
+    /// <summary>Folders as raised cards with a shadow and bold title; files as flat chips.</summary>
+    Cards,
+    /// <summary>Deep title band, lighter body, light borders, no shading.</summary>
+    Bands,
+    /// <summary>One hue per top-level folder, darker with depth.</summary>
+    Terraces,
+    /// <summary>Rounded pastel blocks with gaps.</summary>
+    Soft
+}
+
+/// <param name="Branch">Index of the top-level folder this item belongs to (0 for the root itself).</param>
+public readonly record struct TreemapItem(FsNode Node, Rect Bounds, int Depth, bool HasHeader, FsNode? ChainTop, int Branch);
 
 /// <summary>
 /// SpaceMonger-style nested treemap with a zoomable camera.
@@ -35,7 +53,7 @@ public sealed class TreemapControl : FrameworkElement
 {
     public const double MaxZoom = 1_000_000;
 
-    private const double HeaderHeight = 17;
+    private const double ClassicHeaderHeight = 17;
     private const double MinHeaderWidth = 60;   // folders smaller than this get no title bar
     private const double MinHeaderHeight = 44;
     private const double MinChildSize = 4;       // smaller children are not drawn (the parent's color shows)
@@ -77,7 +95,17 @@ public sealed class TreemapControl : FrameworkElement
     private FsNode? _focus;
     private FsNode? _pinnedFocus;   // folder explicitly focused via FocusOn, until the user wheels/pans
     private FsNode? _hoveredNode;
-    private FsNode? _selectedNode;
+    private FsNode? _selectedNode;                       // anchor of the selection (last clicked)
+    private readonly HashSet<FsNode> _selection = new();
+    private HashSet<FsNode>? _filterMatches;             // null = no filter active
+    private readonly HashSet<FsNode> _matchedGroups = new(); // transient group boxes that contain a match (rebuilt each layout)
+    private readonly Dictionary<Brush, Brush> _dimmed = new();
+    private readonly Dictionary<(Brush, int), Brush> _tints = new();   // style-specific shades of palette brushes
+    private MapStyle _mapStyle = MapStyle.Classic;
+    private double _labelScale = 1.0;
+    private bool _labelHalo;
+    private static readonly Pen LightHaloPen = Frozen(new Pen(new SolidColorBrush(Color.FromArgb(0xB8, 0xFF, 0xFF, 0xFF)), 3) { LineJoin = PenLineJoin.Round });
+    private static readonly Pen DarkHaloPen = Frozen(new Pen(new SolidColorBrush(Color.FromArgb(0xB8, 0x00, 0x00, 0x00)), 3) { LineJoin = PenLineJoin.Round });
     private ColorMode _colorMode = ColorMode.ByDepth;
     private ColorScheme _scheme = Palette.Default;
     private SizeMeasure _measure = SizeMeasure.FileSize;
@@ -123,7 +151,13 @@ public sealed class TreemapControl : FrameworkElement
     /// <summary>Color shown behind and between the boxes (follows the light/dark theme).</summary>
     public static readonly DependencyProperty MapBackgroundProperty = DependencyProperty.Register(
         nameof(MapBackground), typeof(Brush), typeof(TreemapControl),
-        new PropertyMetadata(BackgroundBrush, (d, _) => ((TreemapControl)d).Invalidate()));
+        new PropertyMetadata(BackgroundBrush, (d, _) =>
+        {
+            var map = (TreemapControl)d;
+            map._dimmed.Clear();
+            map._tints.Clear();
+            map.Invalidate();
+        }));
 
     public Brush MapBackground
     {
@@ -158,17 +192,79 @@ public sealed class TreemapControl : FrameworkElement
     /// <summary>The folder the camera is on (shown in the breadcrumb).</summary>
     public FsNode? FocusedFolder => _focus;
 
+    /// <summary>The last clicked item. Setting it replaces the whole selection with that one item.</summary>
     public FsNode? SelectedNode
     {
         get => _selectedNode;
         set
         {
-            if (ReferenceEquals(_selectedNode, value)) return;
+            if (ReferenceEquals(_selectedNode, value) && _selection.Count <= 1) return;
+            _selection.Clear();
+            if (value is not null) _selection.Add(value);
             _selectedNode = value;
             DrawOverlay();
             SelectionChanged?.Invoke(this, value);
         }
     }
+
+    /// <summary>Every selected item (Ctrl+click and Shift+click add to it).</summary>
+    public IReadOnlyCollection<FsNode> SelectedNodes => _selection;
+
+    public void ToggleSelected(FsNode node)
+    {
+        if (!_selection.Remove(node)) _selection.Add(node);
+        _selectedNode = _selection.Contains(node) ? node : _selection.FirstOrDefault();
+        DrawOverlay();
+        SelectionChanged?.Invoke(this, _selectedNode);
+    }
+
+    /// <summary>Selects a range of siblings between the anchor and the node, like Shift+click in Explorer.</summary>
+    public void SelectRangeTo(FsNode node)
+    {
+        var anchor = _selectedNode;
+        if (anchor is null || !ReferenceEquals(anchor.Parent, node.Parent) || node.Parent is null)
+        {
+            ToggleSelected(node);
+            return;
+        }
+
+        var siblings = node.Parent.Children;
+        int a = siblings.IndexOf(anchor), b = siblings.IndexOf(node);
+        if (a < 0 || b < 0)
+        {
+            ToggleSelected(node);
+            return;
+        }
+
+        for (int i = Math.Min(a, b); i <= Math.Max(a, b); i++)
+            if (siblings[i].IsReal) _selection.Add(siblings[i]);
+        DrawOverlay();
+        SelectionChanged?.Invoke(this, _selectedNode);
+    }
+
+    /// <summary>Replaces the selection with the given items.</summary>
+    public void SelectMany(IEnumerable<FsNode> nodes)
+    {
+        _selection.Clear();
+        foreach (var n in nodes) if (n.IsReal) _selection.Add(n);
+        _selectedNode = _selection.FirstOrDefault();
+        DrawOverlay();
+        SelectionChanged?.Invoke(this, _selectedNode);
+    }
+
+    public void ClearSelection() => SelectedNode = null;
+
+    /// <summary>
+    /// Items that match the current filter (files and the folders containing them). Everything else is
+    /// drawn dimmed. Null turns the filter off.
+    /// </summary>
+    public void SetFilterMatches(HashSet<FsNode>? matches)
+    {
+        _filterMatches = matches;
+        Invalidate();
+    }
+
+    public bool HasFilter => _filterMatches is not null;
 
     /// <summary>The color palette used to fill boxes.</summary>
     public ColorScheme Scheme
@@ -178,6 +274,7 @@ public sealed class TreemapControl : FrameworkElement
         {
             if (ReferenceEquals(_scheme, value)) return;
             _scheme = value;
+            _tints.Clear();
             Invalidate();
         }
     }
@@ -206,6 +303,59 @@ public sealed class TreemapControl : FrameworkElement
             Invalidate();
         }
     }
+
+    /// <summary>Text size multiplier for all labels (1 = 11 px). Title bars grow with it.</summary>
+    public double LabelScale
+    {
+        get => _labelScale;
+        set
+        {
+            value = Math.Clamp(value, 0.8, 1.8);
+            if (Math.Abs(_labelScale - value) < 0.001) return;
+            _labelScale = value;
+            Invalidate();
+        }
+    }
+
+    /// <summary>Draw a contrasting outline around every label so text stays readable on any color.</summary>
+    public bool LabelHalo
+    {
+        get => _labelHalo;
+        set
+        {
+            if (_labelHalo == value) return;
+            _labelHalo = value;
+            Invalidate();
+        }
+    }
+
+    /// <summary>The visual treatment of the boxes.</summary>
+    public MapStyle MapStyle
+    {
+        get => _mapStyle;
+        set
+        {
+            if (_mapStyle == value) return;
+            _mapStyle = value;
+            Invalidate();
+        }
+    }
+
+    // Per-style geometry. Gap is taken off each box before drawing; inset is the space folders keep
+    // around their children; the header height is the room reserved for the folder title.
+    private double HeaderHeight => Math.Round((_mapStyle switch
+    {
+        MapStyle.Tiles => 16, MapStyle.Cards => 22, MapStyle.Bands => 18, MapStyle.Terraces => 16, MapStyle.Soft => 20, _ => ClassicHeaderHeight
+    }) * _labelScale);
+
+    private double InsetFor(Rect bounds) => _mapStyle switch
+    {
+        MapStyle.Tiles => 2, MapStyle.Cards => 4, MapStyle.Soft => 3, MapStyle.Bands or MapStyle.Terraces => 2,
+        _ => Math.Min(bounds.Width, bounds.Height) >= 40 ? 2 : 1
+    };
+
+    private double Gap => _mapStyle switch { MapStyle.Tiles => 3, MapStyle.Cards => 4, MapStyle.Soft => 5, _ => 0 };
+    private double Radius => _mapStyle switch { MapStyle.Tiles => 4, MapStyle.Cards => 6, MapStyle.Soft => 8, _ => 0 };
 
     /// <summary>Fly to folders instead of jumping (FocusOn with animate: true).</summary>
     public bool AnimateZoom { get; set; } = true;
@@ -531,6 +681,7 @@ public sealed class TreemapControl : FrameworkElement
         _rebuildPending = false;
         _items.Clear();
         _index.Clear();
+        _matchedGroups.Clear();
 
         double width = ActualWidth;
         double height = ActualHeight;
@@ -541,7 +692,7 @@ public sealed class TreemapControl : FrameworkElement
         {
             ClampOffset();
             var (w, h) = BaseSize();
-            LayoutNode(_root, new Rect(-_offset.X, -_offset.Y, w * _zoom, h * _zoom), 0);
+            LayoutNode(_root, new Rect(-_offset.X, -_offset.Y, w * _zoom, h * _zoom), 0, 0);
         }
 
         double pixelsPerDip = VisualTreeHelper.GetDpi(this).PixelsPerDip;
@@ -559,7 +710,7 @@ public sealed class TreemapControl : FrameworkElement
         UpdateFocus();
     }
 
-    private void LayoutNode(FsNode node, Rect bounds, int depth)
+    private void LayoutNode(FsNode node, Rect bounds, int depth, int branch)
     {
         if (!bounds.IntersectsWith(_viewport)) return;
 
@@ -573,8 +724,8 @@ public sealed class TreemapControl : FrameworkElement
             shown = only;
         }
 
-        bool hasHeader = shown.IsDirectory && bounds.Width >= MinHeaderWidth && bounds.Height >= MinHeaderHeight;
-        var item = new TreemapItem(shown, bounds, depth, hasHeader, chainTop);
+        bool hasHeader = shown.IsDirectory && bounds.Width >= MinHeaderWidth * _labelScale && bounds.Height >= MinHeaderHeight * _labelScale;
+        var item = new TreemapItem(shown, bounds, depth, hasHeader, chainTop, branch);
         _items.Add(item);
 
         // Every folder of the chain maps to the same box, so focus/selection/zoom still work for each.
@@ -588,7 +739,7 @@ public sealed class TreemapControl : FrameworkElement
 
         // Small boxes get thinner frames; tiny ones aren't subdivided at all, so narrow folders
         // don't turn into a pile of nested outlines.
-        double inset = Math.Min(bounds.Width, bounds.Height) >= 40 ? 2 : 1;
+        double inset = InsetFor(bounds);
         double top = hasHeader ? HeaderHeight : inset;
         double contentWidth = bounds.Width - 2 * inset;
         double contentHeight = bounds.Height - top - inset;
@@ -596,10 +747,14 @@ public sealed class TreemapControl : FrameworkElement
 
         var content = new Rect(bounds.X + inset, bounds.Y + top, contentWidth, contentHeight);
         var children = _groupSmall ? GroupSmallChildren(shown, content) : shown.Children;
+        int childIndex = 0;
         Squarify.Layout(children, content, _measure, (child, rect) =>
         {
+            // Children of the root define the branches; everything below inherits its branch.
+            int childBranch = depth == 0 ? childIndex : branch;
+            childIndex++;
             if (rect.Width >= MinChildSize && rect.Height >= MinChildSize)
-                LayoutNode(child, rect, depth + 1);
+                LayoutNode(child, rect, depth + 1, childBranch);
         });
     }
 
@@ -647,6 +802,17 @@ public sealed class TreemapControl : FrameworkElement
             Allocated = allocated,
             FileCount = files
         };
+        if (_filterMatches is not null)
+        {
+            for (int i = cutoff; i < children.Count; i++)
+            {
+                if (_filterMatches.Contains(children[i]))
+                {
+                    _matchedGroups.Add(group);
+                    break;
+                }
+            }
+        }
 
         var list = new List<FsNode>(cutoff + 1);
         for (int i = 0; i < cutoff; i++) list.Add(children[i]);
@@ -655,13 +821,17 @@ public sealed class TreemapControl : FrameworkElement
         return list;
     }
 
-    /// <summary>The folder's only non-empty child, if that child is a folder.</summary>
+    /// <summary>
+    /// The folder's dominant child, if it is a folder holding at least 97% of the size. Steam › steamapps › common
+    /// still merges when Steam has a few small files next to the big folder.
+    /// </summary>
     private FsNode? SingleSubfolder(FsNode node)
     {
         if (!node.IsDirectory || node.Children.Count == 0) return null;
         var first = node.Children[0]; // sorted by size, largest first
-        if (!first.IsDirectory || first.SizeFor(_measure) == 0) return null;
-        return node.Children.Count == 1 || node.Children[1].SizeFor(_measure) == 0 ? first : null;
+        long total = node.SizeFor(_measure);
+        if (!first.IsDirectory || total <= 0) return null;
+        return first.SizeFor(_measure) * 100 >= total * 97 ? first : null;
     }
 
     private void UpdateFocus()
@@ -694,55 +864,161 @@ public sealed class TreemapControl : FrameworkElement
 
     // =============================================================== drawing
 
+    private static readonly Pen LightPen = Frozen(new Pen(new SolidColorBrush(Color.FromArgb(0x8C, 0xFF, 0xFF, 0xFF)), 1));
+    private static readonly Pen DarkPen = Frozen(new Pen(new SolidColorBrush(Color.FromArgb(0x59, 0x00, 0x00, 0x00)), 1));
+    private static readonly Brush CardShadowNear = Frozen(new SolidColorBrush(Color.FromArgb(0x30, 0x00, 0x00, 0x00)));
+    private static readonly Brush CardShadowFar = Frozen(new SolidColorBrush(Color.FromArgb(0x16, 0x00, 0x00, 0x00)));
+    private static readonly Brush SoftSheen = Frozen(new LinearGradientBrush(
+        new GradientStopCollection
+        {
+            new(Color.FromArgb(0x2E, 0xFF, 0xFF, 0xFF), 0.0),
+            new(Color.FromArgb(0x1A, 0x00, 0x00, 0x00), 1.0)
+        }, new Point(0, 0), new Point(0, 1)));
+    private static readonly Typeface CaptionFace = new(new FontFamily("Segoe UI"), FontStyles.Normal, FontWeights.SemiBold, FontStretches.Normal);
+    private static readonly Typeface BoldFace = new(new FontFamily("Segoe UI"), FontStyles.Normal, FontWeights.Bold, FontStretches.Normal);
+
     private void DrawItem(DrawingContext dc, TreemapItem item, double pixelsPerDip)
     {
-        var full = item.Bounds;
-        var visible = Rect.Intersect(full, _drawClip);
-        if (visible.IsEmpty) return;
-
         var node = item.Node;
-        var fill = node.IsFreeSpace ? FreeSpaceBrush : _scheme.Fill(node, item.Depth, _colorMode);
-        var textBrush = _scheme.LabelFor(fill);
-        dc.DrawRectangle(fill, null, visible);
-        if (_cushion) dc.DrawRectangle(CushionBrush, null, visible);
-        if (node.IsGroup) dc.DrawRectangle(HeaderShade, null, visible); // a shade darker: "many things in here"
-        dc.DrawRectangle(null, BorderPen, visible);
+        double gap = Gap;
+        var full = item.Bounds;
+        if (gap > 0)
+        {
+            if (full.Width <= gap || full.Height <= gap) return;
+            full = new Rect(full.X + gap / 2, full.Y + gap / 2, full.Width - gap, full.Height - gap);
+        }
+        var box = Rect.Intersect(full, _drawClip);
+        if (box.IsEmpty) return;
 
+        // ---- fill
+        Brush fill;
+        if (node.IsFreeSpace) fill = FreeSpaceBrush;
+        else if (_mapStyle == MapStyle.Terraces && node.IsDirectory)
+            fill = Tint(_scheme.Fill(node, item.Branch, _colorMode), Colors.Black, Math.Min(0.6, item.Depth * 0.12), 10 + Math.Min(item.Depth, 9));
+        else if (_mapStyle == MapStyle.Terraces)
+            fill = Tint(_scheme.Fill(node, item.Branch, _colorMode), Colors.Black, Math.Min(0.45, item.Depth * 0.08), 20 + Math.Min(item.Depth, 9));
+        else fill = _scheme.Fill(node, item.Depth, _colorMode);
+
+        if (node.IsDirectory && !node.IsFreeSpace)
+        {
+            fill = _mapStyle switch
+            {
+                MapStyle.Cards => Tint(fill, MapBackground is SolidColorBrush bg ? bg.Color : Color.FromRgb(0x17, 0x17, 0x1C), 0.35, 1),
+                MapStyle.Bands => Tint(fill, Colors.White, 0.35, 2),
+                MapStyle.Soft => Tint(fill, Colors.White, 0.15, 3),
+                _ => fill
+            };
+        }
+        else if (_mapStyle == MapStyle.Soft && !node.IsFreeSpace)
+        {
+            fill = Tint(fill, Colors.White, 0.10, 4);
+        }
+
+        bool dimmed = _filterMatches is not null && !_filterMatches.Contains(node) && !_matchedGroups.Contains(node);
+        if (dimmed) fill = Dim(fill);
+        var textBrush = dimmed ? DimText : _scheme.LabelFor(fill);
+        double radius = Radius;
+
+        // ---- body
+        if (_mapStyle == MapStyle.Cards && node.IsDirectory && !dimmed)
+        {
+            // Two soft layers read as a blur without the cost of a real one.
+            dc.DrawRoundedRectangle(CardShadowFar, null, new Rect(box.X - 2, box.Y + 1, box.Width + 4, box.Height + 4), radius + 2, radius + 2);
+            dc.DrawRoundedRectangle(CardShadowNear, null, new Rect(box.X - 1, box.Y + 1, box.Width + 2, box.Height + 2), radius + 1, radius + 1);
+        }
+
+        if (radius > 0) dc.DrawRoundedRectangle(fill, null, box, radius, radius);
+        else dc.DrawRectangle(fill, null, box);
+
+        if (!dimmed)
+        {
+            if (_mapStyle == MapStyle.Classic && _cushion) dc.DrawRectangle(CushionBrush, null, box);
+            if (_mapStyle == MapStyle.Soft) dc.DrawRoundedRectangle(SoftSheen, null, box, radius, radius);
+        }
+        if (node.IsGroup)
+        {
+            if (radius > 0) dc.DrawRoundedRectangle(HeaderShade, null, box, radius, radius);
+            else dc.DrawRectangle(HeaderShade, null, box);
+        }
+
+        var pen = _mapStyle switch { MapStyle.Classic => BorderPen, MapStyle.Bands => LightPen, MapStyle.Terraces => DarkPen, _ => null };
+        if (pen is not null) dc.DrawRectangle(null, pen, box);
+
+        // ---- folder title
         if (node.IsDirectory)
         {
             if (!item.HasHeader) return;
-            var header = Rect.Intersect(new Rect(full.X, full.Y, full.Width, HeaderHeight), _drawClip);
+            double headerHeight = HeaderHeight;
+            var header = Rect.Intersect(new Rect(full.X, full.Y, full.Width, headerHeight), _drawClip);
             if (header.IsEmpty) return;
-            dc.DrawRectangle(HeaderShade, null, header);
-            DrawLabel(dc, HeaderText(item, header.Width - 8, pixelsPerDip), HeaderFace, textBrush,
-                Math.Max(header.X, 0) + 4, full.Y + 1, header.Width - 8, TextAlignment.Left, pixelsPerDip);
+            double x = Math.Max(header.X, 0);
+
+            switch (_mapStyle)
+            {
+                case MapStyle.Classic:
+                    dc.DrawRectangle(HeaderShade, null, header);
+                    DrawLabel(dc, HeaderText(item, header.Width - 8, pixelsPerDip, "  —  "), HeaderFace, textBrush, x + 4, full.Y + 1, header.Width - 8, TextAlignment.Left, pixelsPerDip);
+                    break;
+                case MapStyle.Bands:
+                {
+                    var band = dimmed ? fill : Tint(fill, Colors.Black, 0.35, 5);
+                    dc.DrawRectangle(band, null, header);
+                    DrawLabel(dc, HeaderText(item, header.Width - 8, pixelsPerDip, "  —  "), BoldFace, dimmed ? DimText : _scheme.LabelFor(band), x + 5, full.Y + 2, header.Width - 8, TextAlignment.Left, pixelsPerDip);
+                    break;
+                }
+                case MapStyle.Cards:
+                    DrawLabel(dc, HeaderText(item, header.Width - 18, pixelsPerDip, "  ·  "), BoldFace, textBrush, x + 9, full.Y + 4, header.Width - 18, TextAlignment.Left, pixelsPerDip);
+                    break;
+                case MapStyle.Soft:
+                    DrawLabel(dc, HeaderText(item, header.Width - 18, pixelsPerDip, "  ·  "), HeaderFace, textBrush, x + 9, full.Y + 4, header.Width - 18, TextAlignment.Left, pixelsPerDip);
+                    break;
+                default: // Tiles, Terraces: a small caption, no strip
+                    DrawLabel(dc, HeaderText(item, header.Width - 10, pixelsPerDip, "   ", upper: _mapStyle == MapStyle.Tiles), CaptionFace, textBrush, x + 6, full.Y + 2, header.Width - 10, TextAlignment.Left, pixelsPerDip, 10.5);
+                    break;
+            }
             return;
         }
 
-        if (visible.Width < 44 || visible.Height < 16) return;
-
-        double textWidth = visible.Width - 6;
-        if (visible.Height >= 34)
+        // ---- file label
+        double line = 15 * _labelScale;
+        if (box.Width < 44 * _labelScale || box.Height < line + 1) return;
+        double textWidth = box.Width - 6;
+        if (box.Height >= line * 2 + 4)
         {
-            double y = visible.Y + (visible.Height - 30) / 2;
-            DrawLabel(dc, node.Name, NormalFace, textBrush, visible.X + 3, y, textWidth, TextAlignment.Center, pixelsPerDip);
-            DrawLabel(dc, SizeFormatter.Format(node.SizeFor(_measure)), NormalFace, textBrush, visible.X + 3, y + 15, textWidth, TextAlignment.Center, pixelsPerDip);
+            double y = box.Y + (box.Height - line * 2) / 2;
+            DrawLabel(dc, node.Name, NormalFace, textBrush, box.X + 3, y, textWidth, TextAlignment.Center, pixelsPerDip);
+            DrawLabel(dc, SizeFormatter.Format(node.SizeFor(_measure)), NormalFace, textBrush, box.X + 3, y + line, textWidth, TextAlignment.Center, pixelsPerDip);
         }
         else
         {
-            DrawLabel(dc, node.Name, NormalFace, textBrush, visible.X + 3, visible.Y + (visible.Height - 15) / 2, textWidth, TextAlignment.Center, pixelsPerDip);
+            DrawLabel(dc, node.Name, NormalFace, textBrush, box.X + 3, box.Y + (box.Height - line) / 2, textWidth, TextAlignment.Center, pixelsPerDip);
         }
+    }
+
+    /// <summary>A cached blend of a palette brush toward a color; the key separates different blends of the same brush.</summary>
+    private Brush Tint(Brush fill, Color toward, double t, int key)
+    {
+        if (t <= 0) return fill;
+        if (_tints.TryGetValue((fill, key), out var tinted)) return tinted;
+        var c = fill is SolidColorBrush s ? s.Color : Colors.Gray;
+        tinted = Frozen(new SolidColorBrush(Color.FromRgb(
+            (byte)Math.Round(c.R + (toward.R - c.R) * t),
+            (byte)Math.Round(c.G + (toward.G - c.G) * t),
+            (byte)Math.Round(c.B + (toward.B - c.B) * t))));
+        _tints[(fill, key)] = tinted;
+        return tinted;
     }
 
     /// <summary>
     /// "Users › adria › AppData — 12 GB" for a collapsed chain. When that doesn't fit, leading folders
     /// are dropped ("… › AppData — 12 GB") so the deepest name, the one that matters, stays readable.
     /// </summary>
-    private string HeaderText(TreemapItem item, double maxWidth, double pixelsPerDip)
+    private string HeaderText(TreemapItem item, double maxWidth, double pixelsPerDip, string separator = "  —  ", bool upper = false)
     {
         var node = item.Node;
         string size = SizeFormatter.Format(node.SizeFor(_measure));
-        if (item.ChainTop is null) return $"{node.Name}  —  {size}";
+        string Case(string text) => upper ? text.ToUpperInvariant() : text;
+        if (item.ChainTop is null) return $"{Case(node.Name)}{separator}{size}";
 
         var names = new List<string>();
         for (var n = node; n is not null; n = n.Parent)
@@ -754,39 +1030,67 @@ public sealed class TreemapControl : FrameworkElement
 
         for (int skip = 0; skip < names.Count; skip++)
         {
-            string path = string.Join("  ›  ", names.Skip(skip));
-            string text = (skip > 0 ? "…  ›  " : "") + $"{path}  —  {size}";
+            string path = Case(string.Join("  ›  ", names.Skip(skip)));
+            string text = (skip > 0 ? "…  ›  " : "") + $"{path}{separator}{size}";
             if (skip == names.Count - 1 || MeasureWidth(text, pixelsPerDip) <= maxWidth) return text;
         }
 
-        return $"{node.Name}  —  {size}";
+        return $"{Case(node.Name)}{separator}{size}";
     }
 
-    private static double MeasureWidth(string text, double pixelsPerDip) =>
+    private double MeasureWidth(string text, double pixelsPerDip) =>
         new FormattedText(text, CultureInfo.CurrentUICulture, FlowDirection.LeftToRight,
-            HeaderFace, TextSize, TextBrush, pixelsPerDip).WidthIncludingTrailingWhitespace;
+            HeaderFace, TextSize * _labelScale, TextBrush, pixelsPerDip).WidthIncludingTrailingWhitespace;
 
-    private static void DrawLabel(DrawingContext dc, string text, Typeface face, Brush brush, double x, double y,
-        double maxWidth, TextAlignment alignment, double pixelsPerDip)
+    private void DrawLabel(DrawingContext dc, string text, Typeface face, Brush brush, double x, double y,
+        double maxWidth, TextAlignment alignment, double pixelsPerDip, double size = TextSize)
     {
         if (maxWidth < 8) return;
 
         var formatted = new FormattedText(text, CultureInfo.CurrentUICulture, FlowDirection.LeftToRight,
-            face, TextSize, brush, pixelsPerDip)
+            face, size * _labelScale, brush, pixelsPerDip)
         {
             MaxTextWidth = maxWidth,
             MaxLineCount = 1,
             Trimming = TextTrimming.CharacterEllipsis,
             TextAlignment = alignment
         };
-        dc.DrawText(formatted, new Point(x, y));
+        var origin = new Point(x, y);
+
+        if (_labelHalo)
+        {
+            // Outline in the opposite tone of the text, so it reads on any fill.
+            bool darkText = brush is SolidColorBrush b && (0.299 * b.Color.R + 0.587 * b.Color.G + 0.114 * b.Color.B) < 128;
+            dc.DrawGeometry(null, darkText ? LightHaloPen : DarkHaloPen, formatted.BuildGeometry(origin));
+        }
+        dc.DrawText(formatted, origin);
+    }
+
+    private static readonly Brush DimText = Frozen(new SolidColorBrush(Color.FromArgb(0x70, 0x80, 0x80, 0x88)));
+
+    /// <summary>A washed-out version of a fill, blended toward the map background, for non-matching items.</summary>
+    private Brush Dim(Brush fill)
+    {
+        if (_dimmed.TryGetValue(fill, out var dim)) return dim;
+
+        var c = fill is SolidColorBrush s ? s.Color : Colors.Gray;
+        var bg = MapBackground is SolidColorBrush b ? b.Color : Color.FromRgb(0x17, 0x17, 0x1C);
+        // Desaturate toward gray first, then blend 65% into the background.
+        byte gray = (byte)Math.Round(0.299 * c.R + 0.587 * c.G + 0.114 * c.B);
+        Color faded = Color.FromRgb(
+            (byte)Math.Round((gray * 0.6 + c.R * 0.4) * 0.35 + bg.R * 0.65),
+            (byte)Math.Round((gray * 0.6 + c.G * 0.4) * 0.35 + bg.G * 0.65),
+            (byte)Math.Round((gray * 0.6 + c.B * 0.4) * 0.35 + bg.B * 0.65));
+        dim = Frozen(new SolidColorBrush(faded));
+        _dimmed[fill] = dim;
+        return dim;
     }
 
     private void DrawOverlay()
     {
         using var dc = _overlayVisual.RenderOpen();
 
-        if (_hoveredNode is not null && !ReferenceEquals(_hoveredNode, _selectedNode) &&
+        if (_hoveredNode is not null && !_selection.Contains(_hoveredNode) &&
             _index.TryGetValue(_hoveredNode, out var hovered))
         {
             var r = Rect.Intersect(hovered.Bounds, _drawClip);
@@ -797,8 +1101,9 @@ public sealed class TreemapControl : FrameworkElement
             }
         }
 
-        if (_selectedNode is not null && _index.TryGetValue(_selectedNode, out var selected))
+        foreach (var node in _selection)
         {
+            if (!_index.TryGetValue(node, out var selected)) continue;
             var r = Rect.Intersect(selected.Bounds, _drawClip);
             if (!r.IsEmpty) dc.DrawRectangle(null, SelectionPen, r);
         }
@@ -870,7 +1175,12 @@ public sealed class TreemapControl : FrameworkElement
         var position = e.GetPosition(this);
         var node = NodeAt(position);
         if (node is not null)
-            SelectedNode = node;
+        {
+            var modifiers = Keyboard.Modifiers;
+            if (e.ClickCount == 1 && modifiers.HasFlag(ModifierKeys.Control)) ToggleSelected(node);
+            else if (e.ClickCount == 1 && modifiers.HasFlag(ModifierKeys.Shift)) SelectRangeTo(node);
+            else SelectedNode = node;
+        }
 
         if (e.ClickCount == 2)
         {
@@ -920,7 +1230,8 @@ public sealed class TreemapControl : FrameworkElement
         base.OnMouseRightButtonDown(e);
         Focus();
         var node = NodeAt(e.GetPosition(this));
-        if (node is not null)
+        // Right-clicking something outside the selection selects just that; inside keeps the selection.
+        if (node is not null && !_selection.Contains(node))
             SelectedNode = node;
     }
 

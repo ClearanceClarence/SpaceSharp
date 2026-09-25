@@ -44,6 +44,9 @@ public sealed class FsNode
     /// <summary>Number of files contained (recursive). 1 for a file.</summary>
     public int FileCount { get; internal set; }
 
+    /// <summary>Last write time (UTC). For folders, the newest file inside.</summary>
+    public DateTime LastWriteUtc { get; internal set; }
+
     /// <summary>True if the folder (or part of it) could not be read.</summary>
     public bool AccessDenied { get; internal set; }
 
@@ -80,16 +83,19 @@ public sealed class FsNode
     {
         long size = 0, allocated = 0;
         int files = 0;
+        var newest = DateTime.MinValue;
         foreach (var child in Children)
         {
             size += child.Size;
             allocated += child.Allocated;
             files += child.FileCount;
+            if (child.LastWriteUtc > newest) newest = child.LastWriteUtc;
         }
 
         Size = size;
         Allocated = allocated;
         FileCount = files;
+        LastWriteUtc = newest;
         Children.Sort(static (a, b) => b.Size.CompareTo(a.Size));
     }
 
@@ -182,6 +188,50 @@ public sealed class FsNode
     private static bool IsSameOrUnder(string path, string directory) =>
         path.Equals(directory, StringComparison.OrdinalIgnoreCase) ||
         path.StartsWith(directory.TrimEnd('\\') + "\\", StringComparison.OrdinalIgnoreCase);
+
+    /// <summary>All files in this subtree (or this node if it is a file).</summary>
+    public IEnumerable<FsNode> DescendantFiles()
+    {
+        if (!IsDirectory)
+        {
+            if (Kind == NodeKind.File) yield return this;
+            yield break;
+        }
+
+        var stack = new Stack<FsNode>();
+        stack.Push(this);
+        while (stack.Count > 0)
+        {
+            var node = stack.Pop();
+            foreach (var child in node.Children)
+            {
+                if (child.IsDirectory) stack.Push(child);
+                else if (child.Kind == NodeKind.File) yield return child;
+            }
+        }
+    }
+
+    /// <summary>All folders in this subtree, including this one.</summary>
+    public IEnumerable<FsNode> DescendantDirectories()
+    {
+        if (!IsDirectory) yield break;
+        var stack = new Stack<FsNode>();
+        stack.Push(this);
+        while (stack.Count > 0)
+        {
+            var node = stack.Pop();
+            yield return node;
+            foreach (var child in node.Children)
+                if (child.IsDirectory) stack.Push(child);
+        }
+    }
+
+    public bool IsAncestorOf(FsNode other)
+    {
+        for (var n = other.Parent; n is not null; n = n.Parent)
+            if (ReferenceEquals(n, this)) return true;
+        return false;
+    }
 
     public override string ToString() => FullPath;
 }

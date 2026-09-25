@@ -18,8 +18,14 @@ public partial class AboutWindow : Window
         ("Backspace / Mouse back", "Up one folder"),
         ("Home / Ctrl+0", "Show the whole map"),
         ("F5", "Rescan"),
-        ("Ctrl+C", "Copy the selected item's path"),
+        ("Ctrl+click", "Add to selection"),
+        ("Shift+click", "Select a range"),
+        ("Ctrl+F", "Filter the map"),
+        ("Ctrl+A", "Select every file matching the filter"),
+        ("L", "Largest files, folders and types panel"),
+        ("Ctrl+C", "Copy the selected paths"),
         ("Del", "Move the selected item to the Recycle Bin"),
+        ("S", "Next map style"),
         ("C", "Toggle cushion shading"),
         ("G", "Toggle grouping of small items"),
         ("Esc", "Cancel a scan"),
@@ -56,10 +62,19 @@ public partial class AboutWindow : Window
 
     private void BuildShortcuts()
     {
-        for (int row = 0; row < Shortcuts.Length; row++)
+        // Two columns of key / action pairs.
+        ShortcutGrid.ColumnDefinitions.Clear();
+        foreach (var width in new[] { GridLength.Auto, new GridLength(1, GridUnitType.Star), new GridLength(24), GridLength.Auto, new GridLength(1, GridUnitType.Star) })
+            ShortcutGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = width });
+
+        int rows = (Shortcuts.Length + 1) / 2;
+        for (int r = 0; r < rows; r++) ShortcutGrid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+
+        for (int i = 0; i < Shortcuts.Length; i++)
         {
-            var (keys, action) = Shortcuts[row];
-            ShortcutGrid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+            var (keys, action) = Shortcuts[i];
+            int row = i % rows;
+            int column = i < rows ? 0 : 3;
 
             var caps = new WrapPanel { VerticalAlignment = VerticalAlignment.Center };
             foreach (var key in keys.Split(" / "))
@@ -80,14 +95,16 @@ public partial class AboutWindow : Window
             var description = new TextBlock
             {
                 Text = action,
-                Margin = new Thickness(14, 0, 0, 0),
+                Margin = new Thickness(12, 0, 0, 0),
                 VerticalAlignment = VerticalAlignment.Center,
-                TextWrapping = TextWrapping.Wrap
+                TextWrapping = TextWrapping.Wrap,
+                FontSize = 12.5
             };
 
             Grid.SetRow(caps, row);
+            Grid.SetColumn(caps, column);
             Grid.SetRow(description, row);
-            Grid.SetColumn(description, 1);
+            Grid.SetColumn(description, column + 1);
             ShortcutGrid.Children.Add(caps);
             ShortcutGrid.Children.Add(description);
         }
@@ -132,6 +149,36 @@ public partial class AboutWindow : Window
                 UpdateButton.IsEnabled = true;
             }
         };
+    }
+
+    private const string Repository = "https://github.com/ClearanceClarence/SpaceSharp";
+
+    private void OpenGitHub_Click(object sender, RoutedEventArgs e) => OpenUrl(Repository);
+
+    private void SuggestFeature_Click(object sender, RoutedEventArgs e) =>
+        OpenUrl($"{Repository}/issues/new?template=feature_request.yml");
+
+    /// <summary>Opens the bug form with the version and system fields already filled in.</summary>
+    private void ReportBug_Click(object sender, RoutedEventArgs e)
+    {
+        string install = Updater.Instance.IsInstalled ? "Setup.exe (one-click)" : "Portable SpaceSharp.exe";
+        OpenUrl($"{Repository}/issues/new?template=bug_report.yml" +
+                $"&version={Uri.EscapeDataString(_version)}" +
+                $"&windows={Uri.EscapeDataString(SystemDescription())}" +
+                $"&install={Uri.EscapeDataString(install)}");
+    }
+
+    private void OpenUrl(string url)
+    {
+        try
+        {
+            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(url) { UseShellExecute = true });
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show(this, $"Couldn't open the browser.\n\n{url}\n\n{ex.Message}", "SpaceSharp",
+                MessageBoxButton.OK, MessageBoxImage.Warning);
+        }
     }
 
     private void Close_Click(object sender, RoutedEventArgs e) => Close();

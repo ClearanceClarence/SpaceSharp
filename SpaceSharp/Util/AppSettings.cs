@@ -19,6 +19,9 @@ internal sealed class AppSettings
     public bool SizeOnDisk { get; set; }
     public bool ShowFreeSpace { get; set; }
     public bool Cushion { get; set; } = true;
+    public string? MapStyle { get; set; }
+    public string? LabelSize { get; set; }      // Normal, Large, Larger
+    public bool LabelHalo { get; set; }
     public bool MergeChains { get; set; } = true;
     public bool GroupSmallItems { get; set; } = true;
     public bool AnimateZoom { get; set; } = true;
@@ -26,6 +29,8 @@ internal sealed class AppSettings
     public bool DetectHardLinks { get; set; }
     public bool ConfirmDelete { get; set; } = true;
     public bool CheckForUpdates { get; set; } = true;
+    public bool ShowSidePanel { get; set; } = true;
+    public bool ShowTooltips { get; set; } = true;
 
     public void ResetToDefaults()
     {
@@ -36,6 +41,9 @@ internal sealed class AppSettings
         SizeOnDisk = d.SizeOnDisk;
         ShowFreeSpace = d.ShowFreeSpace;
         Cushion = d.Cushion;
+        MapStyle = d.MapStyle;
+        LabelSize = d.LabelSize;
+        LabelHalo = d.LabelHalo;
         MergeChains = d.MergeChains;
         GroupSmallItems = d.GroupSmallItems;
         AnimateZoom = d.AnimateZoom;
@@ -43,6 +51,8 @@ internal sealed class AppSettings
         DetectHardLinks = d.DetectHardLinks;
         ConfirmDelete = d.ConfirmDelete;
         CheckForUpdates = d.CheckForUpdates;
+        ShowSidePanel = d.ShowSidePanel;
+        ShowTooltips = d.ShowTooltips;
     }
 
     private static AppSettings Load()

@@ -26,13 +26,22 @@ internal static class RecycleBin
     [DllImport("shell32.dll", CharSet = CharSet.Unicode)]
     private static extern int SHFileOperation(ref SHFILEOPSTRUCT lpFileOp);
 
-    public static bool TrySend(string path, IntPtr owner, out string? error)
+    public static bool TrySend(string path, IntPtr owner, out string? error) => TrySend(new[] { path }, owner, out error);
+
+    /// <summary>Sends several items in one shell operation (one progress dialog, one undo).</summary>
+    public static bool TrySend(IReadOnlyCollection<string> paths, IntPtr owner, out string? error)
     {
+        if (paths.Count == 0)
+        {
+            error = null;
+            return true;
+        }
+
         var op = new SHFILEOPSTRUCT
         {
             hwnd = owner,
             wFunc = FO_DELETE,
-            pFrom = path + "\0\0", // must be double-null terminated
+            pFrom = string.Join("\0", paths) + "\0\0", // list of paths, double-null terminated
             fFlags = (ushort)(FOF_ALLOWUNDO | FOF_NOCONFIRMATION | FOF_WANTNUKEWARNING)
         };
 
@@ -49,9 +58,12 @@ internal static class RecycleBin
             return false;
         }
 
-        if (File.Exists(path) || Directory.Exists(path))
+        var remaining = paths.Where(p => File.Exists(p) || Directory.Exists(p)).ToList();
+        if (remaining.Count > 0)
         {
-            error = "The item still exists after the delete operation.";
+            error = remaining.Count == 1
+                ? $"{remaining[0]} still exists after the delete operation."
+                : $"{remaining.Count} of {paths.Count} items still exist after the delete operation.";
             return false;
         }
 

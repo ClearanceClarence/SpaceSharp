@@ -2,7 +2,7 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="About SpaceSharp"
-        Width="560" SizeToContent="Height" ResizeMode="NoResize"
+        Width="720" SizeToContent="Height" ResizeMode="NoResize"
         WindowStartupLocation="CenterOwner" ShowInTaskbar="False"
         Icon="/Assets/SpaceSharp.ico"
         Background="{DynamicResource Bg}" Foreground="{DynamicResource Text}"
@@ -35,12 +35,7 @@
             </DockPanel>
 
             <TextBlock Text="Shortcuts" FontSize="15" FontWeight="SemiBold" Margin="0,26,0,8" />
-            <Grid x:Name="ShortcutGrid">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="*" />
-                </Grid.ColumnDefinitions>
-            </Grid>
+            <Grid x:Name="ShortcutGrid" />
 
             <TextBlock Text="System" FontSize="15" FontWeight="SemiBold" Margin="0,22,0,6" />
             <TextBlock x:Name="SystemText" Foreground="{DynamicResource TextDim}" TextWrapping="Wrap" />
@@ -50,6 +45,15 @@
                 Squarified treemap layout by Bruls, Huizing and van Wijk (2000). Inspired by SpaceMonger.
                 Interface icons from Segoe Fluent Icons.
             </TextBlock>
+
+            <TextBlock Text="Feedback" FontSize="15" FontWeight="SemiBold" Margin="0,22,0,6" />
+            <TextBlock Foreground="{DynamicResource TextDim}" TextWrapping="Wrap" LineHeight="20"
+                       Text="Found a problem or have an idea? Both go to the project's GitHub page. Bug reports open with the version and system fields already filled in." />
+            <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                <Button Style="{StaticResource ToolButton}" Tag="&#xEBE8;" Content="Report a bug" Click="ReportBug_Click" />
+                <Button Style="{StaticResource ToolButton}" Tag="&#xEA80;" Content="Suggest a feature" Margin="6,0,0,0" Click="SuggestFeature_Click" />
+                <Button Style="{StaticResource ToolButton}" Tag="&#xE774;" Content="GitHub" Margin="6,0,0,0" Click="OpenGitHub_Click" />
+            </StackPanel>
 
             <TextBlock x:Name="CopyrightText" Foreground="{DynamicResource TextDim}" Margin="0,22,0,0" />
         </StackPanel>

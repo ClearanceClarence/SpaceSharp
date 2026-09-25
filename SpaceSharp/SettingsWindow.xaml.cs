@@ -38,7 +38,15 @@ public partial class SettingsWindow : Window
         Row("Color by", "Color each nesting level differently, or color files by their type.",
             Combo(new[] { "Folder depth", "File type" }, _settings.ColorMode == nameof(ColorMode.ByFileType) ? 1 : 0,
                 i => _settings.ColorMode = (i == 1 ? ColorMode.ByFileType : ColorMode.ByDepth).ToString()));
-        Row("Cushion shading", "Soft light-to-dark shading on every box. Makes sizes easier to compare than flat colors. Shortcut: C.",
+        Row("Map style", "How boxes are drawn. Classic: title bars and borders. Tiles: flat, gapped, rounded. Cards: raised folders. Bands: deep title band. Terraces: one hue per top folder, darker with depth. Soft: rounded pastel blocks.",
+            Combo(Enum.GetNames<MapStyle>(), Math.Max(0, Array.IndexOf(Enum.GetNames<MapStyle>(), _settings.MapStyle ?? "Classic")),
+                i => _settings.MapStyle = Enum.GetNames<MapStyle>()[i]));
+        Row("Label size", "Bigger text on the map. Title bars grow to match.",
+            Combo(new[] { "Normal", "Large", "Larger" }, Array.IndexOf(new[] { "Normal", "Large", "Larger" }, _settings.LabelSize ?? "Normal"),
+                i => _settings.LabelSize = new[] { "Normal", "Large", "Larger" }[i]));
+        Row("Outlined labels", "A thin contrasting outline around every label, so text stays readable on any color. Recommended if you find the map hard to read.",
+            Switch(_settings.LabelHalo, v => _settings.LabelHalo = v));
+        Row("Cushion shading", "Soft light-to-dark shading on every box in the Classic style. Shortcut: C.",
             Switch(_settings.Cushion, v => _settings.Cushion = v));
 
         Section("Map");
@@ -50,6 +58,10 @@ public partial class SettingsWindow : Window
             Switch(_settings.MergeChains, v => _settings.MergeChains = v));
         Row("Group small items", "Folders with hundreds of small files show one \"312 files\" box instead of a grid of specks. Zooming in shows them individually. Shortcut: G.",
             Switch(_settings.GroupSmallItems, v => _settings.GroupSmallItems = v));
+        Row("Hover details", "Show a small card with size, size on disk, file count and last modified date next to the mouse.",
+            Switch(_settings.ShowTooltips, v => _settings.ShowTooltips = v));
+        Row("Show side panel", "The panel on the left with your drives and the largest files, folders and types. Shortcut: L.",
+            Switch(_settings.ShowSidePanel, v => _settings.ShowSidePanel = v));
         Row("Animate zoom", "Fly into folders instead of jumping to them.",
             Switch(_settings.AnimateZoom, v => _settings.AnimateZoom = v));
 

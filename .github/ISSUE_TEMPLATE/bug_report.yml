@@ -1,0 +1,95 @@
+name: Bug report
+description: Something doesn't work the way it should.
+title: "[Bug] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report this. The more of the fields below you can fill in, the faster it can be fixed.
+        Tip: the About window (F1) has a **Copy version info** button that fills in the version and system fields for you.
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: What did you do, and what went wrong?
+      placeholder: I scanned D:, then double-clicked the Games folder, and the map went blank.
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Scan drive D:
+        2. Double-click "Games"
+        3. Press Backspace
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect instead?
+
+  - type: input
+    id: version
+    attributes:
+      label: SpaceSharp version
+      description: Shown in the About window (F1).
+      placeholder: "1.2.0"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: install
+    attributes:
+      label: How did you install it?
+      options:
+        - MSI installer
+        - Setup.exe (one-click)
+        - Portable SpaceSharp.exe
+        - Built from source
+    validations:
+      required: true
+
+  - type: input
+    id: windows
+    attributes:
+      label: Windows version
+      description: From the About window's "Copy version info", or Settings → System → About in Windows.
+      placeholder: "Windows 11 24H2 (26100), x64"
+
+  - type: dropdown
+    id: scan-target
+    attributes:
+      label: What were you scanning?
+      options:
+        - A whole drive (C:, D:, …)
+        - A folder
+        - A network drive or share
+        - An external or removable drive
+        - Not scanning / doesn't apply
+
+  - type: textarea
+    id: settings
+    attributes:
+      label: Relevant settings
+      description: Map style, size measure, hard-link detection, theme, or anything else that might matter.
+      placeholder: Style Tiles, size on disk, dark theme
+
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Screenshots or error text
+      description: Paste images here, or the text from the "Unexpected error" dialog if one appeared.
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checks
+      options:
+        - label: I'm on the latest release (see the Releases page)
+        - label: I searched existing issues and didn't find this one
