@@ -86,6 +86,9 @@ The theme of 1.2.0 is finding things. Earlier versions showed you the map; this 
 | Ctrl+C | Copy the selected paths (now several) |
 | Del | Move the selected items to the Recycle Bin (now several) |
 
+### Icon
+- New app icon: a square drive unit with the map as its label and an activity light. A simplified variant is used at 16 to 24 px. The installer images use it too.
+
 ### Fixes
 - The drive list turned white while a scan was running. The list is no longer disabled during scans and has its own template, so the system's white disabled look can't appear.
 - The filter box placed the caret about 30 px too far right because the padding was applied twice.

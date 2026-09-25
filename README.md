@@ -10,13 +10,15 @@
 </p>
 
 <p align="center">
+  <a href="https://github.com/ClearanceClarence/SpaceSharp/releases/latest"><img src="https://img.shields.io/github/v/release/ClearanceClarence/SpaceSharp?label=version&color=F5B82E" alt="Latest version"></a>
+  <a href="CHANGELOG.md"><img src="https://img.shields.io/badge/changelog-read-6FC2B0" alt="Changelog"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-F5B82E" alt="MIT License"></a>
-  <img src="https://img.shields.io/badge/version-1.2.0-5C9E6F" alt="Version 1.2.0">
   <img src="https://img.shields.io/badge/platform-Windows%2010%20%7C%2011-74A6CC" alt="Windows 10 and 11">
   <img src="https://img.shields.io/badge/.NET-10-8C84D6" alt=".NET 10">
 </p>
 
 <p align="center">
+  <a href="https://clearanceclarence.github.io/SpaceSharp/"><img src="https://img.shields.io/badge/website-clearanceclarence.github.io%2FSpaceSharp-74A6CC?style=for-the-badge" alt="Website"></a>
   <a href="https://github.com/ClearanceClarence/SpaceSharp/releases/latest/download/SpaceSharp.exe"><img src="https://img.shields.io/badge/Download-SpaceSharp.exe-F5B82E?style=for-the-badge" alt="Download SpaceSharp.exe"></a>
 </p>
 
@@ -340,6 +342,7 @@ SpaceSharp/
 │   ├── SpaceSharp-small.svg      simplified icon for 16–24 px
 │   ├── SpaceSharp.ico            icon with all Windows sizes (16–256 px)
 │   └── SpaceSharp-256.png        icon used in the app UI
+docs/                             landing page (GitHub Pages), screenshots, icon
 ├── Properties/PublishProfiles/   Portable, Small and Velopack publish profiles
 ├── app.manifest                  DPI and long-path awareness
 └── SpaceSharp.csproj
@@ -401,6 +404,8 @@ Delete the file to go back to the defaults.
 - **Found a bug?** [Report it](https://github.com/ClearanceClarence/SpaceSharp/issues/new?template=bug_report.yml). The About window (F1) has a **Report a bug** button that opens the same form with your version and Windows details already filled in.
 - **Have an idea?** [Suggest a feature](https://github.com/ClearanceClarence/SpaceSharp/issues/new?template=feature_request.yml).
 - Anything else: open a [blank issue](https://github.com/ClearanceClarence/SpaceSharp/issues/new).
+- Want to help with code, palettes or translations? See [CONTRIBUTING.md](CONTRIBUTING.md).
+- What changed in each release is in [CHANGELOG.md](CHANGELOG.md).
 
 ## Credits
 
@@ -414,7 +419,3 @@ Delete the file to go back to the defaults.
 SpaceSharp is released under the [MIT License](LICENSE). You're free to use, modify and share it, including in commercial projects, as long as the copyright notice is kept.
 
 Made by ClearanceClarence.
-
-## Changelog
-
-All changes can be found documented in the [Changelog.md](changelog.md).

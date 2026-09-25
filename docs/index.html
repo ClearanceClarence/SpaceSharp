@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>SpaceSharp: see where your disk space went</title>
+<meta name="description" content="SpaceSharp is a free, open-source disk space analyzer for Windows. A zoomable treemap of your drive, inspired by SpaceMonger. Find what's eating your space and clean it up from the map.">
+<meta property="og:title" content="SpaceSharp: see where your disk space went">
+<meta property="og:description" content="A free, zoomable treemap disk space analyzer for Windows, inspired by SpaceMonger.">
+<meta property="og:image" content="https://clearanceclarence.github.io/SpaceSharp/social-preview.png">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+
+<!-- Google Analytics (GA4). Replace G-XXXXXXXXXX with your Measurement ID from analytics.google.com. -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){ dataLayer.push(arguments); }
+  gtag('js', new Date());
+  gtag('config', 'G-XXXXXXXXXX', { anonymize_ip: true });
+</script>
+
+<style>
+  :root {
+    box-sizing: border-box; padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px);
+    --bg: #0f0f13; --bg2: #16161c; --card: #1c1c23; --line: #2a2a34; --ink: #ececf1; --muted: #9c9cac; --amber: #F5B82E; --amber-ink: #1c1500;
+    --blue: #74A6CC; --teal: #6FC2B0; --pink: #C97DB2; --violet: #8C84D6;
+  }
+  @media (prefers-color-scheme: light) { :root:not([data-theme="dark"]) { --bg: #f4f3f0; --bg2: #eceae5; --card: #ffffff; --line: #dcd9d2; --ink: #1c1c22; --muted: #63636f; --amber: #d99a12; } }
+  :root[data-theme="light"] { --bg: #f4f3f0; --bg2: #eceae5; --card: #ffffff; --line: #dcd9d2; --ink: #1c1c22; --muted: #63636f; --amber: #d99a12; }
+  html { scroll-behavior: smooth; scroll-padding-top: calc(72px + env(safe-area-inset-top, 0px)); }
+  *, *::before, *::after { box-sizing: inherit; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.6 "Inter", "Segoe UI", system-ui, sans-serif; overflow-x: hidden; }
+  a { color: inherit; }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 0 24px; }
+  h1, h2, h3 { font-family: "Bricolage Grotesque", "Segoe UI", sans-serif; letter-spacing: -.02em; line-height: 1.05; margin: 0; }
+  h2 { font-size: clamp(30px, 4vw, 44px); font-weight: 700; }
+  .eyebrow { color: var(--amber); font-weight: 600; font-size: 13px; letter-spacing: .12em; text-transform: uppercase; margin-bottom: 14px; }
+  .lead { color: var(--muted); font-size: 18px; max-width: 58ch; }
+
+  /* nav */
+  nav { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 10; backdrop-filter: blur(14px); background: color-mix(in srgb, var(--bg) 78%, transparent); border-bottom: 1px solid var(--line); }
+  nav .wrap { height: 64px; display: flex; align-items: center; gap: 28px; }
+  .brand { display: flex; align-items: center; gap: 10px; font-family: "Bricolage Grotesque", sans-serif; font-weight: 700; font-size: 19px; text-decoration: none; } .brand svg { width: 28px; height: 28px; }
+  nav .links { display: flex; gap: 22px; margin-left: auto; font-size: 14px; font-weight: 500; } nav .links a { text-decoration: none; color: var(--muted); } nav .links a:hover { color: var(--ink); }
+  .btn { display: inline-flex; align-items: center; gap: 9px; height: 44px; padding: 0 20px; border-radius: 10px; font-weight: 600; font-size: 15px; text-decoration: none; border: 1px solid var(--line); background: var(--card); color: var(--ink); transition: transform .15s, background .15s; }
+  .btn:hover { transform: translateY(-1px); }
+  .btn.primary { background: var(--amber); color: var(--amber-ink); border-color: transparent; }
+  .btn.small { height: 36px; padding: 0 14px; font-size: 14px; }
+  .btn svg { width: 18px; height: 18px; }
+
+  /* hero */
+  .hero { position: relative; padding: 72px 0 40px; overflow: hidden; }
+  .hero::before { content: ""; position: absolute; inset: -40% -20% auto; height: 120%; background: radial-gradient(60% 50% at 30% 30%, color-mix(in srgb, var(--amber) 16%, transparent), transparent 70%), radial-gradient(40% 40% at 80% 20%, color-mix(in srgb, var(--blue) 14%, transparent), transparent 70%); pointer-events: none; }
+  .hero .wrap { position: relative; display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 48px; align-items: center; }
+  h1 { font-size: clamp(44px, 6vw, 76px); font-weight: 800; }
+  h1 em { font-style: normal; color: var(--amber); }
+  .hero .lead { margin: 22px 0 30px; }
+  .cta { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+  .meta { display: flex; flex-wrap: wrap; gap: 8px 18px; margin-top: 18px; color: var(--muted); font-size: 13px; }
+  .meta span::before { content: "✓"; color: var(--teal); margin-right: 6px; font-weight: 700; }
+  .winget { display: inline-flex; align-items: center; gap: 12px; margin-top: 22px; padding: 10px 14px; border-radius: 10px; background: var(--card); border: 1px solid var(--line); font: 13.5px/1 Consolas, "Cascadia Code", monospace; color: var(--muted); cursor: pointer; }
+  .winget b { color: var(--ink); font-weight: 500; } .winget:hover { border-color: var(--amber); }
+  .demo { position: relative; aspect-ratio: 16 / 10.4; border-radius: 16px; overflow: hidden; border: 1px solid var(--line); background: var(--bg2); box-shadow: 0 40px 80px -30px rgba(0,0,0,.6); }
+  .demo canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  .demo .chrome { position: absolute; left: 0; right: 0; top: 0; height: 34px; background: color-mix(in srgb, var(--card) 92%, transparent); border-bottom: 1px solid var(--line); display: flex; align-items: center; gap: 8px; padding: 0 12px; font-size: 12px; color: var(--muted); }
+  .demo .chrome b { color: var(--ink); font-weight: 600; } .demo .chrome svg { width: 14px; height: 14px; }
+  .demo .crumb { position: absolute; left: 12px; bottom: 12px; padding: 6px 10px; border-radius: 8px; background: rgba(20,20,26,.78); color: #f2f2f6; font-size: 12px; backdrop-filter: blur(6px); max-width: 80%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .demo .tag { position: absolute; right: 12px; bottom: 12px; padding: 4px 9px; border-radius: 999px; background: rgba(20,20,26,.7); color: #d0d0d8; font-size: 11px; }
+
+  /* sections */
+  section { padding: 84px 0; }
+  section.alt { background: var(--bg2); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+  .grid { display: grid; gap: 18px; margin-top: 40px; }
+  .grid.three { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 24px; }
+  .card .icon { width: 42px; height: 42px; border-radius: 10px; display: grid; place-items: center; margin-bottom: 16px; background: color-mix(in srgb, var(--amber) 14%, transparent); color: var(--amber); } .card .icon svg { width: 22px; height: 22px; }
+  .card h3 { font-size: 20px; margin-bottom: 8px; } .card p { margin: 0; color: var(--muted); font-size: 15px; }
+  .card.c2 .icon { background: color-mix(in srgb, var(--blue) 16%, transparent); color: var(--blue); }
+  .card.c3 .icon { background: color-mix(in srgb, var(--teal) 16%, transparent); color: var(--teal); }
+  .card.c4 .icon { background: color-mix(in srgb, var(--pink) 16%, transparent); color: var(--pink); }
+  .card.c5 .icon { background: color-mix(in srgb, var(--violet) 16%, transparent); color: var(--violet); }
+
+  .filter-demo { margin-top: 32px; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 18px; align-items: stretch; }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+  .chip { padding: 8px 12px; border-radius: 8px; border: 1px solid var(--line); background: var(--card); font: 13.5px Consolas, "Cascadia Code", monospace; cursor: pointer; }
+  .chip.on, .chip:hover { border-color: var(--amber); }
+  .filter-demo .demo { aspect-ratio: 16 / 11; }
+  .filter-demo .demo .crumb { left: 12px; right: auto; }
+
+  .styles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin-top: 36px; }
+  .style { background: var(--card); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; min-width: 0; }
+  .style canvas { width: 100%; max-width: 100%; display: block; }
+  @media (max-width: 900px) { .styles { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  @media (max-width: 560px) { .styles { grid-template-columns: 1fr; } } .style div { padding: 12px 16px 14px; display: flex; justify-content: space-between; gap: 12px; font-size: 14px; } .style div span { color: var(--muted); }
+
+  table { width: 100%; border-collapse: collapse; margin-top: 30px; font-size: 15px; }
+  th, td { text-align: left; padding: 12px 14px; border-bottom: 1px solid var(--line); vertical-align: top; } th { color: var(--muted); font-weight: 600; font-size: 13px; letter-spacing: .04em; text-transform: uppercase; }
+  kbd { font: 12.5px Consolas, "Cascadia Code", monospace; padding: 2px 7px; border-radius: 5px; border: 1px solid var(--line); border-bottom-width: 2px; background: var(--bg2); }
+  .cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 0 48px; }
+
+  details { border-bottom: 1px solid var(--line); padding: 4px 0; } summary { cursor: pointer; font-weight: 600; padding: 14px 0; list-style: none; display: flex; justify-content: space-between; gap: 16px; } summary::after { content: "+"; color: var(--muted); font-size: 22px; line-height: 1; } details[open] summary::after { content: "−"; }
+  details p { margin: 0 0 16px; color: var(--muted); }
+
+  .download-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; margin-top: 32px; }
+  .dl { text-decoration: none; display: flex; flex-direction: column; gap: 8px; } .dl h3 { font-size: 18px; } .dl .file { font: 13px Consolas, monospace; color: var(--amber); } .dl p { flex: 1; } .dl .go { color: var(--ink); font-weight: 600; font-size: 14px; }
+  .dl:hover { border-color: var(--amber); }
+
+  footer { padding: 40px 0 60px; color: var(--muted); font-size: 14px; border-top: 1px solid var(--line); } footer .wrap { display: flex; flex-wrap: wrap; gap: 12px 28px; align-items: center; } footer a { color: var(--muted); } footer .brand { color: var(--ink); font-size: 16px; }
+
+  .toast { position: fixed; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); background: var(--ink); color: var(--bg); padding: 10px 16px; border-radius: 8px; font-size: 14px; opacity: 0; pointer-events: none; transition: opacity .2s; } .toast.show { opacity: 1; }
+  .reveal { opacity: 0; transform: translateY(14px); transition: opacity .6s ease, transform .6s ease; } .reveal.in { opacity: 1; transform: none; }
+
+  @media (max-width: 900px) { .hero .wrap { grid-template-columns: 1fr; } .filter-demo { grid-template-columns: 1fr; } nav .links { display: none; } }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } .reveal { transition: none; opacity: 1; transform: none; } .btn { transition: none; } }
+</style>
+</head>
+<body>
+
+<nav><div class="wrap">
+  <a class="brand" href="#top"><svg viewBox="0 0 256 256"><rect width="256" height="256" rx="60" fill="#1E1E24"/><rect x="22" y="22" width="212" height="212" rx="32" fill="#2A2A33"/><rect x="44" y="44" width="168" height="124" rx="18" fill="#1E1E24"/><rect x="56" y="56" width="75.64" height="100" rx="7" fill="#F5B82E"/><rect x="141.64" y="56" width="58.36" height="50" rx="6" fill="#74A6CC"/><rect x="141.64" y="116" width="24.18" height="40" rx="5" fill="#6FC2B0"/><rect x="175.82" y="116" width="24.18" height="40" rx="5" fill="#C97DB2"/><rect x="44" y="190" width="84" height="14" rx="7" fill="#44444F"/><circle cx="190" cy="197" r="15" fill="#F5B82E"/></svg>SpaceSharp</a>
+  <div class="links"><a href="#features">Features</a><a href="#filter">Filter</a><a href="#styles">Styles</a><a href="#shortcuts">Shortcuts</a><a href="#faq">FAQ</a><a href="https://github.com/ClearanceClarence/SpaceSharp" target="_blank" rel="noopener">GitHub</a></div>
+  <a class="btn primary small" href="#download" data-track="nav_download">Download</a>
+</div></nav>
+
+<header class="hero" id="top"><div class="wrap">
+  <div>
+    <div class="eyebrow">Free · open source · Windows 10 and 11</div>
+    <h1>See where your <em>disk space</em> went.</h1>
+    <p class="lead">SpaceSharp draws your whole drive as one map. Every file and folder is a box sized by the space it takes, so the big ones are obvious at a glance. Fly into folders, filter in plain language, and clean up right from the map.</p>
+    <div class="cta">
+      <a class="btn primary" href="https://github.com/ClearanceClarence/SpaceSharp/releases/latest/download/SpaceSharp-win-x64.msi" data-track="download" data-file="msi"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v8M4.5 6.5L8 10l3.5-3.5M2.5 12.5h11"/></svg>Download for Windows</a>
+      <a class="btn" href="#download">Other downloads</a>
+      <a class="btn" href="https://github.com/ClearanceClarence/SpaceSharp" target="_blank" rel="noopener" data-track="github"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 .2a8 8 0 0 0-2.5 15.6c.4 0 .5-.2.5-.4v-1.5c-2.2.5-2.7-1-2.7-1-.4-.9-.9-1.2-.9-1.2-.7-.5.1-.5.1-.5.8.1 1.2.8 1.2.8.7 1.2 1.9.9 2.3.7.1-.5.3-.9.5-1.1-1.8-.2-3.6-.9-3.6-4 0-.9.3-1.6.8-2.1-.1-.2-.4-1 .1-2.1 0 0 .7-.2 2.2.8a7.6 7.6 0 0 1 4 0c1.5-1 2.2-.8 2.2-.8.4 1.1.2 1.9.1 2.1.5.6.8 1.3.8 2.1 0 3.1-1.9 3.8-3.6 4 .3.3.5.8.5 1.5v2.2c0 .2.1.5.6.4A8 8 0 0 0 8 .2z"/></svg>Star on GitHub</a>
+    </div>
+    <div class="meta"><span>No install needed</span><span>Updates itself</span><span>MIT license</span><span>No telemetry</span></div>
+    <div class="winget" id="winget" title="Copy" data-track="winget_copy"><span>&gt;</span><b>winget install ClearanceClarence.SpaceSharp</b><span>copy</span></div>
+  </div>
+  <div class="demo" id="heroDemo">
+    <div class="chrome"><svg style="width:14px;height:14px" viewBox="0 0 256 256"><rect width="256" height="256" rx="60" fill="#1E1E24"/><rect x="22" y="22" width="212" height="212" rx="32" fill="#2A2A33"/><rect x="44" y="44" width="168" height="124" rx="18" fill="#1E1E24"/><rect x="56" y="56" width="75.64" height="100" rx="7" fill="#F5B82E"/><rect x="141.64" y="56" width="58.36" height="50" rx="6" fill="#74A6CC"/><rect x="141.64" y="116" width="24.18" height="40" rx="5" fill="#6FC2B0"/><rect x="175.82" y="116" width="24.18" height="40" rx="5" fill="#C97DB2"/><rect x="44" y="190" width="84" height="14" rx="7" fill="#44444F"/><circle cx="190" cy="197" r="15" fill="#F5B82E"/></svg><b>SpaceSharp</b><span>·</span><span id="heroTitle">C:\</span></div>
+    <canvas id="heroCanvas"></canvas>
+    <div class="crumb" id="heroCrumb">C:\</div>
+    <div class="tag">live demo with sample data</div>
+  </div>
+</div></header>
+
+<section id="features"><div class="wrap">
+  <div class="eyebrow">Why people switch</div>
+  <h2>A map you can move through, not a list you scroll.</h2>
+  <div class="grid three">
+    <div class="card reveal"><div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="10" height="18" rx="2"/><rect x="15" y="3" width="6" height="8" rx="2"/><rect x="15" y="13" width="6" height="8" rx="2"/></svg></div><h3>Everything, sized to scale</h3><p>The whole drive on one screen. A 16 GB page file and a forgotten 5 GB ISO stand out before you read a single name.</p></div>
+    <div class="card c2 reveal"><div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="M16 16l5 5M8 11h6M11 8v6"/></svg></div><h3>Zoom that goes all the way</h3><p>Double-click a folder and the view flies in. The map is laid out again at every level, so tiny files get real pixels and sharp labels, up to a million times.</p></div>
+    <div class="card c3 reveal"><div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 5h18l-7 8v6l-4-2v-4z"/></svg></div><h3>Filter in plain language</h3><p>Type <i>videos over 500MB older than 2 years</i>. Everything else dims, the layout stays put, and one key selects every match.</p></div>
+    <div class="card c4 reveal"><div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7h16M6 7l1 13h10l1-13M9 7V4h6v3M10 11v6M14 11v6"/></svg></div><h3>Clean up from the map</h3><p>Open, show in Explorer, or send to the Recycle Bin. Select many, delete once, and the map updates without a rescan. Nothing is deleted for good.</p></div>
+    <div class="card c5 reveal"><div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M3 10h18M9 4v16"/></svg></div><h3>Honest numbers</h3><p>File size or size on disk. Hard links counted once. Free space shown as a block. Protected folders flagged, with one click to restart as administrator.</p></div>
+    <div class="card reveal"><div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 1 0 18M7 12h10"/></svg></div><h3>Made to be looked at</h3><p>Six map styles, eight palettes including a color-blind safe one, light and dark themes, and labels that stay readable on any color.</p></div>
+  </div>
+</div></section>
+
+<section class="alt" id="filter"><div class="wrap">
+  <div class="eyebrow">Find it</div>
+  <h2>Ask the map a question.</h2>
+  <p class="lead">Try one of the filters below. Matching files stay bright; everything else fades so you can see exactly where they sit.</p>
+  <div class="filter-demo">
+    <div>
+      <div class="chips" id="chips"></div>
+      <p class="lead" style="margin-top:20px;font-size:15px" id="filterInfo"></p>
+      <p style="color:var(--muted);font-size:15px;margin:18px 0 0">Prefer clicking? A panel with quick filters, type chips and size and age drop-downs writes the text for you. Then <kbd>Ctrl+A</kbd> selects every match and <kbd>Del</kbd> recycles them, all at once.</p>
+    </div>
+    <div class="demo"><canvas id="filterCanvas"></canvas><div class="crumb" id="filterCrumb">C:\ · no filter</div></div>
+  </div>
+</div></section>
+
+<section id="styles"><div class="wrap">
+  <div class="eyebrow">Your map, your look</div>
+  <h2>Six styles. Press <kbd>S</kbd> to cycle.</h2>
+  <div class="styles" id="styleGrid"></div>
+</div></section>
+
+<section class="alt" id="shortcuts"><div class="wrap">
+  <div class="eyebrow">Fast hands</div>
+  <h2>Everything has a key.</h2>
+  <div class="cols">
+    <table><tr><th>Key</th><th>Action</th></tr>
+      <tr><td><kbd>Double-click</kbd> / <kbd>Enter</kbd></td><td>Zoom the map to a folder</td></tr>
+      <tr><td><kbd>Wheel</kbd> · <kbd>+</kbd> <kbd>−</kbd></td><td>Zoom in or out</td></tr>
+      <tr><td><kbd>Drag</kbd></td><td>Pan while zoomed</td></tr>
+      <tr><td><kbd>Backspace</kbd></td><td>Up one folder</td></tr>
+      <tr><td><kbd>Home</kbd> / <kbd>Ctrl+0</kbd></td><td>Show the whole map</td></tr>
+      <tr><td><kbd>Ctrl+F</kbd></td><td>Filter</td></tr>
+      <tr><td><kbd>Ctrl+A</kbd></td><td>Select every match</td></tr>
+    </table>
+    <table><tr><th>Key</th><th>Action</th></tr>
+      <tr><td><kbd>Ctrl+click</kbd> / <kbd>Shift+click</kbd></td><td>Select several items</td></tr>
+      <tr><td><kbd>Del</kbd></td><td>Move selection to the Recycle Bin</td></tr>
+      <tr><td><kbd>L</kbd></td><td>Drives and largest items panel</td></tr>
+      <tr><td><kbd>S</kbd></td><td>Next map style</td></tr>
+      <tr><td><kbd>G</kbd></td><td>Group small items</td></tr>
+      <tr><td><kbd>F5</kbd></td><td>Rescan</td></tr>
+      <tr><td><kbd>Ctrl+,</kbd></td><td>Settings</td></tr>
+    </table>
+  </div>
+</div></section>
+
+<section id="download"><div class="wrap">
+  <div class="eyebrow">Get it</div>
+  <h2>Pick your flavor.</h2>
+  <p class="lead">All three are the same app. 64-bit Windows 10 or 11; Windows on ARM works through x64 emulation.</p>
+  <div class="download-grid">
+    <a class="card dl reveal" href="https://github.com/ClearanceClarence/SpaceSharp/releases/latest/download/SpaceSharp-win-x64.msi" data-track="download" data-file="msi"><h3>Installer</h3><span class="file">SpaceSharp-win-x64.msi</span><p>A standard Windows installer. Choose just for you or for everyone on the PC. Updates itself when a new version is out.</p><span class="go">Download MSI →</span></a>
+    <a class="card dl reveal" href="https://github.com/ClearanceClarence/SpaceSharp/releases/latest/download/SpaceSharp-win-Setup.exe" data-track="download" data-file="setup"><h3>One-click setup</h3><span class="file">SpaceSharp-win-Setup.exe</span><p>Installs to your user profile with no questions and no admin rights. Also updates itself.</p><span class="go">Download Setup →</span></a>
+    <a class="card dl reveal" href="https://github.com/ClearanceClarence/SpaceSharp/releases/latest/download/SpaceSharp-win-Portable.zip" data-track="download" data-file="portable"><h3>Portable</h3><span class="file">SpaceSharp-win-Portable.zip</span><p>Unzip anywhere and run. Nothing is installed. Good for USB sticks and other people's PCs.</p><span class="go">Download ZIP →</span></a>
+  </div>
+  <p style="color:var(--muted);font-size:14px;margin-top:22px">Or from a terminal: <code>winget install ClearanceClarence.SpaceSharp</code> · <a href="https://github.com/ClearanceClarence/SpaceSharp/releases" target="_blank" rel="noopener">All releases and changelog</a></p>
+</div></section>
+
+<section class="alt" id="faq"><div class="wrap">
+  <div class="eyebrow">Questions</div>
+  <h2>Things people ask.</h2>
+  <div style="margin-top:28px;max-width:820px">
+    <details><summary>Windows says "Windows protected your PC". Is it safe?</summary><p>Yes. The warning appears because the download isn't code-signed, which costs a few hundred dollars a year. Click <b>More info</b>, then <b>Run anyway</b>. The full source is on GitHub, so you can see exactly what it does.</p></details>
+    <details><summary>Does it send anything anywhere?</summary><p>No telemetry, no accounts. Installed copies check GitHub for new releases on startup, which you can turn off in Settings. The portable version makes no network requests at all.</p></details>
+    <details><summary>Will it delete anything by itself?</summary><p>Never. It only deletes what you select and confirm, and only to the Recycle Bin, so everything can be restored.</p></details>
+    <details><summary>Why does Windows look bigger than it should?</summary><p>Windows stores thousands of files under several names (hard links). Turn on <b>Count hard links once</b> in Settings for exact numbers; it makes the scan a bit slower.</p></details>
+    <details><summary>How is this different from WizTree or WinDirStat?</summary><p>SpaceSharp is about the map: zooming, styles, filtering and cleaning up in place. WizTree is faster on very large drives because it reads the NTFS index directly. WinDirStat is the classic and hasn't changed much. Use whichever fits; they all read the same disk.</p></details>
+    <details><summary>Is SpaceMonger involved?</summary><p>No. SpaceSharp is an independent open-source project inspired by the original SpaceMonger's approach of drawing a drive as one map.</p></details>
+  </div>
+</div></section>
+
+<footer><div class="wrap">
+  <a class="brand" href="#top"><svg viewBox="0 0 256 256"><rect width="256" height="256" rx="60" fill="#1E1E24"/><rect x="22" y="22" width="212" height="212" rx="32" fill="#2A2A33"/><rect x="44" y="44" width="168" height="124" rx="18" fill="#1E1E24"/><rect x="56" y="56" width="75.64" height="100" rx="7" fill="#F5B82E"/><rect x="141.64" y="56" width="58.36" height="50" rx="6" fill="#74A6CC"/><rect x="141.64" y="116" width="24.18" height="40" rx="5" fill="#6FC2B0"/><rect x="175.82" y="116" width="24.18" height="40" rx="5" fill="#C97DB2"/><rect x="44" y="190" width="84" height="14" rx="7" fill="#44444F"/><circle cx="190" cy="197" r="15" fill="#F5B82E"/></svg>SpaceSharp</a>
+  <span>MIT license · made by ClearanceClarence</span>
+  <a href="https://github.com/ClearanceClarence/SpaceSharp" target="_blank" rel="noopener">GitHub</a>
+  <a href="https://github.com/ClearanceClarence/SpaceSharp/issues/new?template=bug_report.yml" target="_blank" rel="noopener">Report a bug</a>
+  <a href="https://github.com/ClearanceClarence/SpaceSharp/issues/new?template=feature_request.yml" target="_blank" rel="noopener">Suggest a feature</a>
+  <a href="https://github.com/ClearanceClarence/SpaceSharp/blob/main/CHANGELOG.md" target="_blank" rel="noopener">Changelog</a>
+</div></footer>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+(() => {
+  // ------------------------------------------------------------ analytics helpers
+  const track = (name, params) => { try { if (typeof gtag === "function") gtag("event", name, params || {}); } catch (e) {} };
+  document.querySelectorAll("[data-track]").forEach(el => el.addEventListener("click", () => track(el.dataset.track, { file: el.dataset.file || undefined })));
+  function toast(t) { const el = document.getElementById("toast"); el.textContent = t; el.classList.add("show"); clearTimeout(toast.t); toast.t = setTimeout(() => el.classList.remove("show"), 1800); }
+  document.getElementById("winget").addEventListener("click", async () => {
+    try { await navigator.clipboard.writeText("winget install ClearanceClarence.SpaceSharp"); toast("Copied"); } catch { toast("winget install ClearanceClarence.SpaceSharp"); }
+  });
+  const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); } }), { threshold: .12 });
+  document.querySelectorAll(".reveal").forEach(el => io.observe(el));
+
+  // ============================================================ sample data
+  const KB = 1024, MB = KB * 1024, GB = MB * 1024;
+  let seed = 20260924;
+  const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  const F = (name, bytes) => ({ name, size: Math.round(bytes), dir: false });
+  const D = (name, children) => ({ name, dir: true, children });
+  const many = (pattern, count, minMb, maxMb) =>
+    Array.from({ length: count }, (_, i) => F(pattern.replace("#", i + 1), (minMb + (maxMb - minMb) * Math.pow(rnd(), 2.4)) * MB));
+  const range = (a, b) => Array.from({ length: b - a + 1 }, (_, i) => a + i);
+
+  // Generic sample data, so the image reads as an illustration rather than someone's real drive.
+  const pad = (n) => String(n).padStart(2, "0");
+  const root = D("C:\\", [
+    D("Users", [D("User", [
+      D("Games", [
+        D("Example Game", [
+          D("data", [
+            ...range(1, 12).map(i => F(`level_${pad(i)}.pak`, (1.3 + rnd() * 1.9) * GB)),
+            ...range(1, 6).map(i => F(`cinematics_${pad(i)}.pak`, (1.1 + rnd() * 0.9) * GB)),
+            F("intro.pak", 0.62 * GB), F("ui.pak", 0.54 * GB), F("scripts.pak", 0.21 * GB),
+            D("saves", many("save_#.sav", 30, 0.4, 3))
+          ]),
+          D("bin", many("module_#.dll", 40, 0.1, 8)),
+          F("ExampleGame.exe", 0.2 * MB)
+        ]),
+        D("Sample Game", [D("Build", [
+          F("game_data.pak", 3.4 * GB), F("engine.dll", 31 * MB),
+          D("assets", many("asset_#.bundle", 28, 20, 180))
+        ])])
+      ]),
+      D("Videos", [D("Recordings", [
+        F("recording_01.mp4", 4.3 * GB), F("recording_02.mp4", 3.2 * GB), F("recording_03.mp4", 2.6 * GB),
+        ...many("clip_#.mp4", 14, 60, 900)
+      ])]),
+      D("Downloads", [
+        F("os_installer.iso", 5.4 * GB), F("linux_image.iso", 5.7 * GB), F("setup.exe", 1.3 * GB),
+        F("tools.zip", 0.18 * GB), ...many("archive_#.zip", 22, 2, 260), ...many("photo_#.jpg", 30, 1, 6)
+      ]),
+      D("Pictures", [
+        D("Screenshots", many("screenshot_#.png", 120, 0.4, 5)),
+        D("Camera", many("photo_#.jpg", 160, 2, 9))
+      ]),
+      D("Documents", [
+        D("Saved Games", [
+          D("Game One", many("save_#.dat", 40, 2, 9)),
+          D("Game Two", many("save_#.dat", 30, 8, 24))
+        ]),
+        ...many("document_#.docx", 18, 0.05, 2), ...many("report_#.pdf", 12, 0.2, 6)
+      ]),
+      D("Projects", [
+        D("Project A", many("source_#.cs", 16, 0.01, 0.06)),
+        D("Project B", many("source_#.js", 60, 0.01, 0.2)),
+        D("Project C", many("source_#.py", 30, 0.02, 0.5))
+      ]),
+      D("AppData", [D("Local", [
+        D("Shader Cache", many("cache_#.bin", 40, 8, 90)),
+        D("Temp", many("temp_#.tmp", 80, 0.1, 40)),
+        D("Web Browser", [D("User Data", [D("Default", many("cache_#", 60, 2, 40))])]),
+        D("Code Editor", many("index_#.dat", 40, 5, 60))
+      ])])
+    ])]),
+    D("Games Library", [D("common", [
+      D("Game One", [D("content", [
+        ...range(1, 14).map(i => F(`content_${pad(i)}.pak`, (1.2 + rnd() * 4.2) * GB)),
+        ...many("expansion_#.pak", 8, 800, 3600)
+      ])]),
+      D("Game Two", [D("Data", [
+        ...range(1, 12).map(i => F(`textures_${pad(i)}.pak`, (1.4 + rnd() * 2.6) * GB)),
+        F("meshes.pak", 3.8 * GB), F("audio.pak", 4.9 * GB), F("world.dat", 0.46 * GB)
+      ])]),
+      D("Game Three", [D("Data", [
+        F("world.pak", 7.9 * GB), F("shared.pak", 3.1 * GB), F("textures.pak", 4.4 * GB),
+        F("streaming.pak", 9.8 * GB), F("models.pak", 2.7 * GB), ...many("language_#.pak", 8, 100, 900)
+      ])])
+    ])]),
+    D("Program Files", [
+      D("Code Editor", [D("lib", many("library_#.jar", 70, 2, 60)), D("plugins", many("plugin_#.jar", 90, 0.5, 30))]),
+      D("Graphics Driver", many("driver_#.dll", 40, 5, 120)),
+      D("Office Suite", [D("root", many("component_#.dll", 70, 1, 60))]),
+      D("Runtime", [D("shared", many("library_#.dll", 90, 0.1, 12))])
+    ]),
+    D("Windows", [
+      D("WinSxS", many("component_#", 260, 1, 80)),
+      D("System32", many("driver_#.sys", 160, 0.1, 40)),
+      D("Installer", many("package_#.msi", 30, 20, 400)),
+      D("SoftwareDistribution", [D("Download", many("update_#.cab", 24, 30, 700))])
+    ]),
+    D("ProgramData", [
+      D("Package Cache", many("package_#.msi", 40, 5, 150)),
+      D("Shared Data", many("data_#.bin", 40, 1, 80))
+    ]),
+    F("pagefile.sys", 16 * GB), F("hiberfil.sys", 12.7 * GB), F("swapfile.sys", 256 * MB)
+  ]);
+
+  let totalFiles = 0, totalDirs = 0;
+  (function finish(node, parent) {
+    node.parent = parent;
+    node.path = !parent ? node.name : parent.parent ? `${parent.path}\\${node.name}` : parent.path + node.name;
+    if (!node.dir) { node.files = 1; totalFiles++; return; }
+    totalDirs++;
+    node.children.forEach(c => finish(c, node));
+    node.children.sort((a, b) => b.size - a.size);
+    node.size = node.children.reduce((s, c) => s + c.size, 0);
+    node.files = node.children.reduce((s, c) => s + c.files, 0);
+  })(root, null);
+
+  const fmt = (bytes) => {
+    const units = ["B", "KB", "MB", "GB", "TB"];
+    let v = bytes, u = 0;
+    while (v >= 1024 && u < units.length - 1) { v /= 1024; u++; }
+    return u === 0 ? `${bytes} B` : `${+v.toFixed(2)} ${units[u]}`;
+  };
+
+  // ============================================================ colors
+  const hex = (s) => [parseInt(s.slice(1,3),16), parseInt(s.slice(3,5),16), parseInt(s.slice(5,7),16)];
+  const mix = (a, b, t) => a.map((v, i) => Math.round(v + (b[i] - v) * t));
+  const rgb = (c) => `rgb(${c[0]},${c[1]},${c[2]})`;
+  const rgba = (c, a) => `rgba(${c[0]},${c[1]},${c[2]},${a})`;
+  const lum = (c) => c.map(v => { v /= 255; return v <= .04045 ? v / 12.92 : Math.pow((v + .055) / 1.055, 2.4); }).reduce((s, v, i) => s + v * [.2126, .7152, .0722][i], 0);
+  function hsl(h, s, l) {
+    h = (((h % 360) + 360) % 360) / 360; l = Math.min(1, Math.max(0, l));
+    const f = (p, q, t) => { if (t < 0) t += 1; if (t > 1) t -= 1; if (t < 1/6) return p + (q - p) * 6 * t; if (t < .5) return q; if (t < 2/3) return p + (q - p) * (2/3 - t) * 6; return p; };
+    if (s <= 0) return [l, l, l].map(v => Math.round(v * 255));
+    const q = l < .5 ? l * (1 + s) : l + s - l * s, p = 2 * l - q;
+    return [f(p, q, h + 1/3), f(p, q, h), f(p, q, h - 1/3)].map(v => Math.round(v * 255));
+  }
+  const fromList = (list, tint) => { const c = list.map(hex); return { folder: d => c[d % c.length], file: d => mix(c[d % c.length], [255,255,255], tint) }; };
+  const PALETTES = {
+    "Pastel": { folder: d => hsl(205 + d * 37, .42, .60), file: d => hsl(205 + d * 37, .50, .80) },
+    "Retro": fromList(["#5B8DEF","#49B86B","#E8C547","#E8864A","#B565D9","#4CC3C9","#E86A8A"], .45),
+    "Ocean": fromList(["#2E6F95","#3C8DAD","#48A9A6","#5FB49C","#7FC8A9","#4A7FB0","#6C9BD2"], .5),
+    "Sunset": fromList(["#C8553D","#E07A5F","#F2A65A","#F6C85F","#D9738A","#B0588E","#8E5A9E"], .5),
+    "Forest": fromList(["#4F772D","#6A994E","#90A955","#A7C957","#7A9E7E","#5C8D89","#8C7A4F"], .5),
+    "Neon": { folder: d => hex(["#1B2450","#2E1B50","#12403F","#461B3C","#3F3A12","#1B3550"][d % 6]), file: d => hex(["#5CE1E6","#B388FF","#69F0AE","#FF80AB","#FFD740","#82B1FF"][d % 6]) },
+    "Monochrome": { folder: d => hsl(230, .06, .36 + (d % 6) * .06), file: d => hsl(230, .05, .72 + (d % 4) * .05) },
+    "Color-blind safe": fromList(["#0072B2","#E69F00","#009E73","#CC79A7","#56B4E9","#D55E00","#F0E442"], .45)
+  };
+
+  const state = { theme: matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark", palette: "Pastel" };
+  const themeBg = () => state.theme === "dark" ? [23,23,28] : [217,217,225];
+  // Top-level branch index, for styles that color by branch.
+  const branchOf = new Map();
+  root.children.forEach((c, i) => { (function mark(n) { branchOf.set(n, i); (n.children || []).forEach(mark); })(c); });
+
+  // ============================================================ layout (same as the app)
+  function squarify(nodes, x, y, w, h, emit) {
+    const list = nodes.filter(n => n.size > 0), total = list.reduce((s, n) => s + n.size, 0);
+    if (!list.length || w <= 0 || h <= 0) return;
+    const scale = w * h / total; let i = 0;
+    while (i < list.length) {
+      const side = Math.min(w, h); if (side <= .0001) break;
+      let rowSum = 0, worst = Infinity, j = i; const largest = list[i].size * scale;
+      while (j < list.length) { const a = list[j].size * scale, s = rowSum + a; const nw = Math.max(side*side*largest/(s*s), (s*s)/(side*side*a)); if (j > i && nw > worst) break; rowSum = s; worst = nw; j++; }
+      if (w >= h) { const t = rowSum / h; let cy = y; for (let k = i; k < j; k++) { const ih = list[k].size*scale/t; emit(list[k], x, cy, t, ih); cy += ih; } x += t; w = Math.max(0, w - t); }
+      else { const t = rowSum / w; let cx = x; for (let k = i; k < j; k++) { const iw = list[k].size*scale/t; emit(list[k], cx, y, iw, t); cx += iw; } y += t; h = Math.max(0, h - t); }
+      i = j;
+    }
+  }
+  const singleSub = (n) => n.dir && n.children.length && n.children[0].dir && n.children[0].size > 0 && (n.children.length === 1 || n.children[1].size === 0) ? n.children[0] : null;
+  function groupSmall(folder, area) {
+    const kids = folder.children, total = kids.reduce((s, c) => s + c.size, 0); if (total <= 0) return kids;
+    const per = area / total; let cutoff = kids.findIndex(c => c.size * per < 30 * 22); if (cutoff < 0) return kids;
+    const rest = kids.slice(cutoff).filter(c => c.size > 0); if (rest.length < 2) return kids;
+    const group = { name: `${rest.length} files`, dir: false, group: true, parent: folder, size: rest.reduce((s, c) => s + c.size, 0), files: rest.reduce((s, c) => s + c.files, 0) };
+    return [...kids.slice(0, cutoff), group].sort((a, b) => b.size - a.size);
+  }
+  function layout(st, node, x, y, w, h, depth, items) {
+    let shown = node, chainTop = null, next;
+    while ((next = singleSub(shown))) { chainTop = chainTop || node; shown = next; }
+    const header = st.header !== "none" && shown.dir && w >= 60 && h >= st.headerH + 26;
+    items.push({ node: shown, chainTop, x, y, w, h, depth, header });
+    if (!shown.dir || !shown.children.length) return;
+    const inset = st.inset(w, h);
+    const top = header ? st.headerH : inset;
+    const cw = w - 2 * inset, ch = h - top - inset;
+    if (cw < 12 || ch < 12) return;
+    squarify(groupSmall(shown, cw * ch), x + inset, y + top, cw, ch, (c, cx, cy, iw, ih) => { if (iw >= 4 && ih >= 4) layout(st, c, cx, cy, iw, ih, depth + 1, items); });
+  }
+
+  // ============================================================ drawing helpers
+  function rr(ctx, x, y, w, h, r) {
+    r = Math.min(r, w / 2, h / 2);
+    ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r); ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath();
+  }
+  function fit(ctx, text, maxW) {
+    if (maxW < 8) return ""; if (ctx.measureText(text).width <= maxW) return text;
+    let lo = 0, hi = text.length; while (lo < hi) { const mid = (lo + hi + 1) >> 1; if (ctx.measureText(text.slice(0, mid) + "…").width <= maxW) lo = mid; else hi = mid - 1; }
+    return lo ? text.slice(0, lo) + "…" : "";
+  }
+  function chainName(it) {
+    if (!it.chainTop) return it.node.name;
+    const names = []; for (let n = it.node; n; n = n.parent) { names.unshift(n.name); if (n === it.chainTop) break; }
+    return names.join(" › ");
+  }
+  const textFor = (c) => lum(c) > .2 ? "#141418" : "#F2F2F6";
+  const baseFill = (it) => { const p = PALETTES[state.palette]; return it.node.dir ? p.folder(it.depth % 12) : p.file(it.depth % 12); };
+  const gap = (it, g) => ({ x: it.x + g / 2, y: it.y + g / 2, w: Math.max(0, it.w - g), h: Math.max(0, it.h - g) });
+
+  // ============================================================ the ten styles
+  const STYLES = [
+    { name: "Classic", desc: "The current look: title bars, 1 px borders, cushion shading.",
+      header: "bar", headerH: 17, inset: (w, h) => Math.min(w, h) >= 40 ? 2 : 1,
+      draw(ctx, it) {
+        const c = baseFill(it); ctx.fillStyle = rgb(c); ctx.fillRect(it.x, it.y, it.w, it.h);
+        const g = ctx.createLinearGradient(it.x, it.y, it.x + it.w, it.y + it.h); g.addColorStop(0, "rgba(255,255,255,.28)"); g.addColorStop(.55, "rgba(128,128,128,0)"); g.addColorStop(1, "rgba(0,0,0,.31)");
+        ctx.fillStyle = g; ctx.fillRect(it.x, it.y, it.w, it.h);
+        if (it.node.group) { ctx.fillStyle = "rgba(0,0,0,.19)"; ctx.fillRect(it.x, it.y, it.w, it.h); }
+        ctx.strokeStyle = "rgba(16,16,20,.69)"; ctx.lineWidth = 1; ctx.strokeRect(it.x + .5, it.y + .5, it.w - 1, it.h - 1);
+        if (it.header) { ctx.fillStyle = "rgba(0,0,0,.19)"; ctx.fillRect(it.x, it.y, it.w, 17); label(ctx, it, textFor(c), "600 11px", 4, 2, "left", `${chainName(it)}  —  ${fmt(it.node.size)}`); }
+        else fileLabel(ctx, it, textFor(c), it);
+      } },
+
+    { name: "Cushion", desc: "WinDirStat-style. No title bars: folders read from the shading alone. Dense and quiet.",
+      header: "none", headerH: 0, inset: () => 1,
+      draw(ctx, it) {
+        const c = baseFill(it); ctx.fillStyle = rgb(c); ctx.fillRect(it.x, it.y, it.w, it.h);
+        const r = Math.max(it.w, it.h);
+        const g = ctx.createRadialGradient(it.x + it.w * .35, it.y + it.h * .3, 1, it.x + it.w * .5, it.y + it.h * .5, r * .9);
+        g.addColorStop(0, "rgba(255,255,255,.34)"); g.addColorStop(.6, "rgba(0,0,0,0)"); g.addColorStop(1, "rgba(0,0,0,.45)");
+        ctx.fillStyle = g; ctx.fillRect(it.x, it.y, it.w, it.h);
+        if (it.node.dir) return;
+        fileLabel(ctx, it, textFor(c), it, true);
+      } },
+
+    { name: "Tiles", desc: "Flat colors, 3 px gaps, softly rounded. Folder names as small captions, no bars.",
+      header: "text", headerH: 16, inset: () => 3,
+      draw(ctx, it) {
+        const c = baseFill(it), b = gap(it, 3); ctx.fillStyle = rgb(c); rr(ctx, b.x, b.y, b.w, b.h, 4); ctx.fill();
+        if (it.node.group) { ctx.fillStyle = "rgba(0,0,0,.15)"; rr(ctx, b.x, b.y, b.w, b.h, 4); ctx.fill(); }
+        if (it.header) label(ctx, { x: b.x, y: b.y, w: b.w, h: b.h }, rgba(hex(textFor(c)), .8), "600 10.5px", 6, 2, "left", chainName(it).toUpperCase() + "   " + fmt(it.node.size));
+        else fileLabel(ctx, b, textFor(c), it);
+      } },
+
+    { name: "Outline", desc: "Neutral fills, folders drawn as colored frames. Very little ink, files stay quiet.",
+      header: "bar", headerH: 16, inset: () => 3,
+      draw(ctx, it) {
+        const c = baseFill(it);
+        if (it.node.dir) {
+          ctx.fillStyle = state.theme === "dark" ? `rgba(255,255,255,${.03 + it.depth * .02})` : `rgba(0,0,0,${.03 + it.depth * .02})`; ctx.fillRect(it.x, it.y, it.w, it.h);
+          ctx.strokeStyle = rgb(c); ctx.lineWidth = 2; ctx.strokeRect(it.x + 1, it.y + 1, it.w - 2, it.h - 2);
+          if (it.header) { ctx.fillStyle = rgb(c); ctx.fillRect(it.x, it.y, it.w, 16); label(ctx, it, textFor(c), "600 10.5px", 5, 2, "left", `${chainName(it)}  ${fmt(it.node.size)}`); }
+        } else {
+          const b = gap(it, 2); ctx.fillStyle = rgba(c, .55); ctx.fillRect(b.x, b.y, b.w, b.h);
+          ctx.strokeStyle = rgba(c, .9); ctx.lineWidth = 1; ctx.strokeRect(b.x + .5, b.y + .5, b.w - 1, b.h - 1);
+          fileLabel(ctx, b, state.theme === "dark" ? "#F2F2F6" : "#141418", it);
+        }
+      } },
+
+    { name: "Cards", desc: "Folders as raised cards with a shadow and a bold title; files as flat chips inside.",
+      header: "bar", headerH: 20, inset: () => 5,
+      draw(ctx, it) {
+        const c = baseFill(it), b = gap(it, 4);
+        if (it.node.dir) {
+          ctx.save(); ctx.shadowColor = "rgba(0,0,0,.35)"; ctx.shadowBlur = 8; ctx.shadowOffsetY = 2;
+          ctx.fillStyle = rgb(mix(c, themeBg(), .35)); rr(ctx, b.x, b.y, b.w, b.h, 6); ctx.fill(); ctx.restore();
+          if (it.header) label(ctx, b, textFor(mix(c, themeBg(), .35)), "700 11.5px", 8, 3, "left", `${chainName(it)}  ·  ${fmt(it.node.size)}`);
+        } else {
+          ctx.fillStyle = rgb(c); rr(ctx, b.x, b.y, b.w, b.h, 4); ctx.fill();
+          if (it.node.group) { ctx.fillStyle = "rgba(0,0,0,.15)"; rr(ctx, b.x, b.y, b.w, b.h, 4); ctx.fill(); }
+          fileLabel(ctx, b, textFor(c), it);
+        }
+      } },
+
+    { name: "Glow", desc: "Dark boxes with a thin luminous edge in the folder's color. Labels in the same color.",
+      header: "bar", headerH: 16, inset: () => 3,
+      draw(ctx, it) {
+        const c = baseFill(it), b = gap(it, 2);
+        const dark = mix(c, [10, 10, 14], it.node.dir ? .82 : .68);
+        ctx.fillStyle = rgb(dark); ctx.fillRect(b.x, b.y, b.w, b.h);
+        ctx.save(); ctx.shadowColor = rgba(c, .9); ctx.shadowBlur = it.node.dir ? 6 : 3; ctx.strokeStyle = rgba(c, .95); ctx.lineWidth = 1; ctx.strokeRect(b.x + .5, b.y + .5, b.w - 1, b.h - 1); ctx.restore();
+        const t = rgb(mix(c, [255, 255, 255], .35));
+        if (it.header) label(ctx, b, t, "600 10.5px", 6, 2, "left", `${chainName(it)}  ${fmt(it.node.size)}`);
+        else fileLabel(ctx, b, t, it);
+      } },
+
+    { name: "Bands", desc: "SpaceMonger 2 feel: a deep title band, lighter body, crisp light borders, no shading.",
+      header: "bar", headerH: 18, inset: () => 2,
+      draw(ctx, it) {
+        const c = baseFill(it);
+        const body = it.node.dir ? mix(c, [255, 255, 255], .35) : c;
+        ctx.fillStyle = rgb(body); ctx.fillRect(it.x, it.y, it.w, it.h);
+        if (it.node.group) { ctx.fillStyle = "rgba(0,0,0,.12)"; ctx.fillRect(it.x, it.y, it.w, it.h); }
+        ctx.strokeStyle = "rgba(255,255,255,.55)"; ctx.lineWidth = 1; ctx.strokeRect(it.x + .5, it.y + .5, it.w - 1, it.h - 1);
+        if (it.header) { const band = mix(c, [0, 0, 0], .35); ctx.fillStyle = rgb(band); ctx.fillRect(it.x, it.y, it.w, 18); label(ctx, it, "#F5F5F8", "700 11px", 5, 3, "left", `${chainName(it)}  —  ${fmt(it.node.size)}`); }
+        else fileLabel(ctx, it, textFor(body), it);
+      } },
+
+    { name: "Terraces", desc: "Each top-level folder gets one hue; deeper levels get darker. Depth reads as height.",
+      header: "text", headerH: 16, inset: () => 2,
+      draw(ctx, it) {
+        const branch = branchOf.get(it.node) ?? 0;
+        const hue = 205 + branch * 47;
+        const c = it.node.dir ? hsl(hue, .38, Math.max(.22, .62 - it.depth * .07)) : hsl(hue, .45, Math.max(.35, .78 - it.depth * .06));
+        ctx.fillStyle = rgb(c); ctx.fillRect(it.x, it.y, it.w, it.h);
+        ctx.strokeStyle = "rgba(0,0,0,.35)"; ctx.lineWidth = 1; ctx.strokeRect(it.x + .5, it.y + .5, it.w - 1, it.h - 1);
+        if (it.header) label(ctx, it, textFor(c), "600 10.5px", 5, 2, "left", `${chainName(it)}  ${fmt(it.node.size)}`);
+        else fileLabel(ctx, it, textFor(c), it);
+      } },
+
+    { name: "Wireframe", desc: "Light canvas, hairline dividers, folder names in small caps. Clean and printable.",
+      header: "text", headerH: 15, inset: () => 2,
+      draw(ctx, it) {
+        const c = baseFill(it);
+        const paper = state.theme === "dark" ? [40, 40, 48] : [250, 250, 252];
+        ctx.fillStyle = rgb(it.node.dir ? paper : mix(c, paper, .55)); ctx.fillRect(it.x, it.y, it.w, it.h);
+        ctx.strokeStyle = state.theme === "dark" ? "rgba(255,255,255,.22)" : "rgba(0,0,0,.28)"; ctx.lineWidth = 1; ctx.strokeRect(it.x + .5, it.y + .5, it.w - 1, it.h - 1);
+        const ink = state.theme === "dark" ? "#ECECF1" : "#1C1C22";
+        if (it.header) { ctx.fillStyle = rgb(c); ctx.fillRect(it.x + 1, it.y + 1, 3, 13); label(ctx, it, ink, "600 10px", 8, 2, "left", chainName(it).toUpperCase() + "  " + fmt(it.node.size)); }
+        else fileLabel(ctx, it, ink, it);
+      } },
+
+    { name: "Soft", desc: "Rounded pastel blocks with white gaps, like a board of sticky notes. Friendly, less technical.",
+      header: "bar", headerH: 18, inset: () => 4,
+      draw(ctx, it) {
+        const c = baseFill(it), b = gap(it, 4);
+        const light = mix(c, [255, 255, 255], it.node.dir ? .15 : .1);
+        ctx.fillStyle = rgb(light); rr(ctx, b.x, b.y, b.w, b.h, 8); ctx.fill();
+        ctx.save(); rr(ctx, b.x, b.y, b.w, b.h, 8); ctx.clip();
+        const g = ctx.createLinearGradient(b.x, b.y, b.x, b.y + b.h); g.addColorStop(0, "rgba(255,255,255,.18)"); g.addColorStop(1, "rgba(0,0,0,.10)");
+        ctx.fillStyle = g; ctx.fillRect(b.x, b.y, b.w, b.h); ctx.restore();
+        if (it.node.group) { ctx.fillStyle = "rgba(0,0,0,.12)"; rr(ctx, b.x, b.y, b.w, b.h, 8); ctx.fill(); }
+        if (it.header) label(ctx, b, textFor(light), "600 11px", 8, 3, "left", `${chainName(it)}  ·  ${fmt(it.node.size)}`);
+        else fileLabel(ctx, b, textFor(light), it);
+      } }
+  ];
+
+  function label(ctx, box, color, font, px, py, align, text) {
+    ctx.fillStyle = color; ctx.font = `${font} 'Segoe UI', system-ui, sans-serif`; ctx.textBaseline = "top"; ctx.textAlign = align;
+    ctx.fillText(fit(ctx, text, box.w - px * 2), align === "left" ? box.x + px : box.x + box.w / 2, box.y + py);
+  }
+  function fileLabel(ctx, box, color, it, quiet) {
+    if (box.w < 44 || box.h < 16) return;
+    ctx.fillStyle = color; ctx.font = `${quiet ? "500 " : ""}11px 'Segoe UI', system-ui, sans-serif`; ctx.textAlign = "center"; ctx.textBaseline = "top";
+    const cx = box.x + box.w / 2, tw = box.w - 6;
+    if (box.h >= 34) { const ty = box.y + (box.h - 30) / 2; ctx.fillText(fit(ctx, it.node.name, tw), cx, ty + 1); ctx.fillText(fit(ctx, fmt(it.node.size), tw), cx, ty + 16); }
+    else ctx.fillText(fit(ctx, it.node.name, tw), cx, box.y + (box.h - 15) / 2 + 1);
+  }
+
+  // Thumbnails show one branch so the styling is visible at card size; the large preview shows the whole drive.
+    function render(canvas, st, cssW, cssH, node = root) {
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = Math.round(cssW * dpr); canvas.height = Math.round(cssH * dpr); canvas.style.height = cssH + "px";
+    const ctx = canvas.getContext("2d"); ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.fillStyle = rgb(themeBg()); ctx.fillRect(0, 0, cssW, cssH);
+    const items = []; layout(st, node, 0, 0, Math.floor(cssW) - 1, Math.floor(cssH) - 1, 0, items);
+    for (const it of items) st.draw(ctx, it);
+  }
+
+
+
+  // ------------------------------------------------------------ hero: a camera that flies between folders
+  const hero = document.getElementById("heroCanvas"), hctx = hero.getContext("2d");
+  const cam = { zoom: 1, cx: .5, cy: .5 };
+  let anim = null, lastTarget = root, lastItems = [];
+  const folders = []; (function collect(n, d) { if (d > 0 && n.dir && n.size > root.size * .015 && n.children.some(c => c.dir || c.size > 0)) folders.push(n); n.children.forEach(c => c.dir && collect(c, d + 1)); })(root, 0);
+
+  function fitView(it, W, H) {
+    const nx = (it.x + (cam.cx * W * cam.zoom - W / 2)) / (W * cam.zoom), ny = (it.y + (cam.cy * H * cam.zoom - H / 2)) / (H * cam.zoom);
+    const nw = it.w / (W * cam.zoom), nh = it.h / (H * cam.zoom);
+    const z = Math.min(1 / nw, 1 / nh, 60); const half = .5 / z;
+    return { zoom: z, cx: Math.min(1 - half, Math.max(half, nx + nw / 2)), cy: Math.min(1 - half, Math.max(half, ny + nh / 2)) };
+  }
+  function drawHero() {
+    const W = hero.clientWidth, H = hero.clientHeight - 34, dpr = window.devicePixelRatio || 1;
+    if (W < 10 || H < 10) return;
+    hero.width = Math.round(hero.clientWidth * dpr); hero.height = Math.round(hero.clientHeight * dpr); hctx.setTransform(dpr, 0, 0, dpr, 0, 34);
+    hctx.fillStyle = rgb(themeBg()); hctx.fillRect(0, -34, W, H + 34);
+    const ox = cam.cx * W * cam.zoom - W / 2, oy = cam.cy * H * cam.zoom - H / 2;
+    lastItems = []; const st = STYLES[0];
+    // only lay out what's visible
+    const viewport = { x: 0, y: 0, w: W, h: H };
+    const saveLayout = layout;
+    (function layoutV(node, x, y, w, h, depth) {
+      if (x > viewport.w || y > viewport.h || x + w < 0 || y + h < 0) return;
+      let shown = node, chainTop = null, next; while ((next = singleSub(shown))) { chainTop = chainTop || node; shown = next; }
+      const header = shown.dir && w >= 60 && h >= 43; lastItems.push({ node: shown, chainTop, x, y, w, h, depth, header });
+      if (!shown.dir || !shown.children.length) return;
+      const inset = st.inset(w, h), top = header ? 17 : inset, cw = w - 2 * inset, ch = h - top - inset; if (cw < 12 || ch < 12) return;
+      squarify(groupSmall(shown, cw * ch), x + inset, y + top, cw, ch, (c, cx, cy, iw, ih) => { if (iw >= 4 && ih >= 4) layoutV(c, cx, cy, iw, ih, depth + 1); });
+    })(root, -ox, -oy, W * cam.zoom, H * cam.zoom, 0);
+    for (const it of lastItems) { const clipped = { ...it, x: Math.max(it.x, -2), y: Math.max(it.y, -2) }; clipped.w = Math.min(it.x + it.w, W + 2) - clipped.x; clipped.h = Math.min(it.y + it.h, H + 2) - clipped.y; if (clipped.w > 0 && clipped.h > 0) st.draw(hctx, clipped); }
+  }
+  function startFlight(target) {
+    const W = hero.clientWidth, H = hero.clientHeight - 34;
+    const it = lastItems.find(i => i.node === target || (i.chainTop && isUnder(target, i))); if (!it) return false;
+    const end = fitView(it, W, H);
+    anim = { target, t0: performance.now(), dur: 1400, from: { ...cam }, to: end };
+    document.getElementById("heroTitle").textContent = target.path; document.getElementById("heroCrumb").textContent = target === root ? "C:\\  ·  the whole drive" : target.path.replace(/\\/g, "  ›  ");
+    return true;
+  }
+  const isUnder = (target, it) => { for (let n = it.node; n; n = n.parent) { if (n === target) return true; if (n === it.chainTop) break; } return false; };
+  function frame(now) {
+    if (anim) {
+      const t = Math.min(1, (now - anim.t0) / anim.dur), e = 1 - Math.pow(1 - t, 3);
+      const z = Math.exp(Math.log(anim.from.zoom) + (Math.log(anim.to.zoom) - Math.log(anim.from.zoom)) * e);
+      cam.zoom = z; cam.cx = anim.from.cx + (anim.to.cx - anim.from.cx) * e; cam.cy = anim.from.cy + (anim.to.cy - anim.from.cy) * e;
+      drawHero();
+      const W = hero.clientWidth, H = hero.clientHeight - 34; const it = lastItems.find(i => i.node === anim.target); if (it) anim.to = fitView(it, W, H);
+      if (t >= 1) { const done = anim.target; anim = null; setTimeout(() => nextFlight(done), 2600); }
+    }
+    requestAnimationFrame(frame);
+  }
+  function nextFlight(from) {
+    if (document.hidden) { setTimeout(() => nextFlight(from), 1500); return; }
+    if (from !== root) { startFlight(root); return; }
+    const pick = folders[Math.floor(Math.random() * folders.length)];
+    if (!startFlight(pick)) startFlight(root);
+  }
+  drawHero(); requestAnimationFrame(frame); setTimeout(() => nextFlight(root), 1800);
+  hero.parentElement.addEventListener("click", () => { anim = null; cam.zoom = 1; cam.cx = cam.cy = .5; drawHero(); nextFlight(root); track("hero_click"); });
+
+  // ------------------------------------------------------------ filter demo
+  const fcv = document.getElementById("filterCanvas"), fctx = fcv.getContext("2d");
+  const FILTERS = [
+    { text: "no filter", match: null },
+    { text: "*.pak >1GB", match: n => /\.pak$/i.test(n.name) && n.size > GB },
+    { text: "videos over 500MB", match: n => /\.mp4$/i.test(n.name) && n.size > 500 * MB },
+    { text: ".iso", match: n => /\.iso$/i.test(n.name) },
+    { text: "photos", match: n => /\.(jpg|png)$/i.test(n.name) },
+    { text: "installer", match: n => /installer|setup/i.test(n.name) }
+  ];
+  let filterIdx = 0;
+  const chips = document.getElementById("chips");
+  FILTERS.forEach((f, i) => { const c = document.createElement("button"); c.type = "button"; c.className = "chip" + (i === 0 ? " on" : ""); c.textContent = f.text; c.addEventListener("click", () => { filterIdx = i; [...chips.children].forEach((el, k) => el.classList.toggle("on", k === i)); drawFilter(); track("filter_demo", { filter: f.text }); }); chips.appendChild(c); });
+  function drawFilter() {
+    const f = FILTERS[filterIdx], matches = new Set(); let count = 0, bytes = 0;
+    if (f.match) (function visit(n) { let m = false; if (n.dir) { for (const c of n.children) if (visit(c)) m = true; } else if (f.match(n)) { m = true; count++; bytes += n.size; } if (m) matches.add(n); return m; })(root);
+    const W = fcv.clientWidth, H = fcv.clientHeight, dpr = window.devicePixelRatio || 1;
+    fcv.width = Math.round(W * dpr); fcv.height = Math.round(H * dpr); fctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    fctx.fillStyle = rgb(themeBg()); fctx.fillRect(0, 0, W, H);
+    const items = []; layout(STYLES[0], root, 0, 0, W - 1, H - 1, 0, items);
+    const bg = themeBg();
+    for (const it of items) {
+      if (!f.match || matches.has(it.node) || (it.node.group && it.node.parent.children.some(c => matches.has(c)))) { STYLES[0].draw(fctx, it); continue; }
+      const c = baseFill(it), g = Math.round(.299 * c[0] + .587 * c[1] + .114 * c[2]);
+      const faded = c.map((v, i) => Math.round((g * .6 + v * .4) * .35 + bg[i] * .65));
+      fctx.fillStyle = rgb(faded); fctx.fillRect(it.x, it.y, it.w, it.h); fctx.strokeStyle = "rgba(16,16,20,.35)"; fctx.strokeRect(it.x + .5, it.y + .5, it.w - 1, it.h - 1);
+    }
+    document.getElementById("filterCrumb").textContent = f.match ? `${count} files · ${fmt(bytes)} match` : "C:\\ · no filter";
+    document.getElementById("filterInfo").textContent = f.match ? `"${f.text}" → ${count.toLocaleString("en-US")} files, ${fmt(bytes)}. The layout didn't move; only the matches stay bright.` : "Pick a filter above to see the map dim everything that doesn't match.";
+  }
+  drawFilter();
+
+  // ------------------------------------------------------------ styles gallery
+  const branch = root.children.find(c => c.name === "Users") || root;
+  const stylesEl = document.getElementById("styleGrid");
+  const gallery = [["Classic", "title bars, borders, cushion"], ["Tiles", "flat, gapped, rounded"], ["Cards", "raised folders, chips"], ["Bands", "deep title band"], ["Terraces", "one hue per branch, darker with depth"], ["Soft", "rounded pastel blocks"]];
+  const galleryCanvases = gallery.map(([name, desc]) => {
+    const el = document.createElement("div"); el.className = "style reveal"; el.innerHTML = `<canvas></canvas><div><b>${name}</b><span>${desc}</span></div>`; stylesEl.appendChild(el); io.observe(el); return el.querySelector("canvas");
+  });
+  function drawGallery() { galleryCanvases.forEach((c, i) => { const st = STYLES.find(s => s.name === gallery[i][0]); const w = c.parentElement.clientWidth || 300; c.style.width = w + "px"; render(c, st, w, Math.round(w * .6), branch); }); }
+  drawGallery();
+
+  let rt; window.addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(() => { drawHero(); drawFilter(); drawGallery(); }, 80); });
+  matchMedia("(prefers-color-scheme: light)").addEventListener("change", e => { state.theme = e.matches ? "light" : "dark"; drawHero(); drawFilter(); drawGallery(); });
+})();
+</script>
+</body>
+</html>
