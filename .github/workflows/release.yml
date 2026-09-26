@@ -90,7 +90,7 @@ jobs:
           $body -join "`n" | Set-Content -Path release-notes.md -Encoding utf8
 
       - name: Create draft release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           name: SpaceSharp ${{ env.VERSION }}
           body_path: release-notes.md
