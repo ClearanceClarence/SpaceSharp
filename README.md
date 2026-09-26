@@ -11,6 +11,7 @@
 
 <p align="center">
   <a href="https://github.com/ClearanceClarence/SpaceSharp/releases/latest"><img src="https://img.shields.io/github/v/release/ClearanceClarence/SpaceSharp?label=version&color=F5B82E" alt="Latest version"></a>
+  <a href="https://github.com/ClearanceClarence/SpaceSharp/actions/workflows/build.yml"><img src="https://img.shields.io/github/actions/workflow/status/ClearanceClarence/SpaceSharp/build.yml?branch=main&label=build&color=6FC2B0" alt="Build status"></a>
   <a href="CHANGELOG.md"><img src="https://img.shields.io/badge/changelog-read-6FC2B0" alt="Changelog"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-F5B82E" alt="MIT License"></a>
   <img src="https://img.shields.io/badge/platform-Windows%2010%20%7C%2011-74A6CC" alt="Windows 10 and 11">
@@ -243,7 +244,17 @@ The bar then shows how many files match and their total size. **Select matches**
 dotnet run --project .\SpaceSharp\SpaceSharp.csproj
 ```
 
-The only NuGet dependency is Velopack, used for the installer and updates.
+The app's only NuGet dependency is Velopack, used for the installer and updates.
+
+**Tests**
+
+`SpaceSharp.Tests` covers the parts that don't need a screen: the treemap layout, the filter parser and matcher, size formatting, and the tree operations behind delete and free space.
+
+```powershell
+dotnet test
+```
+
+Every push and pull request runs the build and the tests on GitHub Actions (`.github/workflows/build.yml`) and keeps the portable exe as a downloadable artifact for 90 days.
 
 ## Publishing an exe
 
@@ -266,14 +277,16 @@ dotnet publish .\SpaceSharp\SpaceSharp.csproj -p:PublishProfile=Small
 ```powershell
 dotnet publish .\SpaceSharp\SpaceSharp.csproj -p:PublishProfile=Velopack
 vpk download github --repoUrl https://github.com/ClearanceClarence/SpaceSharp
-vpk pack --packId SpaceSharp --packVersion 1.1.1 --packDir .\publish\velopack --mainExe SpaceSharp.exe --packTitle SpaceSharp --packAuthors ClearanceClarence --icon .\SpaceSharp\Assets\SpaceSharp.ico --splashImage .\SpaceSharp\Assets\SpaceSharp-256.png --msi --instLocation Either --instWelcome .\installer\welcome.md --instLicense .\installer\license.txt --instConclusion .\installer\conclusion.md --msiBanner .\installer\banner.bmp --msiLogo .\installer\logo.bmp
+vpk pack --packId SpaceSharp --packVersion 1.2.0 --packDir .\publish\velopack --mainExe SpaceSharp.exe --packTitle SpaceSharp --packAuthors ClearanceClarence --icon .\SpaceSharp\Assets\SpaceSharp.ico --splashImage .\SpaceSharp\Assets\SpaceSharp-256.png --msi --instLocation Either --instWelcome .\installer\welcome.md --instLicense .\installer\license.txt --instConclusion .\installer\conclusion.md --msiBanner .\installer\banner.bmp --msiLogo .\installer\logo.bmp
 ```
 
 `--msi` also builds a Windows Installer package (via WiX, downloaded by vpk on first use). `--instLocation Either` lets the user pick per-user or per-machine and the folder during setup. The `installer` folder holds the wizard's welcome, license and finish pages and the two dialog images (`banner.bmp` 493×58, `logo.bmp` 493×312).
 
-`vpk download` fetches the previous release so a small delta package can be built; skip it for the very first release. The output lands in `Releases\`: `SpaceSharp-win-Setup.exe`, the `.msi`, `SpaceSharp-win-Portable.zip`, the `.nupkg` update packages and `releases.win.json`. Upload **all of them** to the GitHub release, because installed copies read `releases.win.json` and the `.nupkg` files to update. `vpk upload github --repoUrl https://github.com/ClearanceClarence/SpaceSharp --token <PAT> --publish --releaseName "SpaceSharp 1.1.1"` does the upload for you.
+`vpk download` fetches the previous release so a small delta package can be built; skip it for the very first release. The output lands in `Releases\`: `SpaceSharp-win-Setup.exe`, the `.msi`, `SpaceSharp-win-Portable.zip`, the `.nupkg` update packages and `releases.win.json`. Upload **all of them** to the GitHub release, because installed copies read `releases.win.json` and the `.nupkg` files to update. `vpk upload github --repoUrl https://github.com/ClearanceClarence/SpaceSharp --token <PAT> --publish --releaseName "SpaceSharp 1.2.0"` does the upload for you.
 
 The plain exes are written to `publish\portable\` and `publish\small\`. In Rider, all profiles also show up as run configurations.
+
+**Releasing from GitHub Actions.** Pushing a version tag (`git tag 1.2.1 && git push origin 1.2.1`) runs `.github/workflows/release.yml`, which checks that the tag matches `<Version>` in the project file, runs the tests, builds the portable exe and all Velopack packages, and opens a *draft* release with that version's section from `CHANGELOG.md` as the notes. Review the draft and press **Publish**; installed copies only see the update once the release is published.
 
 ## How it works
 
@@ -348,11 +361,13 @@ SpaceSharp/
 │   ├── SpaceSharp-small.svg      simplified icon for 16–24 px
 │   ├── SpaceSharp.ico            icon with all Windows sizes (16–256 px)
 │   └── SpaceSharp-256.png        icon used in the app UI
-docs/                             landing page (GitHub Pages), screenshots, icon
 ├── Properties/PublishProfiles/   Portable, Small and Velopack publish profiles
 ├── app.manifest                  DPI and long-path awareness
 └── SpaceSharp.csproj
+SpaceSharp.Tests/                 xUnit tests for layout, filter, formatting and tree operations
+docs/                             landing page (GitHub Pages), screenshots, icon
 installer/                        MSI wizard pages (welcome, license, finish) and dialog images
+.github/                          issue forms, pull request template, build and release workflows, Dependabot
 ```
 
 ## Customizing

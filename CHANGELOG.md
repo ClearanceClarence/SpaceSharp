@@ -2,6 +2,16 @@
 
 All notable changes to SpaceSharp. The newest release is at the top.
 
+## Unreleased
+
+### Fixes
+- Age filters without a number now work as documented: `modified in the last week`, `older than a year` and `not opened in one month` mean one week, one year and one month. Before, the words fell through to the name search.
+
+### Project
+- Unit tests (`SpaceSharp.Tests`, xUnit) for the treemap layout, the filter parser and matcher, size formatting and the tree operations behind delete and free space.
+- GitHub Actions: every push and pull request builds, runs the tests and keeps the portable exe as an artifact; pushing a version tag builds all release assets and opens a draft release with the changelog section as notes.
+- Dependabot keeps NuGet packages and workflow actions up to date.
+
 ## 1.2.0
 
 The theme of 1.2.0 is finding things. Earlier versions showed you the map; this one lets you ask it questions, pick out what you want to remove, and clear it in one go. It also brings six map styles, a redesigned side panel with your drives, and a set of readability options.

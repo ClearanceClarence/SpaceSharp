@@ -36,6 +36,11 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- Lets the test project set sizes and dates on FsNode without a scanner. -->
+    <InternalsVisibleTo Include="SpaceSharp.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
     <!-- Icon files embedded for the window icon and the About window. -->
     <None Remove="Assets\SpaceSharp.ico" />
     <None Remove="Assets\SpaceSharp-256.png" />

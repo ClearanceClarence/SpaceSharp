@@ -19,10 +19,10 @@ public enum ItemKind
 public sealed class FilterSpec
 {
     private static readonly Regex OlderPhrase = new(
-        @"\b(?:older than|not (?:modified|changed|touched|used|opened) (?:in|for|since)(?: the)?(?: last)?|unused for|untouched for|(?:more than|over) )\s*(\d+)\s*(day|week|month|year)s?(?:\s+old)?\b",
+        @"\b(?:older than|not (?:modified|changed|touched|used|opened) (?:in|for|since)(?: the)?(?: last)?|unused for|untouched for|(?:more than|over) )\s*(\d+|an?|one)?\s*(day|week|month|year)s?(?:\s+old)?\b",
         RegexOptions.IgnoreCase | RegexOptions.Compiled);
     private static readonly Regex NewerPhrase = new(
-        @"\b(?:newer than|(?:modified|changed|touched|used) (?:in|within)(?: the)?(?: last)?|within(?: the)? last|(?:in|from) the last|last)\s*(\d+)\s*(day|week|month|year)s?\b",
+        @"\b(?:newer than|(?:modified|changed|touched|used) (?:in|within)(?: the)?(?: last)?|within(?: the)? last|(?:in|from) the last|last)\s*(\d+|an?|one)?\s*(day|week|month|year)s?\b",
         RegexOptions.IgnoreCase | RegexOptions.Compiled);
     private static readonly Regex MinPhrase = new(
         @"(?:>=|>|\b(?:larger than|bigger than|greater than|more than|over|above|at least|min(?:imum)?|size\s*>)\b)\s*(\d+(?:[.,]\d+)?)\s*(b|kb|mb|gb|tb)?\b",
@@ -119,7 +119,11 @@ public sealed class FilterSpec
 
     private static int Days(Match m)
     {
-        int amount = int.Parse(m.Groups[1].Value, CultureInfo.InvariantCulture);
+        // "last week", "older than a year" and "one month" all mean 1.
+        string number = m.Groups[1].Value;
+        int amount = number.Length > 0 && char.IsDigit(number[0])
+            ? int.Parse(number, CultureInfo.InvariantCulture)
+            : 1;
         return m.Groups[2].Value.ToLowerInvariant() switch
         {
             "day" => amount,
