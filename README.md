@@ -23,6 +23,12 @@
 </p>
 
 <p align="center">
+  <a href="https://www.producthunt.com/products/spacesharp?utm_source=badge-follow&utm_medium=badge&utm_source=badge-spacesharp" target="_blank"><img src="https://api.producthunt.com/widgets/embed-image/v1/follow.svg?product_id=1327502&theme=neutral" alt="SpaceSharp on Product Hunt" width="250" height="54"></a>
+  <a href="https://alternativeto.net/software/spacesharp/about/?utm_source=badge&utm_medium=referral" target="_blank"><img src="https://alternativeto.net/static/badges/badge-wide-dark.svg" alt="SpaceSharp on AlternativeTo" width="284" height="54"></a>
+  <a href="https://sourceforge.net/projects/spacesharp/files/latest/download"><img src="https://a.fsdn.com/con/app/sf-download-button" srcset="https://a.fsdn.com/con/app/sf-download-button?button_size=2x 2x" alt="Download SpaceSharp from SourceForge" width="276" height="48"></a>
+</p>
+
+<p align="center">
   <img src="docs/screenshot.png" alt="SpaceSharp showing a drive as a treemap, with sample data">
   <br>
   <sub>Illustration with sample data</sub>
