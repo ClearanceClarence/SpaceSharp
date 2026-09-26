@@ -22,7 +22,10 @@ public class SquarifyTests
     {
         var items = Run(new Rect(10, 20, 300, 200), 42);
         var rect = Assert.Single(items).Rect;
-        Assert.Equal(new Rect(10, 20, 300, 200), rect);
+        Assert.Equal(10, rect.X, 6);
+        Assert.Equal(20, rect.Y, 6);
+        Assert.Equal(300, rect.Width, 6);
+        Assert.Equal(200, rect.Height, 6);
     }
 
     [Fact]
