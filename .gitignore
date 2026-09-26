@@ -19,3 +19,6 @@ publish/
 Thumbs.db
 Desktop.ini
 .DS_Store
+
+# Downloaded by tools/make-assets.py
+tools/fonts/

@@ -3,6 +3,7 @@
 *.sln text eol=crlf
 *.csproj text eol=crlf
 *.pubxml text eol=crlf
+*.ps1 text eol=crlf
 
 # Binary assets
 *.png binary
