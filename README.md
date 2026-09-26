@@ -285,10 +285,8 @@ The same steps by hand, if you prefer:
 ```powershell
 dotnet publish .\SpaceSharp\SpaceSharp.csproj -p:PublishProfile=Velopack
 vpk download github --repoUrl https://github.com/ClearanceClarence/SpaceSharp
-vpk pack --packId SpaceSharp --packVersion 1.2.1 --packDir .\publish\velopack --mainExe SpaceSharp.exe --packTitle SpaceSharp --packAuthors ClearanceClarence --icon .\SpaceSharp\Assets\SpaceSharp.ico --splashImage .\SpaceSharp\Assets\SpaceSharp-256.png --msi --instLocation Either --instWelcome .\installer\welcome.md --instLicense .\installer\license.txt --instConclusion .\installer\conclusion.md
+vpk pack --packId SpaceSharp --packVersion 1.2.1 --packDir .\publish\velopack --mainExe SpaceSharp.exe --packTitle SpaceSharp --packAuthors ClearanceClarence --icon .\SpaceSharp\Assets\SpaceSharp.ico --splashImage .\SpaceSharp\Assets\SpaceSharp-256.png --msi --instLocation Either --instWelcome .\installer\welcome.md --instLicense .\installer\license.txt --instConclusion .\installer\conclusion.md --msiBanner .\installer\banner.bmp --msiLogo .\installer\logo.bmp
 .\installer\brand-msi.ps1
-```
-
 The plain exes are written to `publish\portable\` and `publish\small\`. In Rider, all profiles also show up as run configurations.
 
 **Releasing from GitHub Actions.** Pushing a version tag (`git tag 1.2.1 && git push origin 1.2.1`) runs `.github/workflows/release.yml`, which checks that the tag matches `<Version>` in the project file, runs the tests, builds the portable exe and all Velopack packages, and opens a *draft* release with that version's section from `CHANGELOG.md` as the notes. Review the draft and press **Publish**; installed copies only see the update once the release is published.

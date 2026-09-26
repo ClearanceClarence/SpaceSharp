@@ -68,6 +68,8 @@ jobs:
           --instWelcome .\installer\welcome.md
           --instLicense .\installer\license.txt
           --instConclusion .\installer\conclusion.md
+          --msiBanner .\installer\banner.bmp
+          --msiLogo .\installer\logo.bmp
 
       - name: Brand the MSI
         if: hashFiles('installer/brand-msi.ps1') != ''
