@@ -36,12 +36,3 @@ jobs:
         with:
           name: test-results
           path: TestResults/*.trx
-
-      - name: Publish portable exe
-        run: dotnet publish .\SpaceSharp\SpaceSharp.csproj -p:PublishProfile=Portable
-
-      - name: Upload portable exe
-        uses: actions/upload-artifact@v6
-        with:
-          name: SpaceSharp-portable-${{ github.sha }}
-          path: publish/portable/SpaceSharp.exe

@@ -12,7 +12,7 @@ All notable changes to SpaceSharp. The newest release is at the top.
 
 ### Project
 - Unit tests (`SpaceSharp.Tests`, xUnit) for the treemap layout, the filter parser and matcher, size formatting and the tree operations behind delete and free space.
-- GitHub Actions: every push and pull request builds, runs the tests and keeps the portable exe as an artifact; pushing a version tag builds all release assets and opens a draft release with the changelog section as notes.
+- GitHub Actions builds and runs the tests on every push and pull request.
 - Dependabot keeps NuGet packages and workflow actions up to date.
 - `installer/release.ps1` builds every release asset locally; `installer/brand-msi.ps1` (now in the repository) brands the MSI and fixes the desktop shortcut description.
 

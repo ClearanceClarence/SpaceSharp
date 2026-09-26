@@ -32,6 +32,6 @@ Thanks for your interest. SpaceSharp is a small project, so the process is light
 ## Releasing (maintainer)
 
 1. Bump `<Version>` in `SpaceSharp/SpaceSharp.csproj` and move the "Unreleased" changelog entries under a `## <version>` heading.
-2. Commit, then tag the commit with the bare version number and push the tag: `git tag 1.2.1 && git push origin 1.2.1`.
-3. The release workflow builds the portable exe and the Velopack packages and opens a draft release with the changelog section as its notes. Check the assets and the notes, then publish it. (`.\installer\release.ps1` builds the same assets locally if you need them.)
+2. Run `.\installer\release.ps1`. It runs the tests and builds the portable exe, the installers and the update packages into `Releases\`.
+3. Commit, tag the commit with the bare version number (`git tag 1.2.1 && git push origin 1.2.1`), and create the GitHub release with the changelog section as its notes. Attach `publish\portable\SpaceSharp.exe` and everything in `Releases\`, or run the script with `-Upload`.
 4. Update the winget manifest: `wingetcreate update ClearanceClarence.SpaceSharp --version 1.2.1 --urls <MSI download URL> --submit`.
