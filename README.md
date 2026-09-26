@@ -365,6 +365,7 @@ SpaceSharp/
 SpaceSharp.Tests/                 xUnit tests for layout, filter, formatting and tree operations
 docs/                             landing page (GitHub Pages), screenshots, icon, header and social preview
 tools/make-assets.py              regenerates every icon, preview and installer image from the mark
+
 installer/                        MSI wizard pages (welcome, license, finish) and dialog images
 .github/                          issue forms, pull request template, build and release workflows, Dependabot
 ```

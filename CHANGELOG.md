@@ -10,6 +10,7 @@ All notable changes to SpaceSharp. The newest release is at the top.
 ### Appearance
 - New mark: nine cells on a charcoal tile whose gutters form the `#` in Sharp, with brightness following size. One brand color (amber) instead of four. New app icon at every size, README header, social preview, landing-page logo and installer images, all generated from `tools/make-assets.py`.
 
+
 ### Project
 - Unit tests (`SpaceSharp.Tests`, xUnit) for the treemap layout, the filter parser and matcher, size formatting and the tree operations behind delete and free space.
 - GitHub Actions: every push and pull request builds, runs the tests and keeps the portable exe as an artifact; pushing a version tag builds all release assets and opens a draft release with the changelog section as notes.
