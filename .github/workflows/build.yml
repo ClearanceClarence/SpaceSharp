@@ -9,6 +9,11 @@ on:
     paths-ignore: ['docs/**', '**.md']
   workflow_dispatch:
 
+# Build and test only. This workflow never publishes or creates releases; releases are built
+# locally with installer/release.ps1 and uploaded by hand.
+permissions:
+  contents: read
+
 jobs:
   build:
     name: Build and test
