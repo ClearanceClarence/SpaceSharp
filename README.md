@@ -74,8 +74,8 @@ It's a single, portable `.exe` with no installer and no dependencies.
 - Chains of folders that only contain one folder (like `Users › adria › AppData › Local`) are merged into a single box with a combined title, instead of a stack of thin frames
 - Folders with hundreds of small files (a photo shoot, a cache) show one "312 files" box instead of a grid of specks; zooming in reveals them individually
 - Boxes too small to see are left out, so the map stays clean instead of turning into noise
-- Six map styles: Classic (title bars, borders, cushion shading), Tiles, Cards, Bands, Terraces and Soft, switchable from the toolbar; S cycles
-- Readability options: three label sizes and outlined labels that stay legible on any color
+- Six map styles: Classic (title bars and borders), Flat, Tiles, Cards, Bands and Soft, switchable from the toolbar; S cycles
+- Readability options: five label sizes and outlined labels that stay legible on any color
 - A gray "Free space" block when scanning a whole drive, so the map shows the entire disk
 
 **Zoom and navigation**
@@ -100,7 +100,7 @@ It's a single, portable `.exe` with no installer and no dependencies.
 - Title bars follow the theme on Windows 10 and 11
 
 **Cleaning up**
-- Right-click any box to open it, show it in Explorer, copy its path, or move it to the Recycle Bin
+- Right-click any box to inspect it, open it, show it in Explorer, open its Windows Properties, copy its path or name, filter the map to its file type, select everything in its folder, or move it to the Recycle Bin
 - Deleting is undoable (it goes to the Recycle Bin) and the map updates without a rescan
 - Rescan (F5) brings you back to the folder you were looking at
 
@@ -131,7 +131,7 @@ The first launch is a little slower than the ones after it, because the portable
 2. When the scan finishes, the whole drive or folder fills the window. The biggest boxes are the biggest space users.
 3. Hover over a box to see its full path and size in the status bar.
 4. Double-click a folder to zoom into it. Use Backspace, the mouse back button, the breadcrumb or the mouse wheel to zoom back out.
-5. Right-click a file or folder to open it, find it in Explorer, or move it to the Recycle Bin.
+5. Right-click a file or folder for the full menu: Inspect (sizes, shares, dates, largest items inside, space by file type), Open, Show in Explorer, Properties, copy, filter to its type, select its folder, or move it to the Recycle Bin.
 
 To see protected system folders, run SpaceSharp as administrator. Otherwise those folders are skipped and marked as unreadable.
 
@@ -143,10 +143,10 @@ The gear button in the toolbar (or Ctrl+,) opens the settings window. Every chan
 |---|---|
 | **Theme** | Match Windows, Light or Dark. |
 | **Palette** and **Color by** | The same choices as in the toolbar. |
-| **Map style** | Classic, Tiles, Cards, Bands, Terraces or Soft. Same layout, different look; S cycles. |
-| **Label size** | Normal, Large or Larger text on the map. Title bars grow to match. |
+| **Map style** | Classic, Flat, Tiles, Cards, Bands or Soft. Same layout, different look; S cycles. |
+| **Label size** | Smallest, Smaller, Normal, Large or Larger text on the map. Title bars shrink and grow to match. |
 | **Outlined labels** | A thin contrasting outline around every label. Recommended if the map is hard to read. |
-| **Cushion shading** | Soft light-to-dark shading on each box in the Classic style. |
+| **Cushion shading** | Soft light-to-dark shading on each box in the Classic style. Off by default. |
 | **Size measure** | File size, or size on disk: the compressed size of compressed, sparse and cloud files, rounded up to whole clusters, like Explorer's "Size on disk". |
 | **Show free space** | Adds a gray block for the drive's unused space when a whole drive is scanned. Off by default. |
 | **Merge single-folder chains** | Draw folders that only contain one folder as a single box with a combined title. |
@@ -185,6 +185,7 @@ The bar then shows how many files match and their total size. **Select matches**
 
 | Mode | What the colors mean |
 |---|---|
+| **Top folder** (default) | Each top-level folder gets one hue, and everything inside it is that hue, a step lighter at each level. Where you are in the tree reads at a glance. |
 | **Depth** | Each nesting level gets its own color, like classic SpaceMonger. Files are a lighter shade of their folder's color. |
 | **File type** | Files are colored by category (images, video, audio, archives, programs, documents, code, other) and folders are neutral gray. A legend appears next to the breadcrumb. |
 
@@ -213,6 +214,8 @@ The bar then shows how many files match and their total size. **Select matches**
 | Home, Ctrl+0 | Show the whole map |
 | F5 | Rescan |
 | Ctrl+C | Copy the selected paths |
+| Ctrl+I | Inspect the selection: sizes, shares, dates, what is inside, which file types take the space |
+| Alt+Enter | Windows Properties for the selected item |
 | Ctrl+click, Shift+click | Select several items |
 | Ctrl+F | Filter the map |
 | Ctrl+A | Select every file matching the filter |
@@ -220,6 +223,7 @@ The bar then shows how many files match and their total size. **Select matches**
 | Ctrl+, | Settings |
 | Del | Move the selected items to the Recycle Bin |
 | S | Next map style |
+| K | Next color mode (top folder, depth, file type) |
 | C | Toggle cushion shading |
 | G | Toggle grouping of small items |
 | Esc | Cancel a scan |
@@ -285,7 +289,7 @@ The same steps by hand, if you prefer:
 ```powershell
 dotnet publish .\SpaceSharp\SpaceSharp.csproj -p:PublishProfile=Velopack
 vpk download github --repoUrl https://github.com/ClearanceClarence/SpaceSharp
-vpk pack --packId SpaceSharp --packVersion 1.2.1 --packDir .\publish\velopack --mainExe SpaceSharp.exe --packTitle SpaceSharp --packAuthors ClearanceClarence --icon .\SpaceSharp\Assets\SpaceSharp.ico --splashImage .\SpaceSharp\Assets\SpaceSharp-256.png --msi --instLocation Either --instWelcome .\installer\welcome.md --instLicense .\installer\license.txt --instConclusion .\installer\conclusion.md
+vpk pack --packId SpaceSharp --packVersion 1.2.2 --packDir .\publish\velopack --mainExe SpaceSharp.exe --packTitle SpaceSharp --packAuthors ClearanceClarence --icon .\SpaceSharp\Assets\SpaceSharp.ico --splashImage .\SpaceSharp\Assets\SpaceSharp-256.png --msi --instLocation Either --instWelcome .\installer\welcome.md --instLicense .\installer\license.txt --instConclusion .\installer\conclusion.md
 .\installer\brand-msi.ps1
 ```
 
@@ -371,6 +375,7 @@ SpaceSharp/
 SpaceSharp.Tests/                 xUnit tests for layout, filter, formatting and tree operations
 docs/                             landing page (GitHub Pages), screenshots, icon, header and social preview
 tools/make-assets.py              regenerates every icon, preview and installer image from the mark
+tools/screenshot-mockup.html      the app drawn in a browser with sample data, for README and store screenshots
 installer/                        MSI wizard pages, dialog images, release.ps1 and brand-msi.ps1
 .github/                          issue forms, pull request template, build workflow, Dependabot
 ```

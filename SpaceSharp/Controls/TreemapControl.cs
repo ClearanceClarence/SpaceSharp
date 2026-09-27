@@ -12,7 +12,11 @@ namespace SpaceSharp.Controls;
 
 public enum ColorMode
 {
+    /// <summary>Each top-level folder gets a hue; everything inside it is that hue, lighter with each level.</summary>
+    ByBranch,
+    /// <summary>Each nesting level gets its own color, the SpaceMonger way.</summary>
     ByDepth,
+    /// <summary>Files by type, folders neutral.</summary>
     ByFileType
 }
 
@@ -23,14 +27,14 @@ public enum MapStyle
 {
     /// <summary>Title bars, 1 px borders, cushion shading.</summary>
     Classic,
+    /// <summary>Plain fills, thin borders, no gaps, no shading. The simplest look.</summary>
+    Flat,
     /// <summary>Flat colors, small gaps, softly rounded, folder names as captions.</summary>
     Tiles,
     /// <summary>Folders as raised cards with a shadow and bold title; files as flat chips.</summary>
     Cards,
     /// <summary>Deep title band, lighter body, light borders, no shading.</summary>
     Bands,
-    /// <summary>One hue per top-level folder, darker with depth.</summary>
-    Terraces,
     /// <summary>Rounded pastel blocks with gaps.</summary>
     Soft
 }
@@ -106,13 +110,24 @@ public sealed class TreemapControl : FrameworkElement
     private bool _labelHalo;
     private static readonly Pen LightHaloPen = Frozen(new Pen(new SolidColorBrush(Color.FromArgb(0xB8, 0xFF, 0xFF, 0xFF)), 3) { LineJoin = PenLineJoin.Round });
     private static readonly Pen DarkHaloPen = Frozen(new Pen(new SolidColorBrush(Color.FromArgb(0xB8, 0x00, 0x00, 0x00)), 3) { LineJoin = PenLineJoin.Round });
-    private ColorMode _colorMode = ColorMode.ByDepth;
+    private ColorMode _colorMode = ColorMode.ByBranch;
     private ColorScheme _scheme = Palette.Default;
     private SizeMeasure _measure = SizeMeasure.FileSize;
-    private bool _cushion = true;
+    private bool _cushion;
     private bool _mergeChains = true;
     private bool _groupSmall = true;
     private bool _rebuildPending;
+
+    /// <summary>
+    /// Each folder's child layout, in coordinates relative to its content rectangle (0..1). Title bars and
+    /// insets are a fixed number of pixels, so a folder's content area changes shape slightly as you zoom;
+    /// re-running squarify on the new shape can flip a row from horizontal to vertical and make boxes
+    /// jump around. Keeping the first layout and only stretching it makes zoom continuous. The cache is
+    /// dropped whenever something other than the camera changes (tree, measure, style, window size).
+    /// </summary>
+    private readonly Dictionary<FsNode, CachedChildLayout> _layoutCache = new();
+
+    private sealed record CachedChildLayout(int Cutoff, IReadOnlyList<FsNode> Children, Rect[] Normalized, FsNode? Group, bool GroupMatched);
 
     // Camera. _offset is the window's top-left on the zoomed canvas, in pixels.
     private double _zoom = 1;
@@ -166,6 +181,9 @@ public sealed class TreemapControl : FrameworkElement
     }
 
     public event EventHandler<FsNode?>? HoveredNodeChanged;
+
+    /// <summary>The item under the mouse, if any.</summary>
+    public FsNode? HoveredNode => _hoveredNode;
     public event EventHandler<FsNode?>? SelectionChanged;
     public event EventHandler<FsNode>? NodeActivated;
     public event EventHandler? FocusChanged;
@@ -184,7 +202,7 @@ public sealed class TreemapControl : FrameworkElement
             _pinnedFocus = null;
             _zoom = 1;
             _offset = default;
-            Invalidate();
+            InvalidateLayout();
             ZoomChanged?.Invoke(this, EventArgs.Empty);
         }
     }
@@ -261,7 +279,7 @@ public sealed class TreemapControl : FrameworkElement
     public void SetFilterMatches(HashSet<FsNode>? matches)
     {
         _filterMatches = matches;
-        Invalidate();
+        InvalidateLayout();
     }
 
     public bool HasFilter => _filterMatches is not null;
@@ -288,7 +306,7 @@ public sealed class TreemapControl : FrameworkElement
             if (_measure == value) return;
             _measure = value;
             _root?.SortBy(value);
-            Invalidate();
+            InvalidateLayout();
         }
     }
 
@@ -310,10 +328,10 @@ public sealed class TreemapControl : FrameworkElement
         get => _labelScale;
         set
         {
-            value = Math.Clamp(value, 0.8, 1.8);
+            value = Math.Clamp(value, 0.6, 1.8);
             if (Math.Abs(_labelScale - value) < 0.001) return;
             _labelScale = value;
-            Invalidate();
+            InvalidateLayout();
         }
     }
 
@@ -337,7 +355,7 @@ public sealed class TreemapControl : FrameworkElement
         {
             if (_mapStyle == value) return;
             _mapStyle = value;
-            Invalidate();
+            InvalidateLayout();
         }
     }
 
@@ -345,17 +363,17 @@ public sealed class TreemapControl : FrameworkElement
     // around their children; the header height is the room reserved for the folder title.
     private double HeaderHeight => Math.Round((_mapStyle switch
     {
-        MapStyle.Tiles => 16, MapStyle.Cards => 22, MapStyle.Bands => 18, MapStyle.Terraces => 16, MapStyle.Soft => 20, _ => ClassicHeaderHeight
+        MapStyle.Tiles => 16, MapStyle.Flat => 16, MapStyle.Cards => 19, MapStyle.Bands => 18, MapStyle.Soft => 18, _ => ClassicHeaderHeight
     }) * _labelScale);
 
     private double InsetFor(Rect bounds) => _mapStyle switch
     {
-        MapStyle.Tiles => 2, MapStyle.Cards => 4, MapStyle.Soft => 3, MapStyle.Bands or MapStyle.Terraces => 2,
+        MapStyle.Tiles => 2, MapStyle.Cards => 3, MapStyle.Soft => 2, MapStyle.Bands => 2, MapStyle.Flat => 1,
         _ => Math.Min(bounds.Width, bounds.Height) >= 40 ? 2 : 1
     };
 
-    private double Gap => _mapStyle switch { MapStyle.Tiles => 3, MapStyle.Cards => 4, MapStyle.Soft => 5, _ => 0 };
-    private double Radius => _mapStyle switch { MapStyle.Tiles => 4, MapStyle.Cards => 6, MapStyle.Soft => 8, _ => 0 };
+    private double Gap => _mapStyle switch { MapStyle.Tiles => 3, MapStyle.Cards => 2, MapStyle.Soft => 3, _ => 0 };
+    private double Radius => _mapStyle switch { MapStyle.Tiles => 4, MapStyle.Cards => 5, MapStyle.Soft => 6, _ => 0 };
 
     /// <summary>Fly to folders instead of jumping (FocusOn with animate: true).</summary>
     public bool AnimateZoom { get; set; } = true;
@@ -368,7 +386,7 @@ public sealed class TreemapControl : FrameworkElement
         {
             if (_mergeChains == value) return;
             _mergeChains = value;
-            Invalidate();
+            InvalidateLayout();
         }
     }
 
@@ -380,7 +398,7 @@ public sealed class TreemapControl : FrameworkElement
         {
             if (_groupSmall == value) return;
             _groupSmall = value;
-            Invalidate();
+            InvalidateLayout();
         }
     }
 
@@ -435,7 +453,7 @@ public sealed class TreemapControl : FrameworkElement
     }
 
     /// <summary>Re-layouts and redraws (call after the tree was modified).</summary>
-    public void Refresh() => Invalidate();
+    public void Refresh() => InvalidateLayout();
 
     protected override int VisualChildrenCount => 2;
 
@@ -451,13 +469,13 @@ public sealed class TreemapControl : FrameworkElement
         var current = sizeInfo.NewSize;
         if (previous.Width > 0 && previous.Height > 0)
             _offset = new Vector(_offset.X * current.Width / previous.Width, _offset.Y * current.Height / previous.Height);
-        Invalidate();
+        InvalidateLayout();
     }
 
     protected override void OnDpiChanged(DpiScale oldDpi, DpiScale newDpi)
     {
         base.OnDpiChanged(oldDpi, newDpi);
-        Invalidate();
+        InvalidateLayout();
     }
 
     // ================================================================ camera
@@ -661,6 +679,13 @@ public sealed class TreemapControl : FrameworkElement
 
     // ================================================================ layout
 
+    /// <summary>Invalidate for changes that alter the layout itself, not only the camera.</summary>
+    private void InvalidateLayout()
+    {
+        _layoutCache.Clear();
+        Invalidate();
+    }
+
     private void Invalidate()
     {
         if (_rebuildPending) return;
@@ -746,16 +771,75 @@ public sealed class TreemapControl : FrameworkElement
         if (contentWidth < MinFolderContent || contentHeight < MinFolderContent) return;
 
         var content = new Rect(bounds.X + inset, bounds.Y + top, contentWidth, contentHeight);
-        var children = _groupSmall ? GroupSmallChildren(shown, content) : shown.Children;
-        int childIndex = 0;
-        Squarify.Layout(children, content, _measure, (child, rect) =>
+        var layout = ChildLayout(shown, content);
+        if (layout.Group is not null && layout.GroupMatched) _matchedGroups.Add(layout.Group);
+
+        for (int i = 0; i < layout.Children.Count; i++)
         {
+            var n = layout.Normalized[i];
+            if (n.IsEmpty) continue;
+            var rect = new Rect(
+                content.X + n.X * content.Width,
+                content.Y + n.Y * content.Height,
+                n.Width * content.Width,
+                n.Height * content.Height);
             // Children of the root define the branches; everything below inherits its branch.
-            int childBranch = depth == 0 ? childIndex : branch;
-            childIndex++;
+            int childBranch = depth == 0 ? i : branch;
             if (rect.Width >= MinChildSize && rect.Height >= MinChildSize)
-                LayoutNode(child, rect, depth + 1, childBranch);
+                LayoutNode(layout.Children[i], rect, depth + 1, childBranch);
+        }
+    }
+
+    /// <summary>
+    /// The folder's child layout for this content area, from the cache when the set of children is the
+    /// same. Grouping depends on how many pixels the folder has, so zooming in can split a "312 files"
+    /// box into its members; that folder is then laid out afresh, and only that folder.
+    /// </summary>
+    private CachedChildLayout ChildLayout(FsNode folder, Rect content)
+    {
+        int cutoff = _groupSmall ? GroupCutoff(folder, content) : folder.Children.Count;
+        if (_layoutCache.TryGetValue(folder, out var cached) && cached.Cutoff == cutoff)
+            return cached;
+
+        IReadOnlyList<FsNode> children = folder.Children;
+        FsNode? group = null;
+        bool groupMatched = false;
+        if (cutoff < folder.Children.Count)
+        {
+            var grouped = GroupSmallChildren(folder, cutoff, out group, out groupMatched);
+            if (grouped is not null) children = grouped;
+            // Fewer than two small children: nothing to group; the requested cutoff stays the cache key.
+        }
+
+        // Lay out in the content's shape, then normalize so the same layout can be stretched to any zoom.
+        var normalized = new Rect[children.Count];
+        int index = 0;
+        Squarify.Layout(children, new Rect(0, 0, content.Width, content.Height), _measure, (_, rect) =>
+        {
+            normalized[index++] = new Rect(rect.X / content.Width, rect.Y / content.Height,
+                rect.Width / content.Width, rect.Height / content.Height);
         });
+        // Zero-sized children get no rectangle from squarify.
+        for (; index < normalized.Length; index++) normalized[index] = Rect.Empty;
+
+        cached = new CachedChildLayout(cutoff, children, normalized, group, groupMatched);
+        _layoutCache[folder] = cached;
+        return cached;
+    }
+
+    /// <summary>Index of the first child that would get fewer than <see cref="GroupBelowArea"/> pixels.</summary>
+    private int GroupCutoff(FsNode folder, Rect content)
+    {
+        var children = folder.Children;
+        double total = 0;
+        foreach (var c in children) total += c.SizeFor(_measure);
+        if (total <= 0) return children.Count;
+
+        double pixelsPerByte = content.Width * content.Height / total;
+        for (int i = 0; i < children.Count; i++)
+            if (children[i].SizeFor(_measure) * pixelsPerByte < GroupBelowArea)
+                return i;
+        return children.Count;
     }
 
     /// <summary>
@@ -763,23 +847,11 @@ public sealed class TreemapControl : FrameworkElement
     /// boxes. Children that would get less than <see cref="GroupBelowArea"/> pixels are replaced by one
     /// "312 files" box. Zooming in gives them more pixels, so they appear individually again.
     /// </summary>
-    private IReadOnlyList<FsNode> GroupSmallChildren(FsNode folder, Rect content)
+    private IReadOnlyList<FsNode>? GroupSmallChildren(FsNode folder, int cutoff, out FsNode? group, out bool groupMatched)
     {
         var children = folder.Children;
-        double total = 0;
-        foreach (var c in children) total += c.SizeFor(_measure);
-        if (total <= 0) return children;
-
-        double pixelsPerByte = content.Width * content.Height / total;
-        int cutoff = children.Count;
-        for (int i = 0; i < children.Count; i++)
-        {
-            if (children[i].SizeFor(_measure) * pixelsPerByte < GroupBelowArea)
-            {
-                cutoff = i;
-                break;
-            }
-        }
+        group = null;
+        groupMatched = false;
 
         long size = 0, allocated = 0;
         int files = 0, count = 0, folders = 0;
@@ -793,10 +865,10 @@ public sealed class TreemapControl : FrameworkElement
             count++;
             if (c.IsDirectory) folders++;
         }
-        if (count < 2) return children;
+        if (count < 2) return null;
 
         string kind = folders == 0 ? "files" : folders == count ? "folders" : "items";
-        var group = new FsNode($"{count:N0} {kind}", folder.FullPath, NodeKind.Group, folder)
+        group = new FsNode($"{count:N0} {kind}", folder.FullPath, NodeKind.Group, folder)
         {
             Size = size,
             Allocated = allocated,
@@ -808,7 +880,7 @@ public sealed class TreemapControl : FrameworkElement
             {
                 if (_filterMatches.Contains(children[i]))
                 {
-                    _matchedGroups.Add(group);
+                    groupMatched = true;
                     break;
                 }
             }
@@ -864,9 +936,8 @@ public sealed class TreemapControl : FrameworkElement
 
     // =============================================================== drawing
 
-    private static readonly Pen LightPen = Frozen(new Pen(new SolidColorBrush(Color.FromArgb(0x8C, 0xFF, 0xFF, 0xFF)), 1));
-    private static readonly Pen DarkPen = Frozen(new Pen(new SolidColorBrush(Color.FromArgb(0x59, 0x00, 0x00, 0x00)), 1));
-    private static readonly Brush CardShadowNear = Frozen(new SolidColorBrush(Color.FromArgb(0x30, 0x00, 0x00, 0x00)));
+    private static readonly Pen FaintPen = Frozen(new Pen(new SolidColorBrush(Color.FromArgb(0x38, 0x00, 0x00, 0x00)), 1));
+    private static readonly Brush CardShadowNear = Frozen(new SolidColorBrush(Color.FromArgb(0x22, 0x00, 0x00, 0x00)));
     private static readonly Brush CardShadowFar = Frozen(new SolidColorBrush(Color.FromArgb(0x16, 0x00, 0x00, 0x00)));
     private static readonly Brush SoftSheen = Frozen(new LinearGradientBrush(
         new GradientStopCollection
@@ -893,18 +964,14 @@ public sealed class TreemapControl : FrameworkElement
         // ---- fill
         Brush fill;
         if (node.IsFreeSpace) fill = FreeSpaceBrush;
-        else if (_mapStyle == MapStyle.Terraces && node.IsDirectory)
-            fill = Tint(_scheme.Fill(node, item.Branch, _colorMode), Colors.Black, Math.Min(0.6, item.Depth * 0.12), 10 + Math.Min(item.Depth, 9));
-        else if (_mapStyle == MapStyle.Terraces)
-            fill = Tint(_scheme.Fill(node, item.Branch, _colorMode), Colors.Black, Math.Min(0.45, item.Depth * 0.08), 20 + Math.Min(item.Depth, 9));
-        else fill = _scheme.Fill(node, item.Depth, _colorMode);
+        else fill = _scheme.Fill(node, item.Depth, item.Branch, _colorMode);
 
         if (node.IsDirectory && !node.IsFreeSpace)
         {
             fill = _mapStyle switch
             {
-                MapStyle.Cards => Tint(fill, MapBackground is SolidColorBrush bg ? bg.Color : Color.FromRgb(0x17, 0x17, 0x1C), 0.35, 1),
-                MapStyle.Bands => Tint(fill, Colors.White, 0.35, 2),
+                MapStyle.Cards => Tint(fill, MapBackground is SolidColorBrush bg ? bg.Color : Color.FromRgb(0x17, 0x17, 0x1C), 0.15, 1),
+                MapStyle.Bands => Tint(fill, Colors.White, 0.22, 2),
                 MapStyle.Soft => Tint(fill, Colors.White, 0.15, 3),
                 _ => fill
             };
@@ -941,7 +1008,7 @@ public sealed class TreemapControl : FrameworkElement
             else dc.DrawRectangle(HeaderShade, null, box);
         }
 
-        var pen = _mapStyle switch { MapStyle.Classic => BorderPen, MapStyle.Bands => LightPen, MapStyle.Terraces => DarkPen, _ => null };
+        var pen = _mapStyle switch { MapStyle.Classic => BorderPen, MapStyle.Flat => FaintPen, MapStyle.Bands => FaintPen, _ => null };
         if (pen is not null) dc.DrawRectangle(null, pen, box);
 
         // ---- folder title
@@ -972,7 +1039,7 @@ public sealed class TreemapControl : FrameworkElement
                 case MapStyle.Soft:
                     DrawLabel(dc, HeaderText(item, header.Width - 18, pixelsPerDip, "  ·  "), HeaderFace, textBrush, x + 9, full.Y + 4, header.Width - 18, TextAlignment.Left, pixelsPerDip);
                     break;
-                default: // Tiles, Terraces: a small caption, no strip
+                default: // Tiles, Flat: a small caption, no strip
                     DrawLabel(dc, HeaderText(item, header.Width - 10, pixelsPerDip, "   ", upper: _mapStyle == MapStyle.Tiles), CaptionFace, textBrush, x + 6, full.Y + 2, header.Width - 10, TextAlignment.Left, pixelsPerDip, 10.5);
                     break;
             }

@@ -53,6 +53,27 @@ public sealed class ColorScheme
     public IEnumerable<(FileCategory Category, Brush Brush)> Categories =>
         _categories.Select(kv => (kv.Key, kv.Value));
 
+    private readonly Dictionary<(int Branch, int Depth, bool Folder), Brush> _branchShades = new();
+
+    /// <summary>
+    /// The box color. In "by top folder" mode every box inside a top-level folder shares that
+    /// folder's hue and gets lighter with each level, so the hierarchy reads at a glance.
+    /// </summary>
+    public Brush Fill(FsNode node, int depth, int branch, ColorMode mode)
+    {
+        if (mode != ColorMode.ByBranch || depth == 0) return Fill(node, depth, mode);
+
+        int level = Math.Min(depth - 1, 6);
+        var key = (branch % DepthCycle, level, node.IsDirectory);
+        if (_branchShades.TryGetValue(key, out var shade)) return shade;
+
+        var hue = ((SolidColorBrush)_folders[branch % DepthCycle]).Color;
+        double t = node.IsDirectory ? level * 0.09 : 0.30 + level * 0.07;
+        shade = Palette.Freeze(Palette.Mix(hue, Colors.White, t));
+        _branchShades[key] = shade;
+        return shade;
+    }
+
     public Brush Fill(FsNode node, int depth, ColorMode mode)
     {
         if (mode == ColorMode.ByDepth)
@@ -174,7 +195,7 @@ public static class Palette
         Convert.ToByte(v.Substring(3, 2), 16),
         Convert.ToByte(v.Substring(5, 2), 16))).ToArray();
 
-    private static Color Mix(Color a, Color b, double t) => Color.FromRgb(
+    internal static Color Mix(Color a, Color b, double t) => Color.FromRgb(
         (byte)Math.Round(a.R + (b.R - a.R) * t),
         (byte)Math.Round(a.G + (b.G - a.G) * t),
         (byte)Math.Round(a.B + (b.B - a.B) * t));

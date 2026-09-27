@@ -64,6 +64,7 @@
   .meta span::before { content: "✓"; color: var(--teal); margin-right: 6px; font-weight: 700; }
   .winget { display: inline-flex; align-items: center; gap: 12px; margin-top: 22px; padding: 10px 14px; border-radius: 10px; background: var(--card); border: 1px solid var(--line); font: 13.5px/1 Consolas, "Cascadia Code", monospace; color: var(--muted); cursor: pointer; }
   .winget b { color: var(--ink); font-weight: 500; } .winget:hover { border-color: var(--amber); }
+  .winget .soon { font: 600 10.5px/1 "Bricolage Grotesque", sans-serif; letter-spacing: .08em; text-transform: uppercase; color: var(--amber); border: 1px solid var(--amber); border-radius: 999px; padding: 4px 8px; }
   .demo { position: relative; aspect-ratio: 16 / 10.4; border-radius: 16px; overflow: hidden; border: 1px solid var(--line); background: var(--bg2); box-shadow: 0 40px 80px -30px rgba(0,0,0,.6); }
   .demo canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
   .demo .chrome { position: absolute; left: 0; right: 0; top: 0; height: 34px; background: color-mix(in srgb, var(--card) 92%, transparent); border-bottom: 1px solid var(--line); display: flex; align-items: center; gap: 8px; padding: 0 12px; font-size: 12px; color: var(--muted); }
@@ -137,7 +138,7 @@
       <a class="btn" href="https://github.com/ClearanceClarence/SpaceSharp" target="_blank" rel="noopener" data-track="github"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 .2a8 8 0 0 0-2.5 15.6c.4 0 .5-.2.5-.4v-1.5c-2.2.5-2.7-1-2.7-1-.4-.9-.9-1.2-.9-1.2-.7-.5.1-.5.1-.5.8.1 1.2.8 1.2.8.7 1.2 1.9.9 2.3.7.1-.5.3-.9.5-1.1-1.8-.2-3.6-.9-3.6-4 0-.9.3-1.6.8-2.1-.1-.2-.4-1 .1-2.1 0 0 .7-.2 2.2.8a7.6 7.6 0 0 1 4 0c1.5-1 2.2-.8 2.2-.8.4 1.1.2 1.9.1 2.1.5.6.8 1.3.8 2.1 0 3.1-1.9 3.8-3.6 4 .3.3.5.8.5 1.5v2.2c0 .2.1.5.6.4A8 8 0 0 0 8 .2z"/></svg>Star on GitHub</a>
     </div>
     <div class="meta"><span>No install needed</span><span>Updates itself</span><span>MIT license</span><span>No telemetry</span></div>
-    <div class="winget" id="winget" title="Copy" data-track="winget_copy"><span>&gt;</span><b>winget install ClearanceClarence.SpaceSharp</b><span>copy</span></div>
+    <div class="winget" id="winget" title="Not yet available; copies the command for later" data-track="winget_copy"><span>&gt;</span><b>winget install ClearanceClarence.SpaceSharp</b><span class="soon">coming soon</span></div>
   </div>
   <div class="demo" id="heroDemo">
     <div class="chrome"><svg style="width:14px;height:14px" viewBox="0 0 256 256"><rect width="256" height="256" rx="60" fill="#1E1E24"/><rect x="22" y="22" width="212" height="212" rx="32" fill="#2A2A33"/><rect x="44" y="44" width="168" height="124" rx="18" fill="#1E1E24"/><rect x="56" y="56" width="75.64" height="100" rx="7" fill="#F5B82E"/><rect x="141.64" y="56" width="58.36" height="50" rx="6" fill="#74A6CC"/><rect x="141.64" y="116" width="24.18" height="40" rx="5" fill="#6FC2B0"/><rect x="175.82" y="116" width="24.18" height="40" rx="5" fill="#C97DB2"/><rect x="44" y="190" width="84" height="14" rx="7" fill="#44444F"/><circle cx="190" cy="197" r="15" fill="#F5B82E"/></svg><b>SpaceSharp</b><span>·</span><span id="heroTitle">C:\</span></div>
@@ -214,7 +215,7 @@
     <a class="card dl reveal" href="https://github.com/ClearanceClarence/SpaceSharp/releases/latest/download/SpaceSharp-win-Setup.exe" data-track="download" data-file="setup"><h3>One-click setup</h3><span class="file">SpaceSharp-win-Setup.exe</span><p>Installs to your user profile with no questions and no admin rights. Also updates itself.</p><span class="go">Download Setup →</span></a>
     <a class="card dl reveal" href="https://github.com/ClearanceClarence/SpaceSharp/releases/latest/download/SpaceSharp-win-Portable.zip" data-track="download" data-file="portable"><h3>Portable</h3><span class="file">SpaceSharp-win-Portable.zip</span><p>Unzip anywhere and run. Nothing is installed. Good for USB sticks and other people's PCs.</p><span class="go">Download ZIP →</span></a>
   </div>
-  <p style="color:var(--muted);font-size:14px;margin-top:22px">Or from a terminal: <code>winget install ClearanceClarence.SpaceSharp</code> · <a href="https://github.com/ClearanceClarence/SpaceSharp/releases" target="_blank" rel="noopener">All releases and changelog</a></p>
+  <p style="color:var(--muted);font-size:14px;margin-top:22px">A winget package is on its way; until then the files above are the way in. · <a href="https://github.com/ClearanceClarence/SpaceSharp/releases" target="_blank" rel="noopener">All releases and changelog</a></p>
 </div></section>
 
 <section class="alt" id="faq"><div class="wrap">
@@ -247,7 +248,7 @@
   document.querySelectorAll("[data-track]").forEach(el => el.addEventListener("click", () => track(el.dataset.track, { file: el.dataset.file || undefined })));
   function toast(t) { const el = document.getElementById("toast"); el.textContent = t; el.classList.add("show"); clearTimeout(toast.t); toast.t = setTimeout(() => el.classList.remove("show"), 1800); }
   document.getElementById("winget").addEventListener("click", async () => {
-    try { await navigator.clipboard.writeText("winget install ClearanceClarence.SpaceSharp"); toast("Copied"); } catch { toast("winget install ClearanceClarence.SpaceSharp"); }
+    try { await navigator.clipboard.writeText("winget install ClearanceClarence.SpaceSharp"); toast("Copied. The winget package isn't published yet; keep it for later."); } catch { toast("winget package coming soon"); }
   });
   const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); } }), { threshold: .12 });
   document.querySelectorAll(".reveal").forEach(el => io.observe(el));
@@ -447,7 +448,13 @@
     return names.join(" › ");
   }
   const textFor = (c) => lum(c) > .2 ? "#141418" : "#F2F2F6";
-  const baseFill = (it) => { const p = PALETTES[state.palette]; return it.node.dir ? p.folder(it.depth % 12) : p.file(it.depth % 12); };
+  // "Top folder" coloring, the app's default: one hue per top-level folder, a step lighter per level inside it.
+  const baseFill = (it) => {
+    const p = PALETTES[state.palette];
+    if (it.depth === 0) return p.folder(0);
+    const hue = p.folder((branchOf.get(it.node) ?? 0) % 12), level = Math.min(it.depth - 1, 6);
+    return mix(hue, [255, 255, 255], it.node.dir ? level * .09 : .30 + level * .07);
+  };
   const gap = (it, g) => ({ x: it.x + g / 2, y: it.y + g / 2, w: Math.max(0, it.w - g), h: Math.max(0, it.h - g) });
 
   // ============================================================ the ten styles
@@ -527,26 +534,24 @@
         else fileLabel(ctx, b, t, it);
       } },
 
-    { name: "Bands", desc: "SpaceMonger 2 feel: a deep title band, lighter body, crisp light borders, no shading.",
+    { name: "Bands", desc: "SpaceMonger 2 feel: a deep title band, lighter body, thin lines, no shading.",
       header: "bar", headerH: 18, inset: () => 2,
       draw(ctx, it) {
         const c = baseFill(it);
-        const body = it.node.dir ? mix(c, [255, 255, 255], .35) : c;
+        const body = it.node.dir ? mix(c, [255, 255, 255], .22) : c;
         ctx.fillStyle = rgb(body); ctx.fillRect(it.x, it.y, it.w, it.h);
         if (it.node.group) { ctx.fillStyle = "rgba(0,0,0,.12)"; ctx.fillRect(it.x, it.y, it.w, it.h); }
-        ctx.strokeStyle = "rgba(255,255,255,.55)"; ctx.lineWidth = 1; ctx.strokeRect(it.x + .5, it.y + .5, it.w - 1, it.h - 1);
+        ctx.strokeStyle = "rgba(0,0,0,.22)"; ctx.lineWidth = 1; ctx.strokeRect(it.x + .5, it.y + .5, it.w - 1, it.h - 1);
         if (it.header) { const band = mix(c, [0, 0, 0], .35); ctx.fillStyle = rgb(band); ctx.fillRect(it.x, it.y, it.w, 18); label(ctx, it, "#F5F5F8", "700 11px", 5, 3, "left", `${chainName(it)}  —  ${fmt(it.node.size)}`); }
         else fileLabel(ctx, it, textFor(body), it);
       } },
 
-    { name: "Terraces", desc: "Each top-level folder gets one hue; deeper levels get darker. Depth reads as height.",
-      header: "text", headerH: 16, inset: () => 2,
+    { name: "Flat", desc: "Plain fills, thin lines, no gaps, no shading. The simplest look.",
+      header: "text", headerH: 16, inset: () => 1,
       draw(ctx, it) {
-        const branch = branchOf.get(it.node) ?? 0;
-        const hue = 205 + branch * 47;
-        const c = it.node.dir ? hsl(hue, .38, Math.max(.22, .62 - it.depth * .07)) : hsl(hue, .45, Math.max(.35, .78 - it.depth * .06));
+        const c = baseFill(it);
         ctx.fillStyle = rgb(c); ctx.fillRect(it.x, it.y, it.w, it.h);
-        ctx.strokeStyle = "rgba(0,0,0,.35)"; ctx.lineWidth = 1; ctx.strokeRect(it.x + .5, it.y + .5, it.w - 1, it.h - 1);
+        ctx.strokeStyle = "rgba(0,0,0,.22)"; ctx.lineWidth = 1; ctx.strokeRect(it.x + .5, it.y + .5, it.w - 1, it.h - 1);
         if (it.header) label(ctx, it, textFor(c), "600 10.5px", 5, 2, "left", `${chainName(it)}  ${fmt(it.node.size)}`);
         else fileLabel(ctx, it, textFor(c), it);
       } },
@@ -698,7 +703,7 @@
   // ------------------------------------------------------------ styles gallery
   const branch = root.children.find(c => c.name === "Users") || root;
   const stylesEl = document.getElementById("styleGrid");
-  const gallery = [["Classic", "title bars, borders, cushion"], ["Tiles", "flat, gapped, rounded"], ["Cards", "raised folders, chips"], ["Bands", "deep title band"], ["Terraces", "one hue per branch, darker with depth"], ["Soft", "rounded pastel blocks"]];
+  const gallery = [["Classic", "title bars, borders, cushion"], ["Tiles", "flat, gapped, rounded"], ["Cards", "raised folders, chips"], ["Bands", "deep title band"], ["Flat", "plain fills, thin lines"], ["Soft", "rounded pastel blocks"]];
   const galleryCanvases = gallery.map(([name, desc]) => {
     const el = document.createElement("div"); el.className = "style reveal"; el.innerHTML = `<canvas></canvas><div><b>${name}</b><span>${desc}</span></div>`; stylesEl.appendChild(el); io.observe(el); return el.querySelector("canvas");
   });

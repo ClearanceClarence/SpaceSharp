@@ -12,6 +12,8 @@ namespace SpaceSharp;
 /// </summary>
 public partial class SettingsWindow : Window
 {
+    private static readonly string[] LabelSizes = { "Smallest", "Smaller", "Normal", "Large", "Larger" };
+
     private readonly AppSettings _settings = AppSettings.Current;
     private readonly MainWindow _main;
     private StackPanel? _card;
@@ -35,15 +37,16 @@ public partial class SettingsWindow : Window
         Row("Palette", "The colors used for boxes in the map.",
             Combo(Palette.Schemes.Select(s => s.Name).ToArray(), Palette.Schemes.ToList().IndexOf(Palette.Find(_settings.Palette)),
                 i => _settings.Palette = Palette.Schemes[i].Name));
-        Row("Color by", "Color each nesting level differently, or color files by their type.",
-            Combo(new[] { "Folder depth", "File type" }, _settings.ColorMode == nameof(ColorMode.ByFileType) ? 1 : 0,
-                i => _settings.ColorMode = (i == 1 ? ColorMode.ByFileType : ColorMode.ByDepth).ToString()));
-        Row("Map style", "How boxes are drawn. Classic: title bars and borders. Tiles: flat, gapped, rounded. Cards: raised folders. Bands: deep title band. Terraces: one hue per top folder, darker with depth. Soft: rounded pastel blocks.",
+        Row("Color by", "Top folder: one hue per top-level folder, lighter with each level inside. Folder depth: a different color per level. File type: files colored by type.",
+            Combo(new[] { "Top folder", "Folder depth", "File type" },
+                Enum.TryParse<ColorMode>(_settings.ColorMode, out var colorMode) ? (int)colorMode : 0,
+                i => _settings.ColorMode = ((ColorMode)i).ToString()));
+        Row("Map style", "How boxes are drawn. Classic: title bars and borders. Flat: plain fills and thin lines. Tiles: flat, gapped, rounded. Cards: raised folders. Bands: dark title band. Soft: rounded pastel blocks.",
             Combo(Enum.GetNames<MapStyle>(), Math.Max(0, Array.IndexOf(Enum.GetNames<MapStyle>(), _settings.MapStyle ?? "Classic")),
                 i => _settings.MapStyle = Enum.GetNames<MapStyle>()[i]));
-        Row("Label size", "Bigger text on the map. Title bars grow to match.",
-            Combo(new[] { "Normal", "Large", "Larger" }, Array.IndexOf(new[] { "Normal", "Large", "Larger" }, _settings.LabelSize ?? "Normal"),
-                i => _settings.LabelSize = new[] { "Normal", "Large", "Larger" }[i]));
+        Row("Label size", "Text size on the map, from Smallest to Larger. Title bars shrink and grow to match.",
+            Combo(LabelSizes, Array.IndexOf(LabelSizes, _settings.LabelSize ?? "Normal"),
+                i => _settings.LabelSize = LabelSizes[i]));
         Row("Outlined labels", "A thin contrasting outline around every label, so text stays readable on any color. Recommended if you find the map hard to read.",
             Switch(_settings.LabelHalo, v => _settings.LabelHalo = v));
         Row("Cushion shading", "Soft light-to-dark shading on every box in the Classic style. Shortcut: C.",

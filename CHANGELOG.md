@@ -2,6 +2,24 @@
 
 All notable changes to SpaceSharp. The newest release is at the top.
 
+## 1.2.2
+
+### Fixes
+- Zooming no longer rearranges the map. Title bars and borders keep a fixed pixel size, so a folder's content area changes shape slightly as you zoom, and the layout could flip a row from horizontal to vertical along the way; the box you were zooming into then jumped somewhere else. Each folder's layout is now computed once and only stretched with the zoom. Small items still ungroup as they get room, but that only affects the folder they are in.
+
+### Changes
+- Two more label sizes, Smaller and Smallest, in Settings › Appearance › Label size.
+- New color mode, **Top folder**, and it is the default: each top-level folder gets one hue, and everything inside it is that hue, a step lighter at each level, so the hierarchy reads at a glance. "Depth" (a color per level, the SpaceMonger way) and "File type" are still there.
+- New **Flat** map style: plain fills, thin lines, no gaps, no shading. It replaces Terraces, whose one-hue-per-branch idea is now the Top folder color mode and works with every style.
+- Map styles reworked. Cards: tighter spacing, folders keep their palette color instead of going muddy, lighter shadow. Bands: the bright borders are gone, replaced by a faint dark line, and folder bodies are less washed out. Soft: smaller gaps, corners and title bars, so less space goes to nothing.
+- Cushion shading is off by default (C turns it on).
+- **Inspect** (Ctrl+I, or from the right-click menu): a window with everything about an item or a selection. Size and size on disk with exact bytes, share of the parent folder and of the drive, file and folder counts, average file size, newest change, and for folders the largest items inside and the space taken by each file type, all with bars. Copy details puts it on the clipboard as text.
+- The right-click menu is reorganized and gains Inspect, Properties (the Windows dialog, also Alt+Enter), Copy name, "Show only *.ext files", and "Select everything in this folder".
+- The hover card shows the item's share of the whole drive, the largest item inside a folder, and a hint for the menu and Inspect.
+- K cycles the color mode, next to S for map style.
+- The scanning card is calmer: no logo, the percentage sits on the right of the title, and the current folder is a single quiet line under the progress bar next to the speed and elapsed time.
+- The filter panel is tidier: a title bar with a close button, sections separated by lines instead of stacked headings, and a footer that shows the live match count next to proper Clear and Done buttons. Clear is disabled when there is nothing to clear.
+
 ## 1.2.1
 
 ### Fixes

@@ -2,6 +2,7 @@
 # Finishes the MSI that "vpk pack" produced in .\Releases:
 #   1. writes the branded dialog images (installer\banner.bmp, installer\logo.bmp)
 #   2. fixes the desktop shortcut description, which vpk 1.2.158 leaves as a placeholder
+#   3. registers the app icon so Apps & features and the installer show the mark instead of the generic MSI icon
 # Works from any folder; the release workflow runs it too:  .\installer\brand-msi.ps1
 
 $ErrorActionPreference = "Stop"
@@ -13,6 +14,7 @@ $msi = $msi.FullName
 
 $banner      = (Resolve-Path (Join-Path $PSScriptRoot "banner.bmp")).Path
 $logo        = (Resolve-Path (Join-Path $PSScriptRoot "logo.bmp")).Path
+$icon        = (Resolve-Path (Join-Path $root "SpaceSharp\Assets\SpaceSharp.ico")).Path
 $description = "See where your disk space went"
 
 $installer = New-Object -ComObject WindowsInstaller.Installer
@@ -69,6 +71,18 @@ if ($hasProperty) {
 # In case the placeholder text is stored directly in the shortcut instead of through the property.
 Run-Sql $db "UPDATE Shortcut SET Description = '$description' WHERE Description = '[MsiDesktopShortcutDescription]'"
 "Set desktop shortcut description"
+
+# ---- 3. product icon --------------------------------------------------------
+$iconName = "SpaceSharp.ico"
+$hasIcon = (Query-Column $db "SELECT Name FROM Icon WHERE Name = '$iconName'").Count -gt 0
+$record = Call $installer "CreateRecord" @(1)
+Call $record "SetStream" @(1, $icon) | Out-Null
+if ($hasIcon) { Run-Sql $db "UPDATE Icon SET Data = ? WHERE Name = '$iconName'" $record }
+else          { Run-Sql $db "INSERT INTO Icon (Name, Data) VALUES ('$iconName', ?)" $record }
+$hasArp = (Query-Column $db "SELECT Property FROM Property WHERE Property = 'ARPPRODUCTICON'").Count -gt 0
+if ($hasArp) { Run-Sql $db "UPDATE Property SET Value = '$iconName' WHERE Property = 'ARPPRODUCTICON'" }
+else         { Run-Sql $db "INSERT INTO Property (Property, Value) VALUES ('ARPPRODUCTICON', '$iconName')" }
+"Set product icon"
 
 Call $db "Commit" @() | Out-Null
 

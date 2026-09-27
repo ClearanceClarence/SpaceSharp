@@ -4,6 +4,7 @@ Thanks for your interest. SpaceSharp is a small project, so the process is light
 
 ## Ways to help
 
+- **Screenshots** for the README, the website and store listings come from `tools/screenshot-mockup.html`, which draws the app with generic sample data so no real file names end up online. Open it in a browser, pick theme, style, palette and a scene (hover card, menu, filter, Inspect, selection, zoomed folder), and capture the window.
 - **Report bugs** and **suggest features** through the [issue forms](https://github.com/ClearanceClarence/SpaceSharp/issues/new/choose). Clear steps and a screenshot go a long way.
 - **Add a palette.** Palettes are a name and a list of colors in `SpaceSharp/Util/Palette.cs`; see the Retro entry for the simplest form. Check it in both color modes and both themes.
 - **Add file types.** Extensions and their categories live in `BuildExtensionMap()` in the same file.

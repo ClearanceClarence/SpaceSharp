@@ -18,9 +18,9 @@ internal sealed class AppSettings
     public string? Theme { get; set; }
     public bool SizeOnDisk { get; set; }
     public bool ShowFreeSpace { get; set; }
-    public bool Cushion { get; set; } = true;
+    public bool Cushion { get; set; }
     public string? MapStyle { get; set; }
-    public string? LabelSize { get; set; }      // Normal, Large, Larger
+    public string? LabelSize { get; set; }      // Smallest, Smaller, Normal, Large, Larger
     public bool LabelHalo { get; set; }
     public bool MergeChains { get; set; } = true;
     public bool GroupSmallItems { get; set; } = true;

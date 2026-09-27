@@ -196,11 +196,11 @@ public partial class MainWindow : Window
     public void ApplySettings()
     {
         var scheme = Palette.Find(_settings.Palette);
-        var mode = _settings.ColorMode == nameof(ColorMode.ByFileType) ? ColorMode.ByFileType : ColorMode.ByDepth;
+        var mode = Enum.TryParse<ColorMode>(_settings.ColorMode, out var parsedMode) ? parsedMode : ColorMode.ByBranch;
 
         _applyingSettings = true;
         PaletteCombo.SelectedItem = scheme;
-        ColorCombo.SelectedIndex = mode == ColorMode.ByFileType ? 1 : 0;
+        ColorCombo.SelectedIndex = (int)mode;
         _applyingSettings = false;
 
         Treemap.Scheme = scheme;
@@ -209,7 +209,7 @@ public partial class MainWindow : Window
         Treemap.Cushion = _settings.Cushion;
         var mapStyle = Enum.TryParse<MapStyle>(_settings.MapStyle, out var style) ? style : MapStyle.Classic;
         Treemap.MapStyle = mapStyle;
-        Treemap.LabelScale = _settings.LabelSize switch { "Large" => 1.2, "Larger" => 1.4, _ => 1.0 };
+        Treemap.LabelScale = _settings.LabelSize switch { "Smallest" => 0.7, "Smaller" => 0.85, "Large" => 1.2, "Larger" => 1.4, _ => 1.0 };
         Treemap.LabelHalo = _settings.LabelHalo;
 
         _applyingSettings = true;
@@ -386,6 +386,7 @@ public partial class MainWindow : Window
         ScanFoldersText.Text = "0";
         ScanRateText.Text = string.Empty;
         ScanElapsedText.Text = string.Empty;
+        ScanPercentText.Text = string.Empty;
         ScanPathText.Text = path;
         SetScanBar(_scanExpectedBytes is null ? null : 0);
     }
@@ -400,22 +401,16 @@ public partial class MainWindow : Window
         ScanFoldersText.Text = p.Directories.ToString("N0");
         ScanElapsedText.Text = _scanClock.Elapsed.ToString(@"m\:ss");
         ScanRateText.Text = p.Files / seconds >= 1000
-            ? $"{p.Files / seconds / 1000:0.0}k files per second"
-            : $"{p.Files / seconds:0} files per second";
-        ScanPathText.Text = ShortenPath(p.CurrentPath, 90);
+            ? $"{p.Files / seconds / 1000:0.0}k files/s"
+            : $"{p.Files / seconds:0} files/s";
+        ScanPathText.Text = ShortenPath(p.CurrentPath, 70);
 
         if (_scanExpectedBytes is { } expected)
         {
             double fraction = Math.Clamp((double)p.Bytes / expected, 0, 0.99);
             SetScanBar(fraction);
-            ScanTitle.Text = $"{ScanTitleBase()}  ·  {fraction * 100:0}%";
+            ScanPercentText.Text = $"{fraction * 100:0}%";
         }
-    }
-
-    private string ScanTitleBase()
-    {
-        int dot = ScanTitle.Text.IndexOf("  ·", StringComparison.Ordinal);
-        return dot < 0 ? ScanTitle.Text : ScanTitle.Text[..dot];
     }
 
     /// <summary>Sets the bar to a fraction (0..1), or starts the sweeping animation when null.</summary>
@@ -796,7 +791,8 @@ public partial class MainWindow : Window
     private void ClearFilter_Click(object sender, RoutedEventArgs e)
     {
         FilterBox.Clear();
-        Treemap.Focus();
+        if (FilterPopup.IsOpen) LoadPanelFromText();
+        else Treemap.Focus();
     }
 
     /// <summary>Evaluates the filter text over the whole tree and dims everything that doesn't match.</summary>
@@ -811,6 +807,7 @@ public partial class MainWindow : Window
             Treemap.SetFilterMatches(null);
             FilterInfo.Visibility = Visibility.Collapsed;
             SelectMatchesButton.Visibility = Visibility.Collapsed;
+            UpdateFilterFooter();
             return;
         }
 
@@ -821,6 +818,7 @@ public partial class MainWindow : Window
             : $"{_filterResult.FileCount:N0} files · {SizeFormatter.Format(_filterResult.Bytes)}: {_filter.Description}";
         FilterInfo.Visibility = Visibility.Visible;
         SelectMatchesButton.Visibility = _filterResult.FileCount > 0 ? Visibility.Visible : Visibility.Collapsed;
+        UpdateFilterFooter();
     }
 
     private void SelectMatches_Click(object sender, RoutedEventArgs e) => SelectMatches();
@@ -954,7 +952,13 @@ public partial class MainWindow : Window
         if (node.LastWriteUtc > DateTime.MinValue) Row("Modified", DescribeDate(node.LastWriteUtc));
         if (Treemap.FocusedFolder is { } focus && focus.SizeFor(measure) > 0 && !ReferenceEquals(focus, node))
             Row("Share", $"{100.0 * node.SizeFor(measure) / focus.SizeFor(measure):0.#}% of {focus.Name}");
+        if (_root is not null && !ReferenceEquals(_root, node) && !ReferenceEquals(_root, Treemap.FocusedFolder) && _root.SizeFor(measure) > 0)
+            Row("Of drive", $"{100.0 * node.SizeFor(measure) / _root.SizeFor(measure):0.##}% of {_root.Name}");
+        if (node.IsDirectory && node.Children.FirstOrDefault(c => c.IsReal && c.SizeFor(measure) > 0) is { } biggest)
+            Row("Largest", $"{biggest.Name}  ({SizeFormatter.Format(biggest.SizeFor(measure))})");
         if (node.AccessDenied) Row("Note", "Some content could not be read");
+        TipHint.Text = node.IsReal ? "Right-click for actions · Ctrl+I to inspect" : node.IsGroup ? "Zoom in to see these items" : string.Empty;
+        TipHint.Visibility = TipHint.Text.Length > 0 ? Visibility.Visible : Visibility.Collapsed;
 
         HoverTip.HorizontalOffset = _mousePosition.X + 16;
         HoverTip.VerticalOffset = _mousePosition.Y + 20;
@@ -1029,7 +1033,7 @@ public partial class MainWindow : Window
         if (_applyingSettings || Treemap is null || LegendPanel is null || PaletteCombo is null || StyleCombo is null) return;
 
         _settings.Palette = (PaletteCombo.SelectedItem as ColorScheme ?? Palette.Default).Name;
-        _settings.ColorMode = (ColorCombo.SelectedIndex == 1 ? ColorMode.ByFileType : ColorMode.ByDepth).ToString();
+        if (ColorCombo.SelectedIndex >= 0) _settings.ColorMode = ((ColorMode)ColorCombo.SelectedIndex).ToString();
         if (StyleCombo.SelectedIndex >= 0) _settings.MapStyle = Enum.GetNames<MapStyle>()[StyleCombo.SelectedIndex];
         ApplySettings();
     }
@@ -1047,6 +1051,14 @@ public partial class MainWindow : Window
         MenuOpen.IsEnabled = hasNode && count <= 1;
         MenuExplorer.IsEnabled = hasNode && count <= 1;
         MenuCopy.IsEnabled = hasNode;
+        MenuInspect.IsEnabled = Treemap.SelectedNodes.Any(n => n.IsReal) && !IsScanning;
+        MenuInspect.Header = count > 1 ? $"Inspect {count:N0} items" : "Inspect";
+        MenuProperties.IsEnabled = hasNode && count <= 1;
+        MenuCopyName.IsEnabled = hasNode;
+        MenuFilterType.IsEnabled = hasNode && count <= 1 && !node!.IsDirectory && node.Extension.Length > 0;
+        MenuFilterType.Header = MenuFilterType.IsEnabled ? $"Show only *{node!.Extension} files" : "Show only this file type";
+        MenuSelectFolder.IsEnabled = hasNode && count <= 1 && folder is not null && folder.Children.Any(c => c.IsReal);
+        MenuSelectFolder.Header = folder is not null ? $"Select everything in {folder.Name}" : "Select everything in this folder";
         MenuDelete.IsEnabled = !IsScanning && Treemap.SelectedNodes.Any(n => n.IsReal && n.Parent is not null && !ReferenceEquals(n, Treemap.Root));
         MenuDelete.Header = count > 1 ? $"Move {count:N0} items to Recycle Bin" : "Move to Recycle Bin";
     }
@@ -1070,6 +1082,43 @@ public partial class MainWindow : Window
 
     private void MenuCopy_Click(object sender, RoutedEventArgs e) => CopySelectedPaths();
 
+    private void MenuInspect_Click(object sender, RoutedEventArgs e) => InspectSelection();
+
+    /// <summary>Opens the Inspect window for the selection (or the hovered item when nothing is selected).</summary>
+    private void InspectSelection()
+    {
+        var nodes = Treemap.SelectedNodes.Where(n => n.IsReal).ToList();
+        if (nodes.Count == 0 && Treemap.HoveredNode is { IsReal: true } hovered) nodes.Add(hovered);
+        if (nodes.Count == 0) return;
+        new InspectWindow(nodes, _root, Treemap.SizeMode) { Owner = this }.ShowDialog();
+    }
+
+    private void MenuProperties_Click(object sender, RoutedEventArgs e)
+    {
+        if (Treemap.SelectedNode is { IsReal: true } node) ShellProperties.Show(node.FullPath);
+    }
+
+    private void MenuCopyName_Click(object sender, RoutedEventArgs e)
+    {
+        var names = Treemap.SelectedNodes.Where(n => n.IsReal).Select(n => n.Name).ToList();
+        if (names.Count > 0) RunSafely(() => Clipboard.SetText(string.Join(Environment.NewLine, names)));
+    }
+
+    private void MenuFilterType_Click(object sender, RoutedEventArgs e)
+    {
+        if (Treemap.SelectedNode is { IsReal: true, IsDirectory: false } node && node.Extension.Length > 0)
+            FilterBox.Text = $"*{node.Extension}";
+    }
+
+    private void MenuSelectFolder_Click(object sender, RoutedEventArgs e)
+    {
+        if (Treemap.SelectedNode is not { } node) return;
+        var folder = node.IsDirectory ? node : node.Parent;
+        if (folder is null) return;
+        Treemap.SelectMany(folder.Children.Where(c => c.IsReal));
+        ShowNodeInfo(null);
+    }
+
     private void CopySelectedPaths()
     {
         var paths = Treemap.SelectedNodes.Where(n => n.IsReal).Select(n => n.FullPath).ToList();
@@ -1082,6 +1131,7 @@ public partial class MainWindow : Window
     {
         if (FilterBox.IsKeyboardFocusWithin) return; // the box handles its own keys
         bool ctrl = Keyboard.Modifiers.HasFlag(ModifierKeys.Control);
+        bool alt = Keyboard.Modifiers.HasFlag(ModifierKeys.Alt);
 
         switch (e.Key)
         {
@@ -1116,6 +1166,22 @@ public partial class MainWindow : Window
             case Key.Delete when Treemap.SelectedNodes.Count > 0:
                 DeleteSelection();
                 break;
+            case Key.I when ctrl:
+                InspectSelection();
+                break;
+            case Key.System when alt && e.SystemKey == Key.Enter && Treemap.SelectedNode is { IsReal: true } propsNode: // Alt+Enter arrives as a system key
+                ShellProperties.Show(propsNode.FullPath);
+                break;
+            case Key.K when !ctrl:
+            {
+                var modes = Enum.GetValues<ColorMode>();
+                var current = Enum.TryParse<ColorMode>(_settings.ColorMode, out var m) ? m : ColorMode.ByBranch;
+                var next = modes[(Array.IndexOf(modes, current) + 1) % modes.Length];
+                _settings.ColorMode = next.ToString();
+                ApplySettings();
+                StatusScan.Text = "Color by: " + next switch { ColorMode.ByBranch => "top folder", ColorMode.ByDepth => "depth", _ => "file type" };
+                break;
+            }
             case Key.C when ctrl && Treemap.SelectedNodes.Count > 0:
                 CopySelectedPaths();
                 break;

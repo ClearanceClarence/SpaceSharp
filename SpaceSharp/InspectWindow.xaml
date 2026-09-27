@@ -1,0 +1,51 @@
+<Window x:Class="SpaceSharp.InspectWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Inspect"
+        Width="640" SizeToContent="Height" MaxHeight="760" ResizeMode="NoResize"
+        WindowStartupLocation="CenterOwner" ShowInTaskbar="False"
+        Icon="/Assets/SpaceSharp.ico"
+        Background="{DynamicResource Bg}" Foreground="{DynamicResource Text}"
+        FontFamily="Segoe UI" FontSize="13" UseLayoutRounding="True">
+
+    <DockPanel>
+        <Border DockPanel.Dock="Bottom" Background="{DynamicResource Panel}" BorderBrush="{DynamicResource Stroke}"
+                BorderThickness="0,1,0,0" Padding="16,12">
+            <DockPanel>
+                <Button DockPanel.Dock="Right" Style="{StaticResource AccentButton}" Content="Close" MinWidth="84"
+                        IsDefault="True" IsCancel="True" Click="Close_Click" />
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
+                    <Button Style="{StaticResource ToolButton}" Tag="&#xE8C8;" Content="Copy details" Click="Copy_Click" />
+                    <Button x:Name="ExplorerButton" Style="{StaticResource ToolButton}" Tag="&#xE838;" Content="Show in Explorer"
+                            Margin="6,0,0,0" Click="Explorer_Click" />
+                    <Button x:Name="PropertiesButton" Style="{StaticResource ToolButton}" Tag="&#xE946;" Content="Properties"
+                            Margin="6,0,0,0" Click="Properties_Click" />
+                </StackPanel>
+            </DockPanel>
+        </Border>
+
+        <ScrollViewer VerticalScrollBarVisibility="Auto">
+            <StackPanel Margin="24,20,24,20">
+                <DockPanel Margin="0,0,0,14">
+                    <TextBlock x:Name="Glyph" DockPanel.Dock="Left" FontFamily="{StaticResource IconFont}" FontSize="30"
+                               Foreground="{DynamicResource Accent}" VerticalAlignment="Top" Margin="2,4,16,0" Text="&#xE8B7;" />
+                    <StackPanel>
+                        <TextBlock x:Name="NameText" FontSize="20" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+                        <TextBox x:Name="PathText" IsReadOnly="True" BorderThickness="0" Background="Transparent" Padding="0"
+                                 Foreground="{DynamicResource TextDim}" FontSize="12" Margin="0,2,0,0" TextWrapping="Wrap" />
+                        <TextBlock x:Name="KindText" Foreground="{DynamicResource TextDim}" Margin="0,4,0,0" />
+                    </StackPanel>
+                </DockPanel>
+
+                <Grid x:Name="Facts" Margin="0,0,0,6">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                </Grid>
+
+                <StackPanel x:Name="Sections" />
+            </StackPanel>
+        </ScrollViewer>
+    </DockPanel>
+</Window>

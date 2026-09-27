@@ -60,7 +60,7 @@ public partial class MainWindow
         var body = FilterPanelBody;
 
         body.Children.Add(PanelHeading("Quick filters"));
-        var presets = new WrapPanel { Margin = new Thickness(0, 6, 0, 8) };
+        var presets = new WrapPanel { Margin = new Thickness(0, 6, 0, 2) };
         foreach (var (label, filter) in Presets)
         {
             var chip = new ToggleButton { Content = label, Style = (Style)FindResource("Chip"), Tag = filter };
@@ -73,18 +73,19 @@ public partial class MainWindow
             presets.Children.Add(chip);
         }
         body.Children.Add(presets);
+        body.Children.Add(Divider());
 
         body.Children.Add(PanelHeading("Name"));
         _nameBox = new TextBox
         {
-            Style = (Style)FindResource("FilterBox"), Height = 30, Margin = new Thickness(0, 6, 0, 12),
+            Style = (Style)FindResource("FilterBox"), Height = 32, Margin = new Thickness(0, 6, 0, 10),
             Tag = "Part of the name, or a pattern like *.iso"
         };
         _nameBox.TextChanged += (_, _) => WritePanelToText();
         body.Children.Add(_nameBox);
 
-        body.Children.Add(PanelHeading("File type"));
-        var types = new WrapPanel { Margin = new Thickness(0, 6, 0, 6) };
+        body.Children.Add(PanelHeading("Type"));
+        var types = new WrapPanel { Margin = new Thickness(0, 6, 0, 2) };
         foreach (var category in Enum.GetValues<FileCategory>())
         {
             var chip = new ToggleButton { Content = category.ToString(), Style = (Style)FindResource("Chip") };
@@ -94,8 +95,9 @@ public partial class MainWindow
             types.Children.Add(chip);
         }
         body.Children.Add(types);
+        body.Children.Add(Divider());
 
-        var sizes = new Grid { Margin = new Thickness(0, 6, 0, 12) };
+        var sizes = new Grid { Margin = new Thickness(0, 0, 0, 10) };
         sizes.ColumnDefinitions.Add(new ColumnDefinition());
         sizes.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(12) });
         sizes.ColumnDefinitions.Add(new ColumnDefinition());
@@ -103,27 +105,28 @@ public partial class MainWindow
         _maxCombo = LabeledCombo(sizes, 2, "Smaller than", SizeSteps.Select(s => s.Label));
         body.Children.Add(sizes);
 
-        var when = new Grid { Margin = new Thickness(0, 0, 0, 14) };
+        var when = new Grid { Margin = new Thickness(0, 0, 0, 10) };
         when.ColumnDefinitions.Add(new ColumnDefinition());
         when.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(12) });
         when.ColumnDefinitions.Add(new ColumnDefinition());
         _ageCombo = LabeledCombo(when, 0, "Not modified for", AgeSteps.Select(a => a.Label));
         _kindCombo = LabeledCombo(when, 2, "Show", new[] { "Files and folders", "Files only", "Folders only" });
         body.Children.Add(when);
+    }
 
-        var footer = new DockPanel();
-        var clear = new Button { Style = (Style)FindResource("ToolButton"), Content = "Clear", Height = 30, Tag = "\uE711" };
-        clear.Click += (_, _) =>
-        {
-            FilterBox.Clear();
-            LoadPanelFromText();
-        };
-        var done = new Button { Style = (Style)FindResource("AccentButton"), Content = "Done", Height = 30 };
-        done.Click += (_, _) => FilterPopup.IsOpen = false;
-        DockPanel.SetDock(done, Dock.Right);
-        footer.Children.Add(done);
-        footer.Children.Add(clear);
-        body.Children.Add(footer);
+    private Border Divider() =>
+        Themed(new Border { Height = 1, Margin = new Thickness(0, 8, 0, 10) }, Border.BackgroundProperty, "Stroke");
+
+    /// <summary>The live result line and Clear button in the popup footer; called whenever the filter is applied.</summary>
+    private void UpdateFilterFooter()
+    {
+        if (FilterFooterInfo is null) return;
+        bool active = _filter is not null && !_filter.IsEmpty;
+        FilterClearButton.IsEnabled = active;
+        FilterFooterInfo.Text = !active ? "No filter: everything is shown"
+            : _root is null ? _filter!.Description
+            : _filterResult is null || _filterResult.FileCount == 0 ? "Nothing matches"
+            : $"{_filterResult.FileCount:N0} files · {SizeFormatter.Format(_filterResult.Bytes)} match";
     }
 
     private TextBlock PanelHeading(string text) =>
@@ -134,7 +137,7 @@ public partial class MainWindow
     {
         var stack = new StackPanel();
         stack.Children.Add(PanelHeading(label));
-        var combo = new ComboBox { ItemsSource = items.ToList(), SelectedIndex = 0, Margin = new Thickness(0, 6, 0, 0), Height = 30 };
+        var combo = new ComboBox { ItemsSource = items.ToList(), SelectedIndex = 0, Margin = new Thickness(0, 6, 0, 0), Height = 32 };
         combo.SelectionChanged += (_, _) => WritePanelToText();
         stack.Children.Add(combo);
         Grid.SetColumn(stack, column);
