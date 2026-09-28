@@ -47,6 +47,12 @@ public sealed class ColorScheme
 
     public string Name { get; }
 
+    /// <summary>True for a palette read from the user's palettes folder.</summary>
+    public bool IsCustom { get; internal set; }
+
+    /// <summary>Header the palette is listed under in the toolbar.</summary>
+    public string Group => IsCustom ? "Custom" : "Built in";
+
     /// <summary>A few representative colors, shown in the palette picker.</summary>
     public IReadOnlyList<Brush> Swatches { get; }
 
@@ -109,9 +115,22 @@ public static class Palette
 {
     private static readonly Dictionary<string, FileCategory> Extensions = BuildExtensionMap();
 
-    public static IReadOnlyList<ColorScheme> Schemes { get; } = BuildSchemes();
+    private static List<ColorScheme> _schemes = BuildSchemes().Concat(CustomPalettes.Load()).ToList();
+
+    /// <summary>Built-in palettes followed by the user's custom ones.</summary>
+    public static IReadOnlyList<ColorScheme> Schemes => _schemes;
+
+    /// <summary>Re-reads the custom palette files. Returns the new list.</summary>
+    public static IReadOnlyList<ColorScheme> Reload()
+    {
+        _schemes = BuildSchemes().Concat(CustomPalettes.Load()).ToList();
+        return _schemes;
+    }
 
     public static ColorScheme Default => Schemes[0];
+
+    /// <summary>The greys used for folders in "File type" mode when a palette doesn't define its own.</summary>
+    internal static Color NeutralFolder(int d) => FromHsl(225, 0.10, 0.50 + d * 0.05);
 
     public static ColorScheme Find(string? name) =>
         Schemes.FirstOrDefault(s => string.Equals(s.Name, name, StringComparison.OrdinalIgnoreCase)) ?? Default;
@@ -123,7 +142,7 @@ public static class Palette
 
     private static List<ColorScheme> BuildSchemes()
     {
-        Color Neutral(int d) => FromHsl(225, 0.10, 0.50 + d * 0.05);
+        Color Neutral(int d) => NeutralFolder(d);
 
         return new List<ColorScheme>
         {
@@ -182,6 +201,36 @@ public static class Palette
     }
 
     // ------------------------------------------------------------ helpers
+
+    // ---- "Color by change": grew warm, shrank cool, unchanged grey, new items bright
+    public static readonly Brush GrewBrush = Freeze(Color.FromRgb(0xE8, 0x7A, 0x4F));
+    public static readonly Brush ShrankBrush = Freeze(Color.FromRgb(0x5D, 0xA9, 0xC9));
+    public static readonly Brush UnchangedBrush = Freeze(Color.FromRgb(0x6A, 0x6A, 0x74));
+    public static readonly Brush NewBrush = Freeze(Color.FromRgb(0xF5, 0xB8, 0x2E));
+    private static readonly Brush[] GrewRamp = Ramp(Color.FromRgb(0x8C, 0x7A, 0x6E), Color.FromRgb(0xE8, 0x7A, 0x4F), 6);
+    private static readonly Brush[] ShrankRamp = Ramp(Color.FromRgb(0x6E, 0x80, 0x8C), Color.FromRgb(0x5D, 0xA9, 0xC9), 6);
+    private static readonly Brush UnchangedFolder = Freeze(Color.FromRgb(0x55, 0x55, 0x60));
+    private static readonly Brush NoBaseline = Freeze(Color.FromRgb(0x62, 0x62, 0x6C));
+
+    /// <summary>
+    /// The color for the change mode. Intensity follows how much of the item's current size is change,
+    /// so a folder that doubled is as loud as a file that appeared, and a 1% wobble stays quiet.
+    /// </summary>
+    public static Brush ChangeFill(FsNode node, SizeMeasure measure)
+    {
+        if (!node.HasBaseline) return NoBaseline;
+        long now = node.SizeFor(measure);
+        long? then = measure == SizeMeasure.SizeOnDisk ? node.BaselineAllocated : node.BaselineSize;
+        if (then is null) return NewBrush;
+        long delta = now - then.Value;
+        if (delta == 0) return node.IsDirectory ? UnchangedFolder : UnchangedBrush;
+        double share = Math.Min(1.0, Math.Abs(delta) / (double)Math.Max(Math.Max(now, then.Value), 1));
+        int step = Math.Min(5, (int)(share * 6));
+        return delta > 0 ? GrewRamp[step] : ShrankRamp[step];
+    }
+
+    private static Brush[] Ramp(Color from, Color to, int steps) =>
+        Enumerable.Range(0, steps).Select(i => Freeze(Mix(from, to, i / (double)(steps - 1)))).ToArray();
 
     internal static Brush Freeze(Color color)
     {

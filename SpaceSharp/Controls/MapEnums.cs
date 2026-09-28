@@ -1,0 +1,45 @@
+using System.Diagnostics;
+using System.Globalization;
+using System.Windows;
+using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Threading;
+using SpaceSharp.Layout;
+using SpaceSharp.Models;
+using SpaceSharp.Util;
+
+namespace SpaceSharp.Controls;
+
+public enum ColorMode
+{
+    /// <summary>Each top-level folder gets a hue; everything inside it is that hue, lighter with each level.</summary>
+    ByBranch,
+    /// <summary>Each nesting level gets its own color, the SpaceMonger way.</summary>
+    ByDepth,
+    /// <summary>Files by type, folders neutral.</summary>
+    ByFileType,
+    /// <summary>Compared with the previous scan: grew warm, shrank cool, unchanged grey, new outlined.</summary>
+    ByChange
+}
+
+/// <param name="Node">The node drawn in this box (the deepest folder of a collapsed chain).</param>
+/// <param name="ChainTop">First folder of a collapsed single-child chain, or null.</param>
+/// <summary>How boxes are drawn. Same layout, different visual treatment.</summary>
+public enum MapStyle
+{
+    /// <summary>Title bars, 1 px borders, cushion shading.</summary>
+    Classic,
+    /// <summary>Plain fills, thin borders, no gaps, no shading. The simplest look.</summary>
+    Flat,
+    /// <summary>Flat colors, small gaps, softly rounded, folder names as captions.</summary>
+    Tiles,
+    /// <summary>Folders as raised cards with a shadow and bold title; files as flat chips.</summary>
+    Cards,
+    /// <summary>Deep title band, lighter body, light borders, no shading.</summary>
+    Bands,
+    /// <summary>Rounded pastel blocks with gaps.</summary>
+    Soft
+}
+
+/// <param name="Branch">Index of the top-level folder this item belongs to (0 for the root itself).</param>
+public readonly record struct TreemapItem(FsNode Node, Rect Bounds, int Depth, bool HasHeader, FsNode? ChainTop, int Branch);

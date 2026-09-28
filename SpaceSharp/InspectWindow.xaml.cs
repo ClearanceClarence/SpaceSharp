@@ -63,6 +63,12 @@ public partial class InspectWindow : Window
 
         if (node.LastWriteUtc > DateTime.MinValue)
             Fact(node.IsDirectory ? "Newest change" : "Modified", DescribeDate(node.LastWriteUtc));
+        if (node.HasBaseline)
+        {
+            long change = node.ChangeFor(_measure);
+            Fact("Since last scan", node.BaselineSize is null ? "New" : change == 0 ? "Unchanged"
+                : $"{(change > 0 ? "Grew by" : "Shrank by")} {SizeFormatter.Format(Math.Abs(change))} (was {SizeFormatter.Format(node.BaselineSize.Value)})");
+        }
         if (node.AccessDenied) Fact("Note", "Some content could not be read (access denied)");
         Fact("Depth", $"{Depth(node)} levels below the scan root");
 

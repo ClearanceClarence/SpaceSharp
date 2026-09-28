@@ -1,2 +1,12 @@
 # Blank issues stay allowed for questions and anything the two forms don't cover.
 blank_issues_enabled: true
+contact_links:
+  - name: Questions and ideas
+    url: https://github.com/ClearanceClarence/SpaceSharp/discussions
+    about: Ask how something works, show a palette you made, or talk through a feature before it becomes an issue.
+  - name: Website
+    url: https://clearanceclarence.github.io/SpaceSharp/
+    about: Downloads, a live preview of the app, and the short answers.
+  - name: Security
+    url: https://github.com/ClearanceClarence/SpaceSharp/blob/main/SECURITY.md
+    about: How to report a vulnerability privately.

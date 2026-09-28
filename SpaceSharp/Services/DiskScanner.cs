@@ -15,6 +15,15 @@ public sealed class ScanOptions
 
     /// <summary>Include files and folders with the Hidden or System attribute (on by default).</summary>
     public bool IncludeHidden { get; init; } = true;
+
+    /// <summary>
+    /// Read the NTFS Master File Table directly when scanning a whole drive (seconds instead of minutes).
+    /// Needs administrator rights and an NTFS volume; otherwise the folder walk is used.
+    /// </summary>
+    public bool UseMft { get; init; } = true;
+
+    /// <summary>Names to leave out entirely, with their contents (node_modules, *.tmp). Matched against the name, not the path.</summary>
+    public Util.NamePatterns Exclude { get; init; } = Util.NamePatterns.Empty;
 }
 
 /// <summary>
@@ -48,6 +57,13 @@ public sealed class DiskScanner
     private long _clusterSize = 4096;
     private string _currentPath = string.Empty;
     private ConcurrentDictionary<(uint, uint, uint), byte>? _seenLinks;
+    private Util.NamePatterns _exclude = Util.NamePatterns.Empty;
+
+    /// <summary>How the current or last scan is done: "MFT" or "folder walk". Set as soon as the scan decides, so the UI can say so.</summary>
+    public string LastMethod { get; private set; } = "folder walk";
+
+    /// <summary>Why the MFT wasn't used on the last drive scan, if it wasn't (for the status line).</summary>
+    public string? MftSkippedReason { get; private set; }
 
     public ScanProgress GetProgress() => new(
         Interlocked.Read(ref _files),
@@ -66,12 +82,46 @@ public sealed class DiskScanner
         _clusterSize = NativeFileInfo.GetClusterSize(rootPath);
         _seenLinks = options.DetectHardLinks ? new ConcurrentDictionary<(uint, uint, uint), byte>() : null;
         _enumeration = MakeEnumerationOptions(options.IncludeHidden);
+        _exclude = options.Exclude;
 
         return Task.Run(() =>
         {
             var root = new DirectoryInfo(rootPath);
             if (!root.Exists)
                 throw new DirectoryNotFoundException($"The folder \"{rootPath}\" does not exist.");
+
+            LastMethod = "folder walk";
+            MftSkippedReason = null;
+            if (options.UseMft && IsDriveRoot(rootPath))
+            {
+                if (MftScanner.IsSupported(rootPath, out string reason))
+                {
+                    LastMethod = "MFT";
+                    try
+                    {
+                        var mft = new MftScanner(rootPath, options.IncludeHidden, options.Exclude, (files, dirs, bytes, path) =>
+                        {
+                            Interlocked.Exchange(ref _files, files);
+                            Interlocked.Exchange(ref _directories, dirs);
+                            Interlocked.Exchange(ref _bytes, bytes);
+                            Volatile.Write(ref _currentPath, path);
+                        });
+                        var fast = mft.Scan(ct);
+                        fast.AddFreeSpace(new DriveInfo(rootPath).AvailableFreeSpace);
+                        return fast;
+                    }
+                    catch (OperationCanceledException) { throw; }
+                    catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or IndexOutOfRangeException or ArgumentException)
+                    {
+                        LastMethod = "folder walk";
+                        MftSkippedReason = ex.Message; // fall through to the folder walk
+                        Interlocked.Exchange(ref _files, 0);
+                        Interlocked.Exchange(ref _directories, 0);
+                        Interlocked.Exchange(ref _bytes, 0);
+                    }
+                }
+                else MftSkippedReason = reason;
+            }
 
             try
             {
@@ -117,6 +167,7 @@ public sealed class DiskScanner
         {
             foreach (var info in dir.EnumerateFileSystemInfos("*", _enumeration))
             {
+                if (!_exclude.IsEmpty && _exclude.Matches(info.Name)) continue;
                 if (info is FileInfo file)
                 {
                     node.Children.Add(CreateFileNode(file, node));

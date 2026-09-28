@@ -6,6 +6,16 @@ publish/
 [Rr]elease/
 *.nupkg
 
+# Velopack output and release assets (built by installer/release.ps1)
+Releases/
+*.msi
+*.trx
+TestResults/
+
+# Saved scans and exported data, in case they are dropped into the repo folder
+*.sscan
+*.csv
+
 # IDEs
 .idea/
 .vs/

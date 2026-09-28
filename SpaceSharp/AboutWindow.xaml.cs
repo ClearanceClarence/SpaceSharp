@@ -25,11 +25,12 @@ public partial class AboutWindow : Window
         ("L", "Largest files, folders and types panel"),
         ("Ctrl+C", "Copy the selected paths"),
         ("Ctrl+I", "Inspect the selection"),
+        ("Ctrl+S", "Save the scan to a file"),
+        ("Ctrl+O", "Open a saved scan"),
         ("Alt+Enter", "Windows Properties for the selected item"),
         ("Del", "Move the selected item to the Recycle Bin"),
         ("S", "Next map style"),
         ("K", "Next color mode"),
-        ("C", "Toggle cushion shading"),
         ("G", "Toggle grouping of small items"),
         ("Esc", "Cancel a scan"),
         ("Ctrl+,", "Settings"),
@@ -44,11 +45,7 @@ public partial class AboutWindow : Window
         TitleBarTheme.Attach(this);
 
         var assembly = Assembly.GetExecutingAssembly();
-        _version = assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion
-                   ?? assembly.GetName().Version?.ToString()
-                   ?? "unknown";
-        int plus = _version.IndexOf('+'); // the SDK appends "+<commit>" when built from git
-        if (plus >= 0) _version = _version[..plus];
+        _version = AppInfo.Version;
 
         VersionText.Text = $"Version {_version}" + (Updater.Instance.IsInstalled ? string.Empty : "  ·  portable");
         UpdateButton.Visibility = Updater.Instance.IsInstalled ? Visibility.Visible : Visibility.Collapsed;

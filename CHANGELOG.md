@@ -2,6 +2,28 @@
 
 All notable changes to SpaceSharp. The newest release is at the top.
 
+## 1.3.0
+
+### Fast NTFS scan
+- Whole drives are scanned by reading the NTFS Master File Table directly, the way WizTree does, so a drive with a million files is mapped in a few seconds. Needs administrator rights; on the start screen the app offers to restart elevated ("Don't ask again" hides the card). Single folders, non-NTFS volumes and non-elevated runs use the folder walk as before. Hard links are always counted once on the fast path. Settings › Scanning › Fast NTFS scan turns it off. The status line says "file table" when it was used.
+
+### Saved scans and comparison
+- Every drive or folder scan is saved automatically (`%LocalAppData%\SpaceSharp\scans`). The app opens with the last map already on screen; F5 rescans. Ctrl+S saves a scan as a file, Ctrl+O opens one, so a scan of another machine can be looked at anywhere.
+- Each new scan is compared with the previous one of the same place, provided both were made the same way (file table or folder walk, administrator or not, hard-link and hidden-file settings); otherwise the status line says why they are not compared, since a folder walk without administrator rights cannot see System Volume Information and counts hard-linked names separately, which would show up as false growth and shrinkage. A new color mode, **Change**, colors what grew in warm shades, what shrank in cool ones, unchanged grey and new items amber, with a legend. The side panel gets a **Changes** tab listing what grew or appeared most, Inspect shows "Since last scan", and the right-click menu can compare with any saved scan or stop comparing.
+- **Rescan this folder** in the right-click menu re-walks one folder and splices it into the map; zoom and the rest of the tree stay as they were.
+- **Export to CSV** from the right-click menu: largest files, a folder's contents, the filter matches, or the changes since the last scan. A first, plain version: fixed columns (path, name, type, sizes, modified, change), UTF-8, no options yet.
+- **Leave out** in Settings › Scanning: names to skip entirely, one wildcard per line (`node_modules`, `$Recycle.Bin`, `*.tmp`), for both the file-table scan and the folder walk.
+
+### Fixes
+- The hover and selection frames follow the map style: rounded corners on Tiles, Cards and Soft, drawn inside the box so they no longer cover the neighbors' labels.
+
+### Changes
+- `TreemapControl` is split into partial files by concern (fields, camera, layout, rendering, input) with the enums in `MapEnums.cs`; no behavior change.
+- Classic always has its soft shading; the Cushion setting and the C shortcut are gone.
+- Custom palettes: drop JSON files into %LocalAppData%\SpaceSharp\palettes (Settings › Appearance › Custom palettes › Open folder writes an Example.json and a README). Reload from Settings or restart; files that can't be read are listed with the reason.
+- New website: the hero is the app itself, drawn live in the browser with sample data, with controls for scene, style, color mode, palette and theme. Spec-style feature list, a comparison with WizTree, WinDirStat and SpaceMonger, and a cleaner download section.
+- The window title shows the version: "SpaceSharp 1.2.3" (with "(Administrator)" after it when elevated).
+
 ## 1.2.2
 
 ### Fixes

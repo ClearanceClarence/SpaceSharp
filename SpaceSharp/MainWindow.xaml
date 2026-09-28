@@ -33,11 +33,22 @@
                         <ComboBoxItem Content="Top folder" />
                         <ComboBoxItem Content="Depth" />
                         <ComboBoxItem Content="File type" />
+                        <ComboBoxItem Content="Change" />
                     </ComboBox>
                     <TextBlock Text="Palette" Foreground="{DynamicResource TextDim}" VerticalAlignment="Center"
                                Margin="14,0,8,0" />
                     <ComboBox x:Name="PaletteCombo" Width="180" MaxDropDownHeight="480"
                               SelectionChanged="ColorSettings_Changed">
+                        <ComboBox.GroupStyle>
+                            <GroupStyle>
+                                <GroupStyle.HeaderTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding Name}" FontSize="11" FontWeight="SemiBold" Margin="8,8,8,3"
+                                                   Foreground="{DynamicResource TextDim}" />
+                                    </DataTemplate>
+                                </GroupStyle.HeaderTemplate>
+                            </GroupStyle>
+                        </ComboBox.GroupStyle>
                         <ComboBox.ItemTemplate>
                             <DataTemplate>
                                 <StackPanel Orientation="Horizontal">
@@ -81,7 +92,7 @@
                     <Button x:Name="FitButton" Style="{StaticResource ToolButton}"
                             Tag="&#xE80F;" ToolTip="Show whole map (Home / Ctrl+0)" Click="Fit_Click" />
                     <Button x:Name="ListsButton" Style="{StaticResource ToolButton}"
-                            Tag="&#xE90A;" ToolTip="Drives and largest items panel (L)" Click="Lists_Click" />
+                            Tag="&#xE90C;" ToolTip="Drives and largest items panel (L)" Click="Lists_Click" />
 
                     <Border Style="{StaticResource ToolDivider}" />
 
@@ -251,6 +262,7 @@
                     <Button x:Name="TabFiles" Style="{StaticResource TabButton}" Content="Files" Click="Tab_Click" />
                     <Button x:Name="TabFolders" Style="{StaticResource TabButton}" Content="Folders" Click="Tab_Click" />
                     <Button x:Name="TabTypes" Style="{StaticResource TabButton}" Content="Types" Click="Tab_Click" />
+                    <Button x:Name="TabChanges" Style="{StaticResource TabButton}" Content="Changes" Click="Tab_Click" Visibility="Collapsed" />
                 </StackPanel>
                 <TextBlock x:Name="ListHint" DockPanel.Dock="Top" Foreground="{DynamicResource TextDim}" FontSize="12"
                            Margin="14,0,14,6" TextTrimming="CharacterEllipsis" />
@@ -342,6 +354,24 @@
                             </MenuItem.Icon>
                         </MenuItem>
                         <Separator />
+                        <MenuItem x:Name="MenuRescan" Header="Rescan this folder" Click="MenuRescan_Click">
+                            <MenuItem.Icon>
+                                <TextBlock Style="{StaticResource MenuIcon}" Text="&#xE72C;" />
+                            </MenuItem.Icon>
+                        </MenuItem>
+                        <MenuItem Header="Scan file">
+                            <MenuItem x:Name="MenuSaveScan" Header="Save scan as…" InputGestureText="Ctrl+S" Click="MenuSaveScan_Click" />
+                            <MenuItem Header="Open saved scan…" InputGestureText="Ctrl+O" Click="MenuOpenScan_Click" />
+                            <MenuItem x:Name="MenuCompareScan" Header="Compare with a saved scan…" Click="MenuCompareScan_Click" />
+                            <MenuItem x:Name="MenuClearCompare" Header="Stop comparing" Click="MenuClearCompare_Click" />
+                        </MenuItem>
+                        <MenuItem x:Name="MenuExport" Header="Export to CSV">
+                            <MenuItem Header="Largest files" Click="MenuExportFiles_Click" />
+                            <MenuItem x:Name="MenuExportFolder" Header="This folder" Click="MenuExportFolder_Click" />
+                            <MenuItem x:Name="MenuExportMatches" Header="Filter matches" Click="MenuExportMatches_Click" />
+                            <MenuItem x:Name="MenuExportChanges" Header="Changes since last scan" Click="MenuExportChanges_Click" />
+                        </MenuItem>
+                        <Separator />
                         <MenuItem x:Name="MenuDelete" Header="Move to Recycle Bin" InputGestureText="Del"
                                   Foreground="{DynamicResource Danger}" Click="MenuDelete_Click">
                             <MenuItem.Icon>
@@ -352,12 +382,36 @@
                 </controls:TreemapControl.ContextMenu>
             </controls:TreemapControl>
 
-            <StackPanel x:Name="EmptyHint" IsHitTestVisible="False"
-                        HorizontalAlignment="Center" VerticalAlignment="Center">
+            <StackPanel x:Name="EmptyHint" HorizontalAlignment="Center" VerticalAlignment="Center" Width="460">
                 <Image Source="/Assets/SpaceSharp-256.png" Width="88" Height="88" HorizontalAlignment="Center"
-                       RenderOptions.BitmapScalingMode="HighQuality" />
-                <TextBlock Text="Click a drive on the left, or choose a folder to scan."
-                           Foreground="{DynamicResource TextDim}" FontSize="15" Margin="0,14,0,0" />
+                       RenderOptions.BitmapScalingMode="HighQuality" IsHitTestVisible="False" />
+                <TextBlock Text="Click a drive on the left, or choose a folder to scan." HorizontalAlignment="Center"
+                           Foreground="{DynamicResource TextDim}" FontSize="15" Margin="0,14,0,0" IsHitTestVisible="False" />
+
+                <!-- fast NTFS scan needs administrator rights; shown until the user decides -->
+                <Border x:Name="FastScanCard" Visibility="Collapsed" Margin="0,32,0,0" Padding="18,16" CornerRadius="10"
+                        Background="{DynamicResource Panel}" BorderBrush="{DynamicResource Stroke}" BorderThickness="1">
+                    <StackPanel>
+                        <DockPanel>
+                            <TextBlock DockPanel.Dock="Left" Text="&#xE945;" FontFamily="{StaticResource IconFont}" FontSize="22"
+                                       Foreground="{DynamicResource Accent}" VerticalAlignment="Top" Margin="0,2,14,0" />
+                            <StackPanel>
+                                <TextBlock Text="Map a whole drive in seconds" FontSize="15" FontWeight="SemiBold" />
+                                <TextBlock Foreground="{DynamicResource TextDim}" TextWrapping="Wrap" Margin="0,4,0,0" LineHeight="19"
+                                           Text="SpaceSharp can read the drive's file table directly instead of walking every folder. That needs administrator rights, so the app has to restart once. Folders and other file systems scan the normal way either way." />
+                            </StackPanel>
+                        </DockPanel>
+                        <DockPanel Margin="0,14,0,0">
+                            <Button DockPanel.Dock="Right" Style="{StaticResource AccentButton}" Height="32" MinWidth="150"
+                                    Tag="&#xE7EF;" Content="Restart as administrator" Click="FastScanRestart_Click" />
+                            <Button DockPanel.Dock="Right" Style="{StaticResource ToolButton}" Height="32" Margin="0,0,8,0"
+                                    Content="Not now" ToolTip="Ask again next time" Click="FastScanLater_Click" />
+                            <Button Style="{StaticResource ToolButton}" Height="32" HorizontalAlignment="Left" Padding="6,0"
+                                    Content="Don't ask again" ToolTip="Keep the normal scan when not running as administrator. Settings › Scanning brings this back."
+                                    Click="FastScanDismiss_Click" />
+                        </DockPanel>
+                    </StackPanel>
+                </Border>
             </StackPanel>
 
             <Popup x:Name="HoverTip" Placement="Relative" PlacementTarget="{Binding ElementName=Treemap}"

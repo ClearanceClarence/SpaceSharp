@@ -24,7 +24,9 @@ public enum TopListKind
 {
     Files,
     Folders,
-    Types
+    Types,
+    /// <summary>What grew most since the compared scan.</summary>
+    Changes
 }
 
 /// <summary>Builds the "largest files", "largest folders" and "space by type" lists.</summary>
@@ -36,8 +38,33 @@ public static class TopLists
     {
         TopListKind.Files => LargestFiles(root, measure),
         TopListKind.Folders => LargestFolders(root, measure),
+        TopListKind.Changes => Changes(root, measure),
         _ => ByType(root, measure, scheme)
     };
+
+    /// <summary>Files and folders that grew or appeared since the baseline, largest change first.</summary>
+    private static List<TopRow> Changes(FsNode root, SizeMeasure measure)
+    {
+        if (!root.HasBaseline) return new List<TopRow>();
+        var candidates = root.DescendantFiles().Concat(root.DescendantDirectories().Where(d => !ReferenceEquals(d, root)))
+            .Where(n => n.ChangeFor(measure) != 0);
+        var top = TopN(candidates, n => Math.Abs(n.ChangeFor(measure)));
+        long largest = top.Count > 0 ? Math.Abs(top[0].ChangeFor(measure)) : 1;
+        return top.Select(n =>
+        {
+            long change = n.ChangeFor(measure);
+            string what = n.BaselineSize is null ? "new" : change > 0 ? "grew" : "shrank";
+            return new TopRow
+            {
+                Name = n.Name,
+                Detail = $"{what}{(n.IsDirectory ? " folder" : string.Empty)} · {n.Parent?.FullPath}",
+                SizeText = (change > 0 ? "+" : "−") + SizeFormatter.Format(Math.Abs(change)),
+                Fraction = largest > 0 ? (double)Math.Abs(change) / largest : 0,
+                Swatch = change > 0 ? Palette.GrewBrush : Palette.ShrankBrush,
+                Node = n
+            };
+        }).ToList();
+    }
 
     private static List<TopRow> LargestFiles(FsNode root, SizeMeasure measure)
     {

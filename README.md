@@ -61,7 +61,13 @@ It's a single, portable `.exe` with no installer and no dependencies.
 
 **Scanning**
 - Scan a whole drive or any folder, with live counts of files, folders and bytes while it runs
-- Parallel scanning of the top folder levels, which is noticeably faster on SSDs
+- Fast NTFS scan: reads the drive's file table directly, mapping a whole drive in seconds (needs administrator; the app offers to restart elevated on the start screen)
+- Every drive scan is saved, so the app opens with yesterday's map already on screen and F5 rescans; save and open scans as files to compare machines
+- Compare with the previous scan: color by change (grew warm, shrank cool, new in amber), a Changes tab listing what grew most, and "since last scan" in Inspect
+- Rescan a single folder from the right-click menu; the rest of the map stays put
+- Export the largest files, a folder, the filter matches or the changes to CSV (a plain first version: fixed columns, no options yet)
+- Leave out names such as `node_modules` or `*.tmp` from every scan
+- Parallel folder walk for everything else: single folders, other file systems, and runs without administrator rights
 - Includes hidden and system files; skips junctions and symbolic links to avoid loops and double counting
 - Folders that can't be read are flagged instead of stopping the scan, and a notice offers to restart as administrator
 - Measures **file size** or **size on disk** (compressed size rounded to whole clusters), switchable at any time
@@ -71,10 +77,10 @@ It's a single, portable `.exe` with no installer and no dependencies.
 **The map**
 - Squarified treemap layout, which keeps boxes close to square so sizes are easy to compare
 - Nested folders with title bars showing name and size
-- Chains of folders that only contain one folder (like `Users › adria › AppData › Local`) are merged into a single box with a combined title, instead of a stack of thin frames
+- Chains of folders that only contain one folder (like `Users › Alex › AppData › Local`) are merged into a single box with a combined title, instead of a stack of thin frames
 - Folders with hundreds of small files (a photo shoot, a cache) show one "312 files" box instead of a grid of specks; zooming in reveals them individually
 - Boxes too small to see are left out, so the map stays clean instead of turning into noise
-- Six map styles: Classic (title bars and borders), Flat, Tiles, Cards, Bands and Soft, switchable from the toolbar; S cycles
+- Six map styles: Classic (title bars, borders and soft shading), Flat, Tiles, Cards, Bands and Soft, switchable from the toolbar; S cycles
 - Readability options: five label sizes and outlined labels that stay legible on any color
 - A gray "Free space" block when scanning a whole drive, so the map shows the entire disk
 
@@ -94,7 +100,7 @@ It's a single, portable `.exe` with no installer and no dependencies.
 
 **Colors and themes**
 - Color boxes by nesting depth or by file type (images, video, audio, archives, programs, documents, code)
-- Eight palettes: Pastel, Retro, Ocean, Sunset, Forest, Neon, Monochrome and Color-blind safe
+- Eight palettes: Pastel, Retro, Ocean, Sunset, Forest, Neon, Monochrome and Color-blind safe, plus your own as JSON files (Settings › Custom palettes › Open folder; an example and a README are written for you)
 - Label text automatically switches between dark and light to stay readable on every color
 - Light and dark themes, or follow the Windows setting and switch live when it changes
 - Title bars follow the theme on Windows 10 and 11
@@ -143,10 +149,9 @@ The gear button in the toolbar (or Ctrl+,) opens the settings window. Every chan
 |---|---|
 | **Theme** | Match Windows, Light or Dark. |
 | **Palette** and **Color by** | The same choices as in the toolbar. |
-| **Map style** | Classic, Flat, Tiles, Cards, Bands or Soft. Same layout, different look; S cycles. |
+| **Map style** | Classic (with soft shading), Flat, Tiles, Cards, Bands or Soft. Same layout, different look; S cycles. |
 | **Label size** | Smallest, Smaller, Normal, Large or Larger text on the map. Title bars shrink and grow to match. |
 | **Outlined labels** | A thin contrasting outline around every label. Recommended if the map is hard to read. |
-| **Cushion shading** | Soft light-to-dark shading on each box in the Classic style. Off by default. |
 | **Size measure** | File size, or size on disk: the compressed size of compressed, sparse and cloud files, rounded up to whole clusters, like Explorer's "Size on disk". |
 | **Show free space** | Adds a gray block for the drive's unused space when a whole drive is scanned. Off by default. |
 | **Merge single-folder chains** | Draw folders that only contain one folder as a single box with a combined title. |
@@ -154,6 +159,9 @@ The gear button in the toolbar (or Ctrl+,) opens the settings window. Every chan
 | **Hover details** | The info card next to the mouse. |
 | **Show side panel** | The panel on the left with your drives and the largest items. |
 | **Animate zoom** | Fly into folders instead of jumping. |
+| **Leave out** | Names to skip, with everything inside them. One wildcard per line, matched against file and folder names. |
+| **Reopen the last scan on startup** | Shows the last map at once, compared with the scan before it. Scans are kept in `%LocalAppData%\SpaceSharp\scans`. On by default. |
+| **Fast NTFS scan** | Reads the drive's Master File Table instead of walking folders, so a whole drive takes seconds. Needs administrator rights and an NTFS volume; otherwise the normal scan runs. On by default. |
 | **Include hidden and system files** | Off leaves out Hidden and System items such as `pagefile.sys`. Applies to the next scan. |
 | **Count hard links once** | Reads every file's link count so data with several names (Windows keeps thousands in `WinSxS`) is counted once. Slower on big drives, off by default, applies to the next scan. |
 | **Confirm before moving to the Recycle Bin** | Ask before deleting. |
@@ -202,6 +210,27 @@ The bar then shows how many files match and their total size. **Select matches**
 | Monochrome | Grays, with archives in amber in file-type mode |
 | Color-blind safe | The Okabe-Ito palette, distinguishable with all common types of color blindness |
 
+#### Your own palettes
+
+Palettes are JSON files in `%LocalAppData%\SpaceSharp\palettes`, one file per palette. Settings › Appearance › **Custom palettes** › **Open folder** creates the folder with an `Example.json` and a `README.txt`, and opens it. Copy the example, rename it, change the colors, then press **Reload** in Settings (or restart). Custom palettes appear under their own **Custom** header in the toolbar's palette list, after the built-in ones.
+
+The smallest valid file:
+
+```json
+{ "name": "Mine", "folders": ["#5B8DEF", "#49B86B", "#E8C547", "#E8864A"] }
+```
+
+| Field | Meaning |
+|---|---|
+| `name` | Shown in the list. If left out, the file name is used. |
+| `folders` | Required. 1 to 12 colors as `#RRGGBB`. Cycled by depth in Depth mode, by top-level folder in Top folder mode. |
+| `files` | Optional. Colors for files. Without it, the folder colors lightened by `fileTint`. |
+| `fileTint` | Optional, 0 to 0.9, default 0.45. |
+| `categories` | Optional. Colors for File type mode by name: `images`, `video`, `audio`, `archives`, `programs`, `documents`, `code`, `other`. Missing ones are derived from `folders`. |
+| `neutral` | Optional. 1 to 6 greys for folders in File type mode. |
+
+Comments and trailing commas are allowed in the files. A file that can't be read is listed with the reason on the Settings page, and the rest still load.
+
 ## Keyboard and mouse
 
 | Input | Action |
@@ -215,6 +244,8 @@ The bar then shows how many files match and their total size. **Select matches**
 | F5 | Rescan |
 | Ctrl+C | Copy the selected paths |
 | Ctrl+I | Inspect the selection: sizes, shares, dates, what is inside, which file types take the space |
+| Ctrl+S | Save the scan to a file |
+| Ctrl+O | Open a saved scan |
 | Alt+Enter | Windows Properties for the selected item |
 | Ctrl+click, Shift+click | Select several items |
 | Ctrl+F | Filter the map |
@@ -223,8 +254,7 @@ The bar then shows how many files match and their total size. **Select matches**
 | Ctrl+, | Settings |
 | Del | Move the selected items to the Recycle Bin |
 | S | Next map style |
-| K | Next color mode (top folder, depth, file type) |
-| C | Toggle cushion shading |
+| K | Next color mode (top folder, depth, file type, change) |
 | G | Toggle grouping of small items |
 | Esc | Cancel a scan |
 | F1 | About |
@@ -289,7 +319,7 @@ The same steps by hand, if you prefer:
 ```powershell
 dotnet publish .\SpaceSharp\SpaceSharp.csproj -p:PublishProfile=Velopack
 vpk download github --repoUrl https://github.com/ClearanceClarence/SpaceSharp
-vpk pack --packId SpaceSharp --packVersion 1.2.2 --packDir .\publish\velopack --mainExe SpaceSharp.exe --packTitle SpaceSharp --packAuthors ClearanceClarence --icon .\SpaceSharp\Assets\SpaceSharp.ico --splashImage .\SpaceSharp\Assets\SpaceSharp-256.png --msi --instLocation Either --instWelcome .\installer\welcome.md --instLicense .\installer\license.txt --instConclusion .\installer\conclusion.md
+vpk pack --packId SpaceSharp --packVersion 1.3.0 --packDir .\publish\velopack --mainExe SpaceSharp.exe --packTitle SpaceSharp --packAuthors ClearanceClarence --icon .\SpaceSharp\Assets\SpaceSharp.ico --splashImage .\SpaceSharp\Assets\SpaceSharp-256.png --msi --instLocation Either --instWelcome .\installer\welcome.md --instLicense .\installer\license.txt --instConclusion .\installer\conclusion.md
 .\installer\brand-msi.ps1
 ```
 
@@ -304,7 +334,7 @@ The scanner walks the folder tree on background threads with `DirectoryInfo.Enum
 **Layout** (`Layout/Squarify.cs`)
 Boxes are placed with the squarified treemap algorithm by Bruls, Huizing and van Wijk. Items are added to a row along the shorter side of the remaining space for as long as that improves the worst aspect ratio in the row, which produces boxes that are close to square.
 
-**Rendering and zoom** (`Controls/TreemapControl.cs`)
+**Rendering and zoom** (`Controls/TreemapControl*.cs`, one partial class in five files: fields and properties, camera, layout, rendering, input)
 The map is a custom WPF element that draws into `DrawingVisual`s instead of creating a control per box, so tens of thousands of boxes stay fast.
 
 Zooming doesn't scale a picture. The map is laid out again on a virtual canvas that is the window size times the zoom level, shifted by the pan offset. Small files get real pixels and sharp labels as you zoom in, and only boxes that intersect the window are laid out and drawn, which keeps deep zoom fast.
@@ -341,7 +371,12 @@ SpaceSharp/
 ├── AboutWindow.xaml(.cs)         About window
 ├── SettingsWindow.xaml(.cs)      settings window
 ├── Controls/
-│   └── TreemapControl.cs         map rendering, zoom camera, hit testing, input
+│   ├── MapEnums.cs               ColorMode, MapStyle, TreemapItem
+│   ├── TreemapControl.cs         constants, fields, constructor, public properties and events
+│   ├── TreemapControl.Camera.cs  zoom, pan, focus animation, viewport math
+│   ├── TreemapControl.Layout.cs  rebuild, squarified layout cache, grouping, chain merging
+│   ├── TreemapControl.Render.cs  boxes, headers, labels, hover and selection drawing
+│   └── TreemapControl.Input.cs   mouse and keyboard
 ├── Layout/
 │   └── Squarify.cs               squarified treemap algorithm
 ├── Models/
@@ -404,15 +439,16 @@ These come from `SpaceSharp.csproj` (`Version`, `Authors`, `Copyright`, `Descrip
 **Icon**
 The mark is nine cells on a charcoal tile; the gutters form the `#` in Sharp and brightness follows size. Every brand asset is generated from one definition in `tools/make-assets.py` (Python 3 with Pillow; it downloads Bricolage Grotesque from its GitHub repository for the wordmark). Running it rewrites `Assets/SpaceSharp.svg`, `SpaceSharp-small.svg` (the four-cell version used at 16 to 24 px), `SpaceSharp.ico`, `SpaceSharp-256.png`, the icons and previews in `docs/`, and the two installer bitmaps, so change the cells or colors there rather than editing the files by hand.
 
-## Settings
+## Where things are stored
 
-Your palette, color mode and theme are saved to:
+| What | Where |
+|---|---|
+| Settings (palette, style, color mode, theme, scanning options) | `%AppData%\SpaceSharp\settings.json`. Delete it to go back to the defaults. |
+| Saved scans, one per drive plus the previous one for comparison | `%LocalAppData%\SpaceSharp\scans\*.sscan` |
+| Custom palettes | `%LocalAppData%\SpaceSharp\palettes\*.json` |
+| The installed app (Setup.exe and Portable.zip) | `%LocalAppData%\SpaceSharp\` |
 
-```
-%AppData%\SpaceSharp\settings.json
-```
-
-Delete the file to go back to the defaults.
+Nothing is written anywhere else, and nothing leaves the machine except the update check against GitHub Releases, which only installed copies make.
 
 ## Known limitations
 
@@ -425,10 +461,6 @@ Delete the file to go back to the defaults.
 
 ## Ideas for the future
 
-- Saving scans so reopening the app is instant, and comparing two scans of the same drive
-- Rescan a single folder from the right-click menu
-- Export the current folder or the filter results to CSV
-- Reading the NTFS index directly for much faster whole-drive scans
 - Duplicate file finder, tied into filter and batch delete
 - Command-line arguments and an Explorer context-menu entry
 - Norwegian translation, once the strings move to resource files

@@ -35,13 +35,13 @@ public partial class SettingsWindow : Window
             Combo(new[] { "Match Windows", "Light", "Dark" }, (int)ThemeManager.Choice,
                 i => _settings.Theme = ((AppTheme)i).ToString()));
         Row("Palette", "The colors used for boxes in the map.",
-            Combo(Palette.Schemes.Select(s => s.Name).ToArray(), Palette.Schemes.ToList().IndexOf(Palette.Find(_settings.Palette)),
+            Combo(Palette.Schemes.Select(s => s.IsCustom ? $"{s.Name}  (custom)" : s.Name).ToArray(), Palette.Schemes.ToList().IndexOf(Palette.Find(_settings.Palette)),
                 i => _settings.Palette = Palette.Schemes[i].Name));
-        Row("Color by", "Top folder: one hue per top-level folder, lighter with each level inside. Folder depth: a different color per level. File type: files colored by type.",
-            Combo(new[] { "Top folder", "Folder depth", "File type" },
+        Row("Color by", "Top folder: one hue per top-level folder, lighter with each level inside. Folder depth: a different color per level. File type: files colored by type. Change: what grew or shrank since the previous scan of the same place.",
+            Combo(new[] { "Top folder", "Folder depth", "File type", "Change since last scan" },
                 Enum.TryParse<ColorMode>(_settings.ColorMode, out var colorMode) ? (int)colorMode : 0,
                 i => _settings.ColorMode = ((ColorMode)i).ToString()));
-        Row("Map style", "How boxes are drawn. Classic: title bars and borders. Flat: plain fills and thin lines. Tiles: flat, gapped, rounded. Cards: raised folders. Bands: dark title band. Soft: rounded pastel blocks.",
+        Row("Map style", "How boxes are drawn. Classic: title bars, borders and soft shading. Flat: plain fills and thin lines. Tiles: flat, gapped, rounded. Cards: raised folders. Bands: dark title band. Soft: rounded pastel blocks.",
             Combo(Enum.GetNames<MapStyle>(), Math.Max(0, Array.IndexOf(Enum.GetNames<MapStyle>(), _settings.MapStyle ?? "Classic")),
                 i => _settings.MapStyle = Enum.GetNames<MapStyle>()[i]));
         Row("Label size", "Text size on the map, from Smallest to Larger. Title bars shrink and grow to match.",
@@ -49,8 +49,9 @@ public partial class SettingsWindow : Window
                 i => _settings.LabelSize = LabelSizes[i]));
         Row("Outlined labels", "A thin contrasting outline around every label, so text stays readable on any color. Recommended if you find the map hard to read.",
             Switch(_settings.LabelHalo, v => _settings.LabelHalo = v));
-        Row("Cushion shading", "Soft light-to-dark shading on every box in the Classic style. Shortcut: C.",
-            Switch(_settings.Cushion, v => _settings.Cushion = v));
+
+        Row("Custom palettes", PaletteNote(),
+            PaletteButtons());
 
         Section("Map");
         Row("Size measure", "Size on disk uses the compressed size of compressed, sparse and cloud files and rounds every file up to whole clusters, like Explorer's \"Size on disk\".",
@@ -69,6 +70,12 @@ public partial class SettingsWindow : Window
             Switch(_settings.AnimateZoom, v => _settings.AnimateZoom = v));
 
         Section("Scanning", "Changes here take effect on the next scan (F5).");
+        Row("Fast NTFS scan", "Reads the drive's file table directly, so a whole drive is mapped in seconds instead of minutes. Needs administrator rights; without them, or on other file systems and single folders, the normal scan is used. Hard links are always counted once.",
+            Switch(_settings.FastNtfsScan, v => _settings.FastNtfsScan = v));
+        Row("Leave out", "Names to skip, with everything inside them. One wildcard per line, matched against file and folder names, not paths. Examples: node_modules, $Recycle.Bin, *.tmp",
+            MultiLine(_settings.ExcludePatterns, v => _settings.ExcludePatterns = v));
+        Row("Reopen the last scan on startup", "Shows yesterday's map the moment the app opens, compared with the scan before it. Every drive scan is kept in %LocalAppData%\\SpaceSharp\\scans; F5 rescans.",
+            Switch(_settings.ReopenLastScan, v => _settings.ReopenLastScan = v));
         Row("Include hidden and system files", "Off leaves out files and folders with the Hidden or System attribute, such as pagefile.sys.",
             Switch(_settings.IncludeHidden, v => _settings.IncludeHidden = v));
         Row("Count hard links once", "Reads every file's link count so data with several names, such as Windows' WinSxS folder, is counted once. Slower on large drives.",
@@ -139,6 +146,56 @@ public partial class SettingsWindow : Window
         var box = new CheckBox { IsChecked = value, Style = (Style)FindResource("Switch") };
         box.Checked += (_, _) => Change(() => onChanged(true));
         box.Unchecked += (_, _) => Change(() => onChanged(false));
+        return box;
+    }
+
+    private static string PaletteNote()
+    {
+        int custom = Palette.Schemes.Count(s => !IsBuiltIn(s));
+        string note = "Add your own: one JSON file per palette in the palettes folder. The folder comes with an example and a README.";
+        if (custom > 0) note += $" {custom} custom palette{(custom == 1 ? string.Empty : "s")} loaded.";
+        if (CustomPalettes.LastErrors.Count > 0) note += " Not loaded: " + string.Join("; ", CustomPalettes.LastErrors);
+        return note;
+    }
+
+    private static bool IsBuiltIn(ColorScheme s) => !s.IsCustom;
+
+    private StackPanel PaletteButtons()
+    {
+        var panel = new StackPanel { Orientation = Orientation.Horizontal };
+        var open = new Button { Style = (Style)FindResource("ToolButton"), Content = "Open folder", Tag = "\uE838", Height = 30 };
+        open.Click += (_, _) =>
+        {
+            try
+            {
+                CustomPalettes.WriteExample();
+                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo("explorer.exe", $"\"{CustomPalettes.Folder}\"") { UseShellExecute = true });
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.ComponentModel.Win32Exception)
+            {
+                MessageBox.Show(this, ex.Message, "Couldn't open the palettes folder", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        };
+        var reload = new Button { Style = (Style)FindResource("ToolButton"), Content = "Reload", Tag = "\uE72C", Height = 30, Margin = new Thickness(6, 0, 0, 0) };
+        reload.Click += (_, _) =>
+        {
+            Palette.Reload();
+            _main.RefreshPalettes();
+            Build(); // redraw the page so the palette list and the note update
+        };
+        panel.Children.Add(open);
+        panel.Children.Add(reload);
+        return panel;
+    }
+
+    private TextBox MultiLine(string value, Action<string> onChanged)
+    {
+        var box = new TextBox
+        {
+            Width = 220, MinHeight = 64, MaxHeight = 140, AcceptsReturn = true, TextWrapping = TextWrapping.NoWrap,
+            VerticalScrollBarVisibility = ScrollBarVisibility.Auto, Text = value, FontFamily = new System.Windows.Media.FontFamily("Consolas"), FontSize = 12
+        };
+        box.LostFocus += (_, _) => { if (box.Text != value) { value = box.Text; onChanged(box.Text); _main.ApplySettings(); } };
         return box;
     }
 

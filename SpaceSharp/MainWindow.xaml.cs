@@ -54,6 +54,7 @@ public partial class MainWindow : Window
     {
         InitializeComponent();
         TitleBarTheme.Attach(this);
+        Title = AppInfo.Title;
         ThemeManager.Changed += OnThemeChanged;
         Closed += (_, _) => ThemeManager.Changed -= OnThemeChanged;
 
@@ -90,19 +91,335 @@ public partial class MainWindow : Window
         Treemap.FocusChanged += (_, _) => UpdateNavigation();
         Treemap.ZoomChanged += (_, _) => UpdateZoomControls();
 
-        PaletteCombo.ItemsSource = Palette.Schemes;
+        PaletteCombo.ItemsSource = PaletteView();
         ApplySettings();
         UpdateThemeButton();
         LoadDrives();
         UpdateNavigation();
 
         if (IsElevated) Title += "  (Administrator)";
+        FastScanCard.Visibility = _settings.FastNtfsScan && !IsElevated && !_settings.FastScanBarDismissed ? Visibility.Visible : Visibility.Collapsed;
 
         // Started with a folder argument (e.g. after "Restart as administrator"): scan it right away.
         if (App.StartupScanPath is { } startPath)
             Loaded += async (_, _) => await StartScanAsync(startPath);
 
         Loaded += async (_, _) => await CheckForUpdatesAsync();
+        if (App.StartupScanPath is null && _settings.ReopenLastScan && _settings.LastScanRoot is { } last)
+            Loaded += async (_, _) => await ReopenLastScanAsync(last);
+    }
+
+    // ============================================================ saved scans
+
+    private DateTime _scanTimeUtc = DateTime.MinValue;
+    private ScanFileInfo? _baselineInfo;
+
+    /// <summary>On startup: show the last map straight away, compared with the one before it.</summary>
+    private async Task ReopenLastScanAsync(string rootPath)
+    {
+        string file = ScanFile.AutoPathFor(rootPath);
+        if (!File.Exists(file) || IsScanning) return;
+        try
+        {
+            StatusScan.Text = "Opening the last scan…";
+            var (root, info, baseline) = await Task.Run(() =>
+            {
+                var (r, i) = ScanFile.Load(file);
+                ScanFileInfo? b = null;
+                string prev = ScanFile.PreviousPathFor(rootPath);
+                if (File.Exists(prev) && ScanFile.Peek(prev) is { } prevInfo && Comparable(prevInfo.Method, i.Method))
+                {
+                    try { var (old, oldInfo) = ScanFile.Load(prev, addFreeSpace: false); ScanCompare.Apply(r, old); b = oldInfo; }
+                    catch (Exception ex) when (ex is IOException or InvalidDataException or EndOfStreamException) { }
+                }
+                return (r, i, b);
+            });
+            ShowLoadedScan(root, info, baseline, "Opened the scan from");
+        }
+        catch (Exception ex) when (ex is IOException or InvalidDataException or EndOfStreamException or UnauthorizedAccessException)
+        {
+            StatusScan.Text = string.Empty;
+        }
+    }
+
+    private void ShowLoadedScan(FsNode root, ScanFileInfo info, ScanFileInfo? baseline, string verb)
+    {
+        root.SortBy(Treemap.SizeMode);
+        root.SetFreeSpaceVisible(_settings.ShowFreeSpace, Treemap.SizeMode);
+        _root = root;
+        _lastScanPath = info.RootPath;
+        _scanTimeUtc = info.ScannedUtc;
+        _baselineInfo = baseline;
+        Treemap.SelectedNode = null;
+        Treemap.Root = root;
+        ApplyFilter();
+        UpdateCompareUi();
+        RefreshTopList();
+        LoadDrives();
+        StatusScan.Text = $"{verb} {Ago(info.ScannedUtc)}: {root.FileCount:N0} files · {SizeFormatter.Format(info.Bytes)}. F5 rescans." +
+                          (baseline is not null ? $"  Compared with {Ago(baseline.ScannedUtc)}." : string.Empty);
+        UpdateNavigation();
+    }
+
+    /// <summary>
+    /// How a scan saw the disk. Two scans are only compared when this matches: the folder walk without
+    /// administrator rights cannot see System Volume Information, and it counts hard-linked names separately
+    /// unless link detection is on, whereas the file-table scan sees everything and counts links once. A diff
+    /// across those would report growth and shrinkage that never happened.
+    /// </summary>
+    private string ScanSignature() =>
+        (_scanner.LastMethod == "MFT" ? "MFT" : "folder walk") +
+        (IsElevated ? ", administrator" : string.Empty) +
+        (_scanner.LastMethod == "MFT" || _settings.DetectHardLinks ? ", links once" : string.Empty) +
+        (_settings.IncludeHidden ? string.Empty : ", no hidden") +
+        (string.IsNullOrWhiteSpace(_settings.ExcludePatterns) ? string.Empty : ", exclusions");
+
+    private static bool Comparable(string a, string b) => string.Equals(a, b, StringComparison.Ordinal);
+
+    /// <summary>After a scan: compare with the previous save of the same place, then save this one.</summary>
+    private async Task SaveAndCompareAsync(FsNode root, string rootPath)
+    {
+        string auto = ScanFile.AutoPathFor(rootPath), prev = ScanFile.PreviousPathFor(rootPath);
+        var when = DateTime.UtcNow;
+        string method = ScanSignature();
+        _scanTimeUtc = when;
+        try
+        {
+            var (baseline, skipped) = await Task.Run(() =>
+            {
+                ScanFileInfo? b = null; string? why = null;
+                if (File.Exists(auto))
+                {
+                    var oldInfo = ScanFile.Peek(auto);
+                    if (oldInfo is not null && !Comparable(oldInfo.Method, method))
+                        why = $"The previous scan was made differently ({oldInfo.Method} vs {method}), so it isn't compared. The next scan of the same kind will be.";
+                    else
+                    {
+                        try { var (old, info) = ScanFile.Load(auto, addFreeSpace: false); ScanCompare.Apply(root, old); b = info; }
+                        catch (Exception ex) when (ex is IOException or InvalidDataException or EndOfStreamException) { }
+                    }
+                    File.Copy(auto, prev, overwrite: true);
+                }
+                ScanFile.Save(root, auto, when, method);
+                return (b, why);
+            });
+            if (!ReferenceEquals(_root, root)) return; // a newer scan replaced it meanwhile
+            _baselineInfo = baseline;
+            _settings.LastScanRoot = rootPath;
+            _settings.Save();
+            UpdateCompareUi();
+            if (baseline is not null)
+            {
+                StatusScan.Text += $"  ·  compared with the scan from {Ago(baseline.ScannedUtc)}";
+                Treemap.Refresh();
+                RefreshTopList();
+            }
+            else if (skipped is not null) StatusScan.Text += "  ·  " + skipped;
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            // Saving is a convenience; the scan on screen is unaffected.
+        }
+    }
+
+    private bool HasBaseline => _root is { HasBaseline: true };
+
+    private void UpdateCompareUi()
+    {
+        TabChanges.Visibility = HasBaseline ? Visibility.Visible : Visibility.Collapsed;
+        if (!HasBaseline && _listKind == TopListKind.Changes) _listKind = TopListKind.Files;
+        var colorItem = (ComboBoxItem)ColorCombo.Items[(int)ColorMode.ByChange];
+        colorItem.IsEnabled = HasBaseline;
+        colorItem.ToolTip = HasBaseline ? null : "Scan the same drive or folder twice, or open a saved scan to compare with.";
+        ApplySettings();
+    }
+
+    private static string Ago(DateTime utc)
+    {
+        var age = DateTime.UtcNow - utc;
+        return age.TotalMinutes < 2 ? "just now"
+             : age.TotalHours < 1 ? $"{(int)age.TotalMinutes} minutes ago"
+             : age.TotalDays < 1 ? $"{(int)age.TotalHours} hours ago"
+             : age.TotalDays < 2 ? "yesterday"
+             : age.TotalDays < 30 ? $"{(int)age.TotalDays} days ago"
+             : utc.ToLocalTime().ToString("d MMM yyyy");
+    }
+
+    private void MenuSaveScan_Click(object sender, RoutedEventArgs e) => SaveScanAs();
+
+    private void SaveScanAs()
+    {
+        if (_root is null) return;
+        var dialog = new SaveFileDialog
+        {
+            Title = "Save scan",
+            Filter = "SpaceSharp scan (*.sscan)|*.sscan",
+            FileName = SuggestedScanName(_root.FullPath)
+        };
+        if (dialog.ShowDialog(this) != true) return;
+        var root = _root; var when = _scanTimeUtc == DateTime.MinValue ? DateTime.UtcNow : _scanTimeUtc; string method = ScanSignature();
+        RunSafely(() => ScanFile.Save(root, dialog.FileName, when, method));
+        StatusScan.Text = $"Saved {Path.GetFileName(dialog.FileName)}";
+    }
+
+    private static string SuggestedScanName(string rootPath)
+    {
+        string name = rootPath.TrimEnd('\\'); if (name.Length == 2 && name[1] == ':') name = name[..1];
+        foreach (char c in Path.GetInvalidFileNameChars()) name = name.Replace(c, '-');
+        return $"{name} {DateTime.Now:yyyy-MM-dd}{ScanFile.Extension}";
+    }
+
+    private void MenuOpenScan_Click(object sender, RoutedEventArgs e) => _ = OpenScanAsync();
+
+    private async Task OpenScanAsync()
+    {
+        if (IsScanning) return;
+        var dialog = new OpenFileDialog { Title = "Open a saved scan", Filter = "SpaceSharp scan (*.sscan)|*.sscan", InitialDirectory = ScanFile.Folder };
+        if (dialog.ShowDialog(this) != true) return;
+        try
+        {
+            var (root, info) = await Task.Run(() => ScanFile.Load(dialog.FileName));
+            ShowLoadedScan(root, info, null, "Opened the scan from");
+        }
+        catch (Exception ex) when (ex is IOException or InvalidDataException or EndOfStreamException or UnauthorizedAccessException)
+        {
+            MessageBox.Show(this, ex.Message, "Couldn't open the scan", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+    }
+
+    private void MenuCompareScan_Click(object sender, RoutedEventArgs e) => _ = CompareWithFileAsync();
+
+    private async Task CompareWithFileAsync()
+    {
+        if (_root is null) return;
+        var dialog = new OpenFileDialog { Title = "Compare with a saved scan", Filter = "SpaceSharp scan (*.sscan)|*.sscan", InitialDirectory = ScanFile.Folder };
+        if (dialog.ShowDialog(this) != true) return;
+        var root = _root;
+        try
+        {
+            var info = await Task.Run(() =>
+            {
+                var (old, oldInfo) = ScanFile.Load(dialog.FileName, addFreeSpace: false);
+                ScanCompare.Apply(root, old);
+                return oldInfo;
+            });
+            if (!ReferenceEquals(_root, root)) return;
+            _baselineInfo = info;
+            if (!string.Equals(info.RootPath.TrimEnd('\\'), root.FullPath.TrimEnd('\\'), StringComparison.OrdinalIgnoreCase))
+                StatusScan.Text = $"Comparing with a scan of {info.RootPath} from {Ago(info.ScannedUtc)}; names are matched folder by folder.";
+            else if (!Comparable(info.Method, ScanSignature()))
+                StatusScan.Text = $"Comparing with the scan from {Ago(info.ScannedUtc)}. It was made differently ({info.Method} vs {ScanSignature()}), so some differences are down to that, not to the disk.";
+            else
+                StatusScan.Text = $"Comparing with the scan from {Ago(info.ScannedUtc)}.";
+            _settings.ColorMode = ColorMode.ByChange.ToString();
+            UpdateCompareUi();
+            _listKind = TopListKind.Changes;
+            Treemap.Refresh();
+            RefreshTopList();
+        }
+        catch (Exception ex) when (ex is IOException or InvalidDataException or EndOfStreamException or UnauthorizedAccessException)
+        {
+            MessageBox.Show(this, ex.Message, "Couldn't open the scan", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+    }
+
+    private void MenuClearCompare_Click(object sender, RoutedEventArgs e)
+    {
+        if (_root is null) return;
+        ScanCompare.Clear(_root);
+        _baselineInfo = null;
+        if (_settings.ColorMode == ColorMode.ByChange.ToString()) _settings.ColorMode = ColorMode.ByBranch.ToString();
+        UpdateCompareUi();
+        Treemap.Refresh();
+        RefreshTopList();
+        StatusScan.Text = "Comparison cleared.";
+    }
+
+    // ============================================================ rescan a folder
+
+    private CancellationTokenSource? _rescanCts;
+
+    private void MenuRescan_Click(object sender, RoutedEventArgs e) => _ = RescanFolderAsync();
+
+    /// <summary>Re-walks one folder and splices the result into the tree, keeping the rest of the map as it is.</summary>
+    private async Task RescanFolderAsync()
+    {
+        if (_root is null || IsScanning || _rescanCts is not null) return;
+        var node = Treemap.SelectedNode ?? Treemap.FocusedFolder;
+        var folder = node is null ? null : node.IsDirectory ? node : node.Parent;
+        if (folder is null) return;
+        if (ReferenceEquals(folder, _root)) { await StartScanAsync(_root.FullPath); return; }
+        if (folder.Parent is not { } parent) return;
+
+        _rescanCts = new CancellationTokenSource();
+        var scanner = new DiskScanner();
+        StatusScan.Text = $"Rescanning {folder.Name}…";
+        try
+        {
+            var options = new ScanOptions
+            {
+                DetectHardLinks = _settings.DetectHardLinks,
+                IncludeHidden = _settings.IncludeHidden,
+                UseMft = false,
+                Exclude = NamePatterns.Parse(_settings.ExcludePatterns)
+            };
+            var fresh = await scanner.ScanAsync(folder.FullPath, options, _rescanCts.Token);
+            if (!parent.Children.Contains(folder)) return; // tree changed under us
+            bool wasFocus = ReferenceEquals(Treemap.FocusedFolder, folder) || folder.IsAncestorOf(Treemap.FocusedFolder ?? folder);
+            parent.ReplaceChild(folder, fresh, Treemap.SizeMode);
+            if (_baselineInfo is not null) ScanCompare.Clear(fresh); // no baseline for the new subtree, only for its parent
+            Treemap.SelectedNode = null;
+            Treemap.Refresh();
+            if (wasFocus) Treemap.FocusOn(fresh, animate: false);
+            ApplyFilter();
+            RefreshTopList();
+            var p = scanner.GetProgress();
+            StatusScan.Text = $"Rescanned {fresh.Name}: {fresh.FileCount:N0} files · {SizeFormatter.Format(fresh.SizeFor(Treemap.SizeMode))}" +
+                              (fresh.Size != folder.Size ? $" ({(fresh.Size > folder.Size ? "+" : "−")}{SizeFormatter.Format(Math.Abs(fresh.Size - folder.Size))})" : string.Empty);
+        }
+        catch (OperationCanceledException) { StatusScan.Text = "Rescan cancelled"; }
+        catch (Exception ex) { MessageBox.Show(this, ex.Message, "Rescan failed", MessageBoxButton.OK, MessageBoxImage.Error); }
+        finally { _rescanCts.Dispose(); _rescanCts = null; }
+    }
+
+    // ============================================================ export
+
+    private void MenuExportFiles_Click(object sender, RoutedEventArgs e)
+    {
+        if (_root is null) return;
+        ExportCsv("largest-files", _root.DescendantFiles().OrderByDescending(n => n.SizeFor(Treemap.SizeMode)).Take(1000));
+    }
+
+    private void MenuExportFolder_Click(object sender, RoutedEventArgs e)
+    {
+        var node = Treemap.SelectedNode ?? Treemap.FocusedFolder ?? _root;
+        var folder = node is null ? null : node.IsDirectory ? node : node.Parent;
+        if (folder is null) return;
+        ExportCsv(folder.Name.TrimEnd('\\', ':'), folder.Children.Where(c => c.IsReal));
+    }
+
+    private void MenuExportMatches_Click(object sender, RoutedEventArgs e)
+    {
+        if (_filterResult is null || _filter is null) return;
+        ExportCsv("filter-matches", _filterResult.Matches.Where(n => !n.IsDirectory && _filter.Matches(n)).OrderByDescending(n => n.SizeFor(Treemap.SizeMode)));
+    }
+
+    private void MenuExportChanges_Click(object sender, RoutedEventArgs e)
+    {
+        if (_root is null || !HasBaseline) return;
+        var measure = Treemap.SizeMode;
+        ExportCsv("changes", _root.DescendantFiles().Concat(_root.DescendantDirectories().Where(d => !ReferenceEquals(d, _root)))
+            .Where(n => n.ChangeFor(measure) != 0).OrderByDescending(n => Math.Abs(n.ChangeFor(measure))).Take(5000));
+    }
+
+    private void ExportCsv(string suggestedName, IEnumerable<FsNode> nodes)
+    {
+        foreach (char c in Path.GetInvalidFileNameChars()) suggestedName = suggestedName.Replace(c, '-');
+        var dialog = new SaveFileDialog { Title = "Export to CSV", Filter = "CSV (*.csv)|*.csv", FileName = $"SpaceSharp {suggestedName} {DateTime.Now:yyyy-MM-dd}.csv" };
+        if (dialog.ShowDialog(this) != true) return;
+        var list = nodes.ToList();
+        RunSafely(() => CsvExport.Write(dialog.FileName, list, Treemap.SizeMode));
+        StatusScan.Text = $"Exported {list.Count:N0} rows to {Path.GetFileName(dialog.FileName)} (a basic CSV: fixed columns, more options later)";
     }
 
     // =============================================================== updates
@@ -197,6 +514,7 @@ public partial class MainWindow : Window
     {
         var scheme = Palette.Find(_settings.Palette);
         var mode = Enum.TryParse<ColorMode>(_settings.ColorMode, out var parsedMode) ? parsedMode : ColorMode.ByBranch;
+        if (mode == ColorMode.ByChange && !HasBaseline) mode = ColorMode.ByBranch; // nothing to compare with yet
 
         _applyingSettings = true;
         PaletteCombo.SelectedItem = scheme;
@@ -206,7 +524,6 @@ public partial class MainWindow : Window
         Treemap.Scheme = scheme;
         Treemap.ColorMode = mode;
         Treemap.SizeMode = _settings.SizeOnDisk ? SizeMeasure.SizeOnDisk : SizeMeasure.FileSize;
-        Treemap.Cushion = _settings.Cushion;
         var mapStyle = Enum.TryParse<MapStyle>(_settings.MapStyle, out var style) ? style : MapStyle.Classic;
         Treemap.MapStyle = mapStyle;
         Treemap.LabelScale = _settings.LabelSize switch { "Smallest" => 0.7, "Smaller" => 0.85, "Large" => 1.2, "Larger" => 1.4, _ => 1.0 };
@@ -218,8 +535,8 @@ public partial class MainWindow : Window
         Treemap.AnimateZoom = _settings.AnimateZoom;
         Treemap.MergeSingleFolderChains = _settings.MergeChains;
         Treemap.GroupSmallItems = _settings.GroupSmallItems;
-        BuildLegend(scheme);
-        LegendPanel.Visibility = mode == ColorMode.ByFileType ? Visibility.Visible : Visibility.Collapsed;
+        if (mode == ColorMode.ByChange) BuildChangeLegend(); else BuildLegend(scheme);
+        LegendPanel.Visibility = mode is ColorMode.ByFileType or ColorMode.ByChange ? Visibility.Visible : Visibility.Collapsed;
 
         if (_root is not null && _root.FreeSpaceVisible != _settings.ShowFreeSpace)
         {
@@ -228,6 +545,8 @@ public partial class MainWindow : Window
         }
 
         SidePanel.Visibility = _settings.ShowSidePanel ? Visibility.Visible : Visibility.Collapsed;
+        ListsButton.Style = (Style)FindResource(_settings.ShowSidePanel ? "AccentButton" : "ToolButton");
+        ListsButton.Padding = new Thickness(8, 0, 8, 0); // icon only: AccentButton's text padding would make it wide
         RefreshTopList();
         if (_filter is not null && !_filter.IsEmpty) ApplyFilter(); // size measure may have changed
 
@@ -238,6 +557,41 @@ public partial class MainWindow : Window
         UpdateNavigation();
         ShowNodeInfo(Treemap.SelectedNode);
         _settings.Save();
+    }
+
+    /// <summary>After custom palettes were reloaded: refresh the toolbar list and keep the chosen one if it still exists.</summary>
+    public void RefreshPalettes()
+    {
+        PaletteCombo.ItemsSource = null;
+        PaletteCombo.ItemsSource = PaletteView();
+        ApplySettings();
+    }
+
+    /// <summary>The palettes grouped as "Built in" and "Custom"; the header only appears when there are custom ones.</summary>
+    private static System.Windows.Data.ListCollectionView PaletteView()
+    {
+        var view = new System.Windows.Data.ListCollectionView(Palette.Schemes.ToList());
+        if (Palette.Schemes.Any(s => s.IsCustom))
+            view.GroupDescriptions.Add(new System.Windows.Data.PropertyGroupDescription(nameof(ColorScheme.Group)));
+        return view;
+    }
+
+    private void BuildChangeLegend()
+    {
+        LegendPanel.Children.Clear();
+        foreach (var (label, brush) in new[] { ("Grew", Palette.GrewBrush), ("Shrank", Palette.ShrankBrush), ("Same", Palette.UnchangedBrush), ("New", Palette.NewBrush) })
+        {
+            LegendPanel.Children.Add(new StackPanel
+            {
+                Orientation = Orientation.Horizontal,
+                Margin = new Thickness(12, 0, 0, 0),
+                Children =
+                {
+                    new Border { Width = 11, Height = 11, Background = brush, CornerRadius = new CornerRadius(3), VerticalAlignment = VerticalAlignment.Center },
+                    Themed(new TextBlock { Text = label, FontSize = 11.5, Margin = new Thickness(5, 0, 0, 0), VerticalAlignment = VerticalAlignment.Center }, TextBlock.ForegroundProperty, "TextDim")
+                }
+            });
+        }
     }
 
     private void BuildLegend(ColorScheme scheme)
@@ -285,9 +639,12 @@ public partial class MainWindow : Window
             var options = new ScanOptions
             {
                 DetectHardLinks = _settings.DetectHardLinks,
-                IncludeHidden = _settings.IncludeHidden
+                IncludeHidden = _settings.IncludeHidden,
+                UseMft = _settings.FastNtfsScan,
+                Exclude = NamePatterns.Parse(_settings.ExcludePatterns)
             };
             FsNode root = await _scanner.ScanAsync(path, options, cts.Token);
+            _baselineInfo = null;
             root.SetFreeSpaceVisible(_settings.ShowFreeSpace, Treemap.SizeMode);
             _root = root;
             _lastScanPath = path;
@@ -299,12 +656,15 @@ public partial class MainWindow : Window
 
             var progress = _scanner.GetProgress();
             StatusScan.Text = $"{root.FileCount:N0} files · {progress.Directories:N0} folders · " +
-                              $"{SizeFormatter.Format(progress.Bytes)} · {_scanClock.Elapsed.TotalSeconds:0.0} s";
+                              $"{SizeFormatter.Format(progress.Bytes)} · {_scanClock.Elapsed.TotalSeconds:0.0} s" +
+                              (_scanner.LastMethod == "MFT" ? " · file table" : string.Empty);
             ShowAccessBar(progress.DeniedFolders);
 
             // On a rescan, go back to the folder the user was looking at.
             if (previousFocus is not null && root.FindDescendant(previousFocus) is { } folder && folder != root)
                 Treemap.FocusOn(folder, animate: false);
+            UpdateCompareUi();
+            _ = SaveAndCompareAsync(root, path);
         }
         catch (OperationCanceledException)
         {
@@ -332,12 +692,26 @@ public partial class MainWindow : Window
             AccessText.Text = $"{deniedFolders:N0} protected {(deniedFolders == 1 ? "folder" : "folders")} couldn't be read, so the map is missing their contents.";
     }
 
+    private void FastScanRestart_Click(object sender, RoutedEventArgs e) => RestartElevated();
+
+    /// <summary>"Not now": hides the card until the next start.</summary>
+    private void FastScanLater_Click(object sender, RoutedEventArgs e) => FastScanCard.Visibility = Visibility.Collapsed;
+
+    /// <summary>"Don't ask again": hides the card for good; the setting itself stays on for elevated runs.</summary>
+    private void FastScanDismiss_Click(object sender, RoutedEventArgs e)
+    {
+        FastScanCard.Visibility = Visibility.Collapsed;
+        _settings.FastScanBarDismissed = true;
+        _settings.Save();
+    }
+
     private void RestartElevated()
     {
-        if (_lastScanPath is null || Environment.ProcessPath is not { } exe) return;
+        if (Environment.ProcessPath is not { } exe) return;
         try
         {
-            Process.Start(new ProcessStartInfo(exe, $"\"{_lastScanPath}\"") { UseShellExecute = true, Verb = "runas" });
+            string args = _lastScanPath is null ? string.Empty : $"\"{_lastScanPath}\"";
+            Process.Start(new ProcessStartInfo(exe, args) { UseShellExecute = true, Verb = "runas" });
             Application.Current.Shutdown();
         }
         catch (System.ComponentModel.Win32Exception)
@@ -377,6 +751,7 @@ public partial class MainWindow : Window
         {
         }
 
+        _scanTarget = target;
         ScanTitle.Text = $"Scanning {target}";
         ScanSubtitle.Text = _scanExpectedBytes is null
             ? "Reading the folder tree. The map appears when it's done."
@@ -387,12 +762,33 @@ public partial class MainWindow : Window
         ScanRateText.Text = string.Empty;
         ScanElapsedText.Text = string.Empty;
         ScanPercentText.Text = string.Empty;
+        _scanMethodShown = null;
         ScanPathText.Text = path;
         SetScanBar(_scanExpectedBytes is null ? null : 0);
     }
 
+    private string? _scanMethodShown;
+    private string _scanTarget = string.Empty;
+    private string ScanTarget() => _scanTarget;
+
+    /// <summary>Once the scanner has decided how it reads the drive, say so on the card.</summary>
+    private void ShowScanMethod()
+    {
+        string method = _scanner.LastMethod;
+        if (method == _scanMethodShown) return;
+        _scanMethodShown = method;
+        bool mft = method == "MFT";
+        ScanTitle.Text = mft ? $"Scanning {ScanTarget()} from the file table" : $"Scanning {ScanTarget()}";
+        ScanSubtitle.Text = mft
+            ? $"Reading the NTFS file table directly{(_scanExpectedBytes is { } b ? $", {SizeFormatter.Format(b)} of used space" : string.Empty)}. Every file on the drive in one pass."
+            : _scanExpectedBytes is null
+                ? "Reading the folder tree. The map appears when it's done."
+                : $"Reading {SizeFormatter.Format(_scanExpectedBytes.Value)} of used space. The map appears when it's done.";
+    }
+
     private void UpdateProgress()
     {
+        ShowScanMethod();
         var p = _scanner.GetProgress();
         double seconds = Math.Max(0.001, _scanClock.Elapsed.TotalSeconds);
 
@@ -840,6 +1236,8 @@ public partial class MainWindow : Window
         _settings.ShowSidePanel = !_settings.ShowSidePanel;
         _settings.Save();
         SidePanel.Visibility = _settings.ShowSidePanel ? Visibility.Visible : Visibility.Collapsed;
+        ListsButton.Style = (Style)FindResource(_settings.ShowSidePanel ? "AccentButton" : "ToolButton");
+        ListsButton.Padding = new Thickness(8, 0, 8, 0); // icon only: AccentButton's text padding would make it wide
         RefreshTopList();
     }
 
@@ -847,6 +1245,7 @@ public partial class MainWindow : Window
     {
         _listKind = ReferenceEquals(sender, TabFolders) ? TopListKind.Folders
                   : ReferenceEquals(sender, TabTypes) ? TopListKind.Types
+                  : ReferenceEquals(sender, TabChanges) ? TopListKind.Changes
                   : TopListKind.Files;
         RefreshTopList();
     }
@@ -855,7 +1254,7 @@ public partial class MainWindow : Window
     {
         if (SidePanel.Visibility != Visibility.Visible) return;
 
-        foreach (var (button, kind) in new[] { (TabFiles, TopListKind.Files), (TabFolders, TopListKind.Folders), (TabTypes, TopListKind.Types) })
+        foreach (var (button, kind) in new[] { (TabFiles, TopListKind.Files), (TabFolders, TopListKind.Folders), (TabTypes, TopListKind.Types), (TabChanges, TopListKind.Changes) })
         {
             bool active = kind == _listKind;
             button.SetResourceReference(ForegroundProperty, active ? "Text" : "TextDim");
@@ -877,6 +1276,7 @@ public partial class MainWindow : Window
         {
             TopListKind.Files => $"Largest files in {_root.FullPath}",
             TopListKind.Folders => $"Largest folders in {_root.FullPath}",
+            TopListKind.Changes => _baselineInfo is { } b ? $"Biggest changes since {Ago(b.ScannedUtc)}" : "Biggest changes since the compared scan",
             _ => $"Space by file type in {_root.FullPath}. Click a type to filter the map."
         };
     }
@@ -1059,6 +1459,15 @@ public partial class MainWindow : Window
         MenuFilterType.Header = MenuFilterType.IsEnabled ? $"Show only *{node!.Extension} files" : "Show only this file type";
         MenuSelectFolder.IsEnabled = hasNode && count <= 1 && folder is not null && folder.Children.Any(c => c.IsReal);
         MenuSelectFolder.Header = folder is not null ? $"Select everything in {folder.Name}" : "Select everything in this folder";
+        MenuRescan.IsEnabled = folder is not null && !IsScanning && _rescanCts is null;
+        MenuRescan.Header = folder is not null ? $"Rescan {folder.Name}" : "Rescan this folder";
+        MenuSaveScan.IsEnabled = _root is not null;
+        MenuCompareScan.IsEnabled = _root is not null;
+        MenuClearCompare.IsEnabled = HasBaseline;
+        MenuExport.IsEnabled = _root is not null;
+        MenuExportMatches.IsEnabled = _filterResult is { FileCount: > 0 };
+        MenuExportChanges.IsEnabled = HasBaseline;
+        MenuExportFolder.Header = folder is not null ? $"Contents of {folder.Name}" : "This folder";
         MenuDelete.IsEnabled = !IsScanning && Treemap.SelectedNodes.Any(n => n.IsReal && n.Parent is not null && !ReferenceEquals(n, Treemap.Root));
         MenuDelete.Header = count > 1 ? $"Move {count:N0} items to Recycle Bin" : "Move to Recycle Bin";
     }
@@ -1169,6 +1578,12 @@ public partial class MainWindow : Window
             case Key.I when ctrl:
                 InspectSelection();
                 break;
+            case Key.S when ctrl:
+                SaveScanAs();
+                break;
+            case Key.O when ctrl:
+                _ = OpenScanAsync();
+                break;
             case Key.System when alt && e.SystemKey == Key.Enter && Treemap.SelectedNode is { IsReal: true } propsNode: // Alt+Enter arrives as a system key
                 ShellProperties.Show(propsNode.FullPath);
                 break;
@@ -1177,9 +1592,10 @@ public partial class MainWindow : Window
                 var modes = Enum.GetValues<ColorMode>();
                 var current = Enum.TryParse<ColorMode>(_settings.ColorMode, out var m) ? m : ColorMode.ByBranch;
                 var next = modes[(Array.IndexOf(modes, current) + 1) % modes.Length];
+                if (next == ColorMode.ByChange && !HasBaseline) next = modes[0];
                 _settings.ColorMode = next.ToString();
                 ApplySettings();
-                StatusScan.Text = "Color by: " + next switch { ColorMode.ByBranch => "top folder", ColorMode.ByDepth => "depth", _ => "file type" };
+                StatusScan.Text = "Color by: " + next switch { ColorMode.ByBranch => "top folder", ColorMode.ByDepth => "depth", ColorMode.ByChange => "change since last scan", _ => "file type" };
                 break;
             }
             case Key.C when ctrl && Treemap.SelectedNodes.Count > 0:
@@ -1194,9 +1610,6 @@ public partial class MainWindow : Window
                 break;
             case Key.L when !ctrl:
                 ToggleLists();
-                break;
-            case Key.C when !ctrl:
-                ToggleSetting(v => _settings.Cushion = v, _settings.Cushion, "Cushion shading");
                 break;
             case Key.S when !ctrl:
             {

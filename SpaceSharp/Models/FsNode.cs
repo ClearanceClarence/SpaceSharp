@@ -30,7 +30,7 @@ public sealed class FsNode
         Parent = parent;
     }
 
-    public string Name { get; }
+    public string Name { get; internal set; }
     public string FullPath { get; }
     public NodeKind Kind { get; }
     public FsNode? Parent { get; private set; }
@@ -57,6 +57,22 @@ public sealed class FsNode
     public bool IsHardLinkDuplicate { get; internal set; }
 
     public long LinkedSize { get; internal set; }
+
+    /// <summary>
+    /// Size of this item in the scan it is being compared with, or null when it did not exist then.
+    /// Set by <see cref="Services.ScanCompare"/>; <see cref="HasBaseline"/> says whether a comparison is loaded at all.
+    /// </summary>
+    public long? BaselineSize { get; internal set; }
+    public long? BaselineAllocated { get; internal set; }
+    public bool HasBaseline { get; internal set; }
+
+    /// <summary>Bytes grown since the baseline (negative when shrunk). A new item counts fully as growth.</summary>
+    public long ChangeFor(SizeMeasure measure)
+    {
+        long now = SizeFor(measure);
+        long? then = measure == SizeMeasure.SizeOnDisk ? BaselineAllocated : BaselineSize;
+        return now - (then ?? 0);
+    }
 
     /// <summary>Children sorted by the current measure, largest first.</summary>
     public List<FsNode> Children { get; } = new();
@@ -142,6 +158,34 @@ public sealed class FsNode
         if (FreeSpaceNode is null) return;
         FreeBytes += Math.Max(0, bytes);
         SetFreeSpaceVisible(FreeSpaceVisible, measure);
+    }
+
+    /// <summary>
+    /// Swaps a child for a freshly scanned version of the same folder, keeping every ancestor's totals and
+    /// order correct. Used by "Rescan this folder".
+    /// </summary>
+    public void ReplaceChild(FsNode oldChild, FsNode newChild, SizeMeasure measure)
+    {
+        int index = Children.IndexOf(oldChild);
+        if (index < 0) throw new InvalidOperationException("The node is not a child of this folder.");
+        newChild.Parent = this;
+        newChild.Name = oldChild.Name; // a scan root carries its full path as its name; inside the tree it is just the folder
+        newChild.BaselineSize = oldChild.BaselineSize;
+        newChild.BaselineAllocated = oldChild.BaselineAllocated;
+        newChild.HasBaseline = oldChild.HasBaseline;
+        Children[index] = newChild;
+        oldChild.Parent = null;
+
+        long dSize = newChild.Size - oldChild.Size, dAlloc = newChild.Allocated - oldChild.Allocated;
+        int dFiles = newChild.FileCount - oldChild.FileCount;
+        for (var p = this; p is not null; p = p.Parent)
+        {
+            p.Size += dSize;
+            p.Allocated += dAlloc;
+            p.FileCount += dFiles;
+            if (newChild.LastWriteUtc > p.LastWriteUtc) p.LastWriteUtc = newChild.LastWriteUtc;
+            p.Children.Sort((a, b) => b.SizeFor(measure).CompareTo(a.SizeFor(measure)));
+        }
     }
 
     /// <summary>Detaches this node and subtracts its sizes from every ancestor.</summary>

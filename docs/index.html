@@ -178,6 +178,7 @@
   .btn { height:32px; min-width:32px; display:flex; align-items:center; justify-content:center; gap:8px; padding:0 10px; border-radius:6px; white-space:nowrap; }
   .btn svg, .icon { width:16px; height:16px; flex:none; }
   .btn.accent { background:var(--accent); color:var(--accent-text); font-weight:600; padding:0 14px; }
+  .btn.accent.only { padding:0 8px; }
   .btn.off { opacity:.35; }
   .divider { width:1px; height:20px; background:var(--stroke); margin:0 8px; flex:none; }
   .label { color:var(--dim); margin:0 8px 0 6px; white-space:nowrap; }
@@ -210,6 +211,8 @@
   .tabs { display:flex; gap:2px; margin:4px 10px; } .tab { height:28px; padding:0 12px; display:flex; align-items:center; border-radius:6px; color:var(--dim); } .tab.on { background:var(--control); color:var(--text); font-weight:600; }
   .rows { padding:0 4px; overflow:hidden; }
   .row { display:grid; grid-template-columns:1fr auto; gap:0 10px; padding:6px 8px; border-radius:5px; margin:1px 0; position:relative; }
+  .row .s { white-space:nowrap; }
+  .row .sw { position:absolute; left:8px; top:11px; width:9px; height:9px; border-radius:2px; } .row.chg { padding-left:24px; }
   .row .n { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; } .row .d { color:var(--dim); font-size:11px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
   .row .s { font-weight:600; align-self:center; } .row .bar { position:absolute; left:8px; bottom:2px; height:3px; border-radius:2px; background:var(--accent); opacity:.55; }
 
@@ -298,7 +301,7 @@
 <div class="fit"><div class="fit-inner" id="fitInner"><div class="stage" id="stage">
   <div class="win" id="win">
     <div class="titlebar">
-      <div class="app"><span id="titleIcon"></span>SpaceSharp</div>
+      <div class="app"><span id="titleIcon"></span>SpaceSharp 1.3.0</div>
       <div class="caption"><span><svg viewBox="0 0 10 10"><path d="M0 5.5h10"/></svg></span><span><svg viewBox="0 0 10 10"><rect x=".5" y=".5" width="9" height="9"/></svg></span><span><svg viewBox="0 0 10 10"><path d="M0 0l10 10M10 0L0 10"/></svg></span></div>
     </div>
     <div class="toolbar">
@@ -307,7 +310,7 @@
       <div class="divider"></div>
       <div class="btn off"><svg data-i="up"></svg></div>
       <div class="btn off"><svg data-i="home"></svg></div>
-      <div class="btn"><svg data-i="panel"></svg></div>
+      <div class="btn" id="panelBtn"><svg data-i="panel"></svg></div>
       <div class="divider"></div>
       <div class="btn off"><svg data-i="zoomout"></svg></div><div class="zoomlabel">100%</div><div class="btn"><svg data-i="zoomin"></svg></div>
       <div class="spacer"></div>
@@ -331,8 +334,8 @@
         <div class="drives" id="drives"></div>
         <div class="rule"></div>
         <h2 style="margin-top:4px">Largest items</h2>
-        <div class="tabs"><span class="tab on">Files</span><span class="tab">Folders</span><span class="tab">Types</span></div>
-        <div class="sub">Largest files in C:\</div>
+        <div class="tabs" id="tabs"><span class="tab on">Files</span><span class="tab">Folders</span><span class="tab">Types</span><span class="tab" id="tabChanges" hidden>Changes</span></div>
+        <div class="sub" id="listSub">Largest files in C:\</div>
         <div class="rows" id="rows"></div>
       </aside>
       <div class="map" id="map"><canvas id="canvas"></canvas><div class="sample-tag" id="sampleTag" hidden>Illustration with sample data</div></div>
@@ -475,7 +478,7 @@
     refresh:'<path d="M13.2 8A5.2 5.2 0 1 1 11.6 4.2" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><path d="M11.8 1.6v2.9H8.9" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>',
     up:'<path d="M8 14V2.5M3.5 7L8 2.5 12.5 7" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>',
     home:'<path d="M2.5 7.2L8 2.5l5.5 4.7V13a.8.8 0 0 1-.8.8H10V9.8H6v4H3.3a.8.8 0 0 1-.8-.8z" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/>',
-    panel:'<rect x="1.5" y="2.5" width="13" height="11" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.3"/><path d="M6 2.5v11" stroke="currentColor" stroke-width="1.3"/>',
+    panel:'<rect x="1.5" y="3" width="13" height="10" rx="2" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M5.8 3v10" stroke="currentColor" stroke-width="1.4"/>',
     zoomout:'<circle cx="6.8" cy="6.8" r="4.6" fill="none" stroke="currentColor" stroke-width="1.3"/><path d="M10.2 10.2L14 14M4.6 6.8h4.4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>',
     zoomin:'<circle cx="6.8" cy="6.8" r="4.6" fill="none" stroke="currentColor" stroke-width="1.3"/><path d="M10.2 10.2L14 14M4.6 6.8h4.4M6.8 4.6v4.4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>',
     search:'<circle cx="6.8" cy="6.8" r="4.6" fill="none" stroke="currentColor" stroke-width="1.3"/><path d="M10.2 10.2L14 14" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>',
@@ -641,7 +644,7 @@
   const category = (name) => { const m = /\.([^.]+)$/.exec(name); return m && EXT[m[1].toLowerCase()] !== undefined ? EXT[m[1].toLowerCase()] : 7; };
   const catColors = () => { const p = PALETTES[state.palette]; return CATCOL[state.palette] ? CATCOL[state.palette].map(hex) : [...Array(7)].map((_, i) => mix(p.folder(i), [255,255,255], .2)).concat([hex("#B8B4AC")]); };
 
-  const state = { theme: "dark", palette: "Pastel", mode: "branch", style: 0, w: 1400, h: 860, hovered: null, selected: null, panel: true, cushion: false, group: true, scene: "none", filter: null, multi: [], zoomNode: null, tag: false };
+  const state = { theme: "dark", palette: "Pastel", mode: "branch", style: 0, w: 1400, h: 860, hovered: null, selected: null, panel: true, cushion: true, group: true, scene: "none", filter: null, multi: [], zoomNode: null, tag: false };
   const themeBg = () => state.theme === "dark" ? [23,23,28] : [217,217,225];
 
   // Top-level branch index, for styles that color by branch.
@@ -699,7 +702,18 @@
     return names.join(" › ");
   }
   const textFor = (c) => lum(c) > .2 ? "#141418" : "#F2F2F6";
+  // "Change" mode: a deterministic pretend baseline per node (some grew, some shrank, a few are new).
+  const changeOf = (n) => { let h = 0; for (const ch of n.name) h = (h * 31 + ch.charCodeAt(0)) | 0; const r = ((h >>> 0) % 100) / 100; return r < .12 ? null : r < .40 ? +Math.round(n.size * (r - .1)) : r < .62 ? -Math.round(n.size * (r - .4) * .6) : 0; };
+  const changeFill = (it) => {
+    const n = it.node; if (n.group) return [106, 106, 116];
+    const d = n.dir ? n.children.reduce((s, c) => s + (changeOf(c) ?? c.size), 0) : changeOf(n);
+    if (d === null) return [245, 184, 46];
+    if (d === 0) return n.dir ? [85, 85, 96] : [106, 106, 116];
+    const share = Math.min(1, Math.abs(d) / Math.max(n.size, 1)), t = Math.min(1, share * 1.4);
+    return d > 0 ? mix([140, 122, 110], [232, 122, 79], t) : mix([110, 128, 140], [93, 169, 201], t);
+  };
   const baseFill = (it) => {
+    if (state.mode === "change") return changeFill(it);
     const p = PALETTES[state.palette];
     if (state.mode === "type") return it.node.dir ? hsl(225, .10, .50 + (it.depth % 6) * .05) : catColors()[category(it.node.name)];
     if (state.mode === "branch" && it.depth > 0) {
@@ -712,7 +726,7 @@
 
   // ============================================================ the six styles
   const STYLES = [
-    { name: "Classic", desc: "Title bars, 1 px borders, optional cushion shading.",
+    { name: "Classic", desc: "Title bars, 1 px borders, soft shading.",
       header: "bar", headerH: 17, inset: (w, h) => Math.min(w, h) >= 40 ? 2 : 1,
       draw(ctx, it) {
         const c = baseFill(it); ctx.fillStyle = rgb(c); ctx.fillRect(it.x, it.y, it.w, it.h);
@@ -863,10 +877,29 @@
     <div class="bar"><i style="width:${(100 * d.used / d.total).toFixed(1)}%"></i></div>
     <div class="detail">${fmt(d.used * GBs)} used of ${fmt(d.total * GBs)} · ${d.fs}</div></div>`).join("");
   const files = []; (function walk(n) { for (const c of n.children) c.dir ? walk(c) : files.push(c); })(root);
-  files.sort((a, b) => b.size - a.size); const top = files.slice(0, 7); const largest = top[0].size;
-  document.getElementById("rows").innerHTML = top.map(f => `
-    <div class="row"><div><div class="n">${f.name}</div><div class="d">${f.parent.path}</div></div><div class="s">${fmt(f.size)}</div>
-    <div class="bar" style="width:${Math.round(292 * f.size / largest)}px"></div></div>`).join("");
+  files.sort((a, b) => b.size - a.size);
+  function fillSideList(changes) {
+    const tabs = [...document.querySelectorAll("#tabs .tab")];
+    tabs.forEach(t => t.classList.toggle("on", changes ? t.id === "tabChanges" : t.textContent === "Files"));
+    if (!changes) {
+      const top = files.slice(0, 7), largest = top[0].size;
+      document.getElementById("listSub").textContent = "Largest files in C:\\";
+      document.getElementById("rows").innerHTML = top.map(f => `
+        <div class="row"><div><div class="n">${f.name}</div><div class="d">${f.parent.path}</div></div><div class="s">${fmt(f.size)}</div>
+        <div class="bar" style="width:${Math.round(292 * f.size / largest)}px"></div></div>`).join("");
+      return;
+    }
+    const rows = files.map(f => ({ f, d: changeOf(f) })).filter(x => x.d !== 0).map(x => ({ ...x, abs: Math.abs(x.d ?? x.f.size) }))
+      .sort((a, b) => b.abs - a.abs).slice(0, 7);
+    const largest = rows[0].abs;
+    document.getElementById("listSub").textContent = "Biggest changes since yesterday";
+    document.getElementById("rows").innerHTML = rows.map(({ f, d, abs }) => {
+      const what = d === null ? "new" : d > 0 ? "grew" : "shrank", color = d === null ? "#F5B82E" : d > 0 ? "#E87A4F" : "#5DA9C9";
+      return `<div class="row chg"><span class="sw" style="background:${color}"></span><div><div class="n">${f.name}</div><div class="d">${what} · ${f.parent.path}</div></div>
+        <div class="s">${d === null || d > 0 ? "+" : "−"}${fmt(abs)}</div><div class="bar" style="width:${Math.round(292 * abs / largest)}px;left:24px"></div></div>`;
+    }).join("");
+  }
+  fillSideList(false);
 
   // ============================================================ scenes
   const isVideo = n => !n.dir && !n.group && category(n.name) === 1;
@@ -887,6 +920,8 @@
     const tip = document.getElementById("tip"), menu = document.getElementById("cmenu"), fpanel = document.getElementById("fpanel"), scrim = document.getElementById("scrim");
     tip.hidden = menu.hidden = fpanel.hidden = scrim.hidden = true;
     state.hovered = null; state.selected = null; state.multi = []; state.filter = null; state.zoomNode = null;
+    if (state.scene !== "compare" && state.mode === "change" && state.sceneWasCompare) { state.mode = "branch";  }
+    state.sceneWasCompare = state.scene === "compare";
     const ft = document.getElementById("filterText"), fb = document.getElementById("filterBox"), selBtn = document.getElementById("selBtn");
     ft.textContent = "Filter, e.g. videos over 500MB older than 1 year"; fb.classList.remove("active"); selBtn.classList.remove("show");
     document.getElementById("filterX").classList.remove("show"); document.getElementById("filterInfo").classList.remove("show");
@@ -895,6 +930,7 @@
     document.querySelector(".zoomlabel").textContent = "100%";
     document.querySelectorAll(".toolbar .btn.off").forEach(b => b.style.opacity = "");
     document.getElementById("statusHover").textContent = "";
+    if (state.scene === "compare") document.getElementById("statusScan").textContent = `${root.files.toLocaleString("en-US")} files · ${totalDirs.toLocaleString("en-US")} folders · ${fmt(root.size)} · 2.1 s · file table  ·  compared with the scan from yesterday`;
 
     switch (state.scene) {
       case "zoomed": {
@@ -914,6 +950,7 @@
         break;
       }
       case "multi": state.multi = sameFolder; break;
+      case "compare":  break;
       case "hover": state.hovered = focusFile; break;
       case "menu": state.selected = focusFile; break;
       case "inspect": state.selected = largestFolder; break;
@@ -935,6 +972,7 @@
       menu.innerHTML = menuRow("inspect", "<b>Inspect</b>", "Ctrl+I") + '<div class="sep"></div>' + menuRow("zoomin", "Zoom to folder", "Double-click") + menuRow("up", "Up one folder", "Backspace", "off") + menuRow("home", "Show whole map", "Home", "off")
         + '<div class="sep"></div>' + menuRow("open", "Open", "Enter", "on") + menuRow("folderOpen", "Show in Explorer") + menuRow("props", "Properties", "Alt+Enter")
         + '<div class="sep"></div>' + menuRow("copy", "Copy path", "Ctrl+C") + menuRow("", "Copy name") + menuRow("funnel", `Show only *${ext} files`) + menuRow("select", `Select everything in ${focusFile.parent.name}`)
+        + '<div class="sep"></div>' + menuRow("refresh", `Rescan ${focusFile.parent.name}`) + menuRow("", "Scan file", "›") + menuRow("", "Export to CSV", "›")
         + '<div class="sep"></div>' + menuRow("trash", '<span class="danger">Move to Recycle Bin</span>', "Del");
       menu.hidden = false; place(menu, it.x + it.w * .5, it.y + it.h * .45);
       showInfo(focusFile);
@@ -959,6 +997,7 @@
           <tr><td>Directly inside</td><td>${f.children.filter(c => !c.dir).length} files, ${f.children.filter(c => c.dir).length} folders</td></tr>
           <tr><td>Average file</td><td>${fmt(f.size / Math.max(1, f.files))}</td></tr>
           <tr><td>Newest change</td><td>${dateOf(kids[0])}</td></tr>
+          <tr><td>Since last scan</td><td>Grew by ${fmt(Math.round(f.size * .06))} (was ${fmt(Math.round(f.size * .94))})</td></tr>
           <tr><td>Depth</td><td>1 level below the scan root</td></tr></table>
           <h5>Largest inside</h5>${bars(kids.map(k => [k.name + (k.dir ? "\\" : ""), k.size]), f.size)}
           <h5>By file type</h5>${bars(typeRows, f.size)}
@@ -979,10 +1018,16 @@
     document.getElementById("swatches").innerHTML = [0,1,2,3,4,5].map(d => `<i style="background:${rgb(p.folder(d))}"></i>`).join("");
     document.getElementById("paletteText").textContent = state.palette;
     document.getElementById("styleText").textContent = STYLES[state.style].name;
-    document.getElementById("modeText").textContent = state.mode === "branch" ? "Top folder" : state.mode === "depth" ? "Depth" : "File type";
-    const legend = document.getElementById("legend"); legend.classList.toggle("show", state.mode === "type");
-    legend.innerHTML = CATS.map((n, i) => `<span><i style="background:${rgb(catColors()[i])}"></i>${n}</span>`).join("");
+    if (state.scene === "compare") state.mode = "change";
+    document.getElementById("modeText").textContent = { branch: "Top folder", depth: "Depth", type: "File type", change: "Change" }[state.mode];
+    const legend = document.getElementById("legend"); legend.classList.toggle("show", state.mode === "type" || state.mode === "change");
+    legend.innerHTML = state.mode === "change"
+      ? [["Grew", "#E87A4F"], ["Shrank", "#5DA9C9"], ["Same", "#6A6A74"], ["New", "#F5B82E"]].map(([n, c]) => `<span><i style="background:${c}"></i>${n}</span>`).join("")
+      : CATS.map((n, i) => `<span><i style="background:${rgb(catColors()[i])}"></i>${n}</span>`).join("");
+    document.getElementById("tabChanges").hidden = state.scene !== "compare" && state.mode !== "change";
+    fillSideList(state.scene === "compare" || state.mode === "change");
     document.getElementById("side").classList.toggle("hidden", !state.panel);
+    document.getElementById("panelBtn").classList.toggle("accent", state.panel); document.getElementById("panelBtn").classList.toggle("only", state.panel);
     document.getElementById("crumbInfo").textContent = `${fmt(root.size)} · ${root.files.toLocaleString("en-US")} files`;
     document.getElementById("statusScan").textContent = `${root.files.toLocaleString("en-US")} files · ${totalDirs.toLocaleString("en-US")} folders · ${fmt(root.size)} · 3.8 s`;
     rescale(); applyScene();
@@ -1020,9 +1065,9 @@
   // ---- previewer controls, driven by the embedded engine's API
   const P = window.SpaceSharpPreview;
   const groups = {
-    scene: [["none", "Map"], ["hover", "Hover card"], ["menu", "Right-click"], ["filter", "Filter"], ["fpanel", "Filter panel"], ["inspect", "Inspect"], ["multi", "Selection"], ["zoomed", "Zoomed in"]],
+    scene: [["none", "Map"], ["hover", "Hover card"], ["menu", "Right-click"], ["filter", "Filter"], ["fpanel", "Filter panel"], ["inspect", "Inspect"], ["multi", "Selection"], ["zoomed", "Zoomed in"], ["compare", "Since last scan"]],
     style: P.styles.map((n, i) => [i, n]),
-    mode: [["branch", "Top folder"], ["depth", "Depth"], ["type", "File type"]],
+    mode: [["branch", "Top folder"], ["depth", "Depth"], ["type", "File type"], ["change", "Change"]],
     palette: P.palettes.map(n => [n, n]),
     theme: [["dark", "Dark"], ["light", "Light"]]
   };

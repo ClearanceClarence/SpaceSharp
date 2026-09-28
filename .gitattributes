@@ -8,3 +8,8 @@
 # Binary assets
 *.png binary
 *.ico binary
+*.bmp binary
+*.jpg binary
+*.woff2 binary
+*.sscan binary
+*.svg text
