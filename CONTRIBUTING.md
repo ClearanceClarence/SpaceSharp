@@ -4,6 +4,7 @@ Thanks for your interest. SpaceSharp is a small project, so the process is light
 
 ## Ways to help
 
+- **Translate.** Text lives in `SpaceSharp/Resources/Strings.resx` (English); `Strings.nb.resx` is the Norwegian bokmål translation and a good model. To add a language, copy it to `Strings.<culture>.resx` next to it (`Strings.nb.resx` for Norwegian bokmål, `Strings.de.resx` for German), translate the `<value>` elements, keep the `{0}` placeholders, and build. The language appears in Settings › Language by itself; nothing else has to be registered. `dotnet test` checks that every translation has the same keys and placeholders as the English file. Anything a translation lacks falls back to English. Keep file names, keyboard keys and the filter grammar (`over`, `older than`) in English; only the words around them are translated.
 - **Screenshots** for the README, the website and store listings come from `tools/screenshot-mockup.html`, which draws the app with generic sample data so no real file names end up online. Open it in a browser, pick theme, style, palette and a scene (hover card, menu, filter, Inspect, selection, zoomed folder), and capture the window.
 - **Report bugs** and **suggest features** through the [issue forms](https://github.com/ClearanceClarence/SpaceSharp/issues/new/choose). Clear steps and a screenshot go a long way.
 - **Add a palette.** Palettes are a name and a list of colors in `SpaceSharp/Util/Palette.cs`; see the Retro entry for the simplest form. Check it in both color modes and both themes.
@@ -28,7 +29,7 @@ Thanks for your interest. SpaceSharp is a small project, so the process is light
 - New shortcuts go in `MainWindow.Window_PreviewKeyDown`, the About window's shortcut list and the README's shortcut table.
 - Add a line to `CHANGELOG.md` under an "Unreleased" heading describing the change from the user's point of view.
 - Test on a real drive, not only a small folder. Performance problems show up at a few hundred thousand files.
-- If you change `Squarify`, `FsNode`, `FilterSpec`, `FileFilter` or `SizeFormatter`, add or adjust a test in `SpaceSharp.Tests`. The build workflow runs them on every pull request.
+- If you change `Squarify`, `FsNode`, `FilterSpec`, `FileFilter`, `SizeFormatter`, `ScanFile`, `ScanCompare` or `NamePatterns`, add or adjust a test in `SpaceSharp.Tests`. Text changes are checked too: a test fails if code or XAML asks for a resource key that `Strings.resx` lacks, or if a translation is missing keys. The test workflow runs them on every pull request; it only tests and never builds release assets.
 
 ## Releasing (maintainer)
 

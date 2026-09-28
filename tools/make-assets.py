@@ -9,7 +9,7 @@ import io
 import struct
 from pathlib import Path
 
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageDraw, ImageFont, ImageEnhance
 
 ROOT = Path(__file__).resolve().parent.parent
 FONTS = Path(__file__).resolve().parent / "fonts"
@@ -208,14 +208,33 @@ def social_preview(w=1280, h=640, scale=1):
     return im
 
 
-def header(w=1280, h=320):
-    """README header: wordmark and tagline on charcoal."""
+def header(w=1280, h=360):
+    """README header: mark, wordmark and tagline, with a quiet abstract treemap on the right. No screenshot,
+    no labels, only the shape the app is about, in the brand's amber steps."""
     S = 2
-    im = Image.new("RGBA", (w * S, h * S), CHARCOAL + (255,))
+    im = Image.new('RGBA', (w * S, h * S), BASE + (255,))
     d = ImageDraw.Draw(im)
-    paste_mark(im, 120 * S, (80 * S, 100 * S), tile=PANEL)
-    wordmark(d, 232 * S, 104 * S, 88 * S)
-    d.text((236 * S, 214 * S), "See where your disk space went.", font=font(500, 28 * S), fill=MUTED)
+    # abstract map: a handful of boxes, largest first from the top left, brightness following size
+    x0, y0, mw, mh = 720 * S, 0, 560 * S, h * S
+    boxes = [
+        (0, 0, 300, 220, 0.55), (306, 0, 254, 140, 0.34), (306, 146, 150, 74, 0.24), (462, 146, 98, 74, 0.17),
+        (0, 226, 190, 134, 0.26), (196, 226, 140, 80, 0.18), (196, 312, 140, 48, 0.12), (342, 226, 120, 134, 0.14),
+        (468, 226, 92, 64, 0.10), (468, 296, 92, 64, 0.07),
+    ]
+    for bx, by, bw, bh, a in boxes:
+        d.rounded_rectangle([x0 + bx * S, y0 + by * S, x0 + (bx + bw) * S - 1, y0 + (by + bh) * S - 1], radius=6 * S,
+                            fill=blend(AMBER, BASE, a * 0.34))
+    # fade the map's left edge so the words sit on a clean surface
+    fade = Image.new('RGBA', (w * S, h * S), (0, 0, 0, 0))
+    fd = ImageDraw.Draw(fade)
+    span = 300 * S
+    for i in range(span):
+        fd.line([(x0 + i, 0), (x0 + i, h * S)], fill=BASE + (int(255 * (1 - i / span) ** 1.4),))
+    im.alpha_composite(fade)
+    d = ImageDraw.Draw(im)
+    paste_mark(im, 112 * S, (72 * S, (h // 2 - 56) * S), tile=PANEL)
+    wordmark(d, 210 * S, (h // 2 - 62) * S, 84 * S)
+    d.text((214 * S, (h // 2 + 40) * S), "See where your disk space went.", font=font(500, 27 * S), fill=MUTED)
     return im.resize((w, h), Image.LANCZOS)
 
 

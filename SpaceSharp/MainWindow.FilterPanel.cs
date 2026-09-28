@@ -14,24 +14,24 @@ public partial class MainWindow
 {
     private static readonly (string Label, long Bytes)[] SizeSteps =
     {
-        ("Any size", 0), ("1 MB", 1L << 20), ("10 MB", 10L << 20), ("100 MB", 100L << 20),
+        (Strings.Get("Filter_AnySize"), 0), ("1 MB", 1L << 20), ("10 MB", 10L << 20), ("100 MB", 100L << 20),
         ("500 MB", 500L << 20), ("1 GB", 1L << 30), ("5 GB", 5L << 30), ("10 GB", 10L << 30), ("50 GB", 50L << 30)
     };
 
     private static readonly (string Label, int Days)[] AgeSteps =
     {
-        ("Any time", 0), ("1 month", 30), ("3 months", 90), ("6 months", 180),
-        ("1 year", 365), ("2 years", 730), ("5 years", 1825)
+        (Strings.Get("Filter_AnyTime"), 0), (Strings.Get("Filter_1Month"), 30), (Strings.Get("Filter_3Months"), 90), (Strings.Get("Filter_6Months"), 180),
+        (Strings.Get("Filter_1Year"), 365), (Strings.Get("Filter_2Years"), 730), (Strings.Get("Filter_5Years"), 1825)
     };
 
     private static readonly (string Label, string Filter)[] Presets =
     {
-        ("Large files", ">1GB is:file"),
-        ("Big videos", "type:video >500MB"),
-        ("Installers & archives", "type:archives,programs >100MB"),
-        ("Untouched for 2 years", "older than 2 years is:file"),
-        ("Big and old", ">500MB older than 1 year is:file"),
-        ("Recently changed", "newer than 1 week is:file")
+        (Strings.Get("Preset_LargeFiles"), ">1GB is:file"),
+        (Strings.Get("Preset_BigVideos"), "type:video >500MB"),
+        (Strings.Get("Preset_InstallersArchives"), "type:archives,programs >100MB"),
+        (Strings.Get("Preset_Untouched2Years"), "older than 2 years is:file"),
+        (Strings.Get("Preset_BigAndOld"), ">500MB older than 1 year is:file"),
+        (Strings.Get("Preset_RecentlyChanged"), "newer than 1 week is:file")
     };
 
     private bool _buildingPanel;
@@ -59,7 +59,7 @@ public partial class MainWindow
     {
         var body = FilterPanelBody;
 
-        body.Children.Add(PanelHeading("Quick filters"));
+        body.Children.Add(PanelHeading(Strings.Get("Filter_QuickFilters")));
         var presets = new WrapPanel { Margin = new Thickness(0, 6, 0, 2) };
         foreach (var (label, filter) in Presets)
         {
@@ -75,20 +75,20 @@ public partial class MainWindow
         body.Children.Add(presets);
         body.Children.Add(Divider());
 
-        body.Children.Add(PanelHeading("Name"));
+        body.Children.Add(PanelHeading(Strings.Get("Filter_Name")));
         _nameBox = new TextBox
         {
             Style = (Style)FindResource("FilterBox"), Height = 32, Margin = new Thickness(0, 6, 0, 10),
-            Tag = "Part of the name, or a pattern like *.iso"
+            Tag = Strings.Get("Filter_NamePlaceholder")
         };
         _nameBox.TextChanged += (_, _) => WritePanelToText();
         body.Children.Add(_nameBox);
 
-        body.Children.Add(PanelHeading("Type"));
+        body.Children.Add(PanelHeading(Strings.Get("Filter_Type")));
         var types = new WrapPanel { Margin = new Thickness(0, 6, 0, 2) };
         foreach (var category in Enum.GetValues<FileCategory>())
         {
-            var chip = new ToggleButton { Content = category.ToString(), Style = (Style)FindResource("Chip") };
+            var chip = new ToggleButton { Content = Strings.Category(category), Style = (Style)FindResource("Chip") };
             chip.Checked += (_, _) => WritePanelToText();
             chip.Unchecked += (_, _) => WritePanelToText();
             _typeChips[category] = chip;
@@ -101,16 +101,16 @@ public partial class MainWindow
         sizes.ColumnDefinitions.Add(new ColumnDefinition());
         sizes.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(12) });
         sizes.ColumnDefinitions.Add(new ColumnDefinition());
-        _minCombo = LabeledCombo(sizes, 0, "Larger than", SizeSteps.Select(s => s.Label));
-        _maxCombo = LabeledCombo(sizes, 2, "Smaller than", SizeSteps.Select(s => s.Label));
+        _minCombo = LabeledCombo(sizes, 0, Strings.Get("Filter_LargerThan"), SizeSteps.Select(s => s.Label));
+        _maxCombo = LabeledCombo(sizes, 2, Strings.Get("Filter_SmallerThan"), SizeSteps.Select(s => s.Label));
         body.Children.Add(sizes);
 
         var when = new Grid { Margin = new Thickness(0, 0, 0, 10) };
         when.ColumnDefinitions.Add(new ColumnDefinition());
         when.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(12) });
         when.ColumnDefinitions.Add(new ColumnDefinition());
-        _ageCombo = LabeledCombo(when, 0, "Not modified for", AgeSteps.Select(a => a.Label));
-        _kindCombo = LabeledCombo(when, 2, "Show", new[] { "Files and folders", "Files only", "Folders only" });
+        _ageCombo = LabeledCombo(when, 0, Strings.Get("Filter_NotModifiedFor"), AgeSteps.Select(a => a.Label));
+        _kindCombo = LabeledCombo(when, 2, Strings.Get("Filter_Show"), new[] { Strings.Get("Filter_FilesAndFolders"), Strings.Get("Filter_FilesOnly"), Strings.Get("Filter_FoldersOnly") });
         body.Children.Add(when);
     }
 
@@ -123,10 +123,10 @@ public partial class MainWindow
         if (FilterFooterInfo is null) return;
         bool active = _filter is not null && !_filter.IsEmpty;
         FilterClearButton.IsEnabled = active;
-        FilterFooterInfo.Text = !active ? "No filter: everything is shown"
+        FilterFooterInfo.Text = !active ? Strings.Get("Filter_NoFilter")
             : _root is null ? _filter!.Description
-            : _filterResult is null || _filterResult.FileCount == 0 ? "Nothing matches"
-            : $"{_filterResult.FileCount:N0} files · {SizeFormatter.Format(_filterResult.Bytes)} match";
+            : _filterResult is null || _filterResult.FileCount == 0 ? Strings.Get("Filter_NothingMatchesShort")
+            : Strings.Format("Filter_MatchCount", _filterResult.FileCount, SizeFormatter.Format(_filterResult.Bytes));
     }
 
     private TextBlock PanelHeading(string text) =>

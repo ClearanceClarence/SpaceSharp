@@ -1,6 +1,7 @@
 using System.Windows.Media;
 using SpaceSharp.Controls;
 using SpaceSharp.Models;
+using SpaceSharp.Util;
 
 namespace SpaceSharp.Util;
 
@@ -51,7 +52,7 @@ public sealed class ColorScheme
     public bool IsCustom { get; internal set; }
 
     /// <summary>Header the palette is listed under in the toolbar.</summary>
-    public string Group => IsCustom ? "Custom" : "Built in";
+    public string Group => IsCustom ? Strings.Get("Palette_GroupCustom") : Strings.Get("Palette_GroupBuiltIn");
 
     /// <summary>A few representative colors, shown in the palette picker.</summary>
     public IReadOnlyList<Brush> Swatches { get; }

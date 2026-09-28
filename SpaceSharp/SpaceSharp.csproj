@@ -13,12 +13,13 @@
     <RootNamespace>SpaceSharp</RootNamespace>
     <!-- Program.Main runs Velopack's install/update hooks before WPF starts. -->
     <StartupObject>SpaceSharp.Program</StartupObject>
-    <!-- Only ship English framework resources (keeps the published exe smaller). -->
+    <!-- Only ship English framework resources (keeps the published exe smaller). This filters referenced
+         packages only; SpaceSharp's own Resources/Strings.*.resx are always built and bundled. -->
     <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
 
     <!-- Shown in the About window and in the .exe's file properties. -->
     <Product>SpaceSharp</Product>
-    <Version>1.3.0</Version>
+    <Version>1.3.1</Version>
     <Authors>ClearanceClarence</Authors>
     <Copyright>© 2026 ClearanceClarence</Copyright>
     <Description>See where your disk space went. SpaceSharp maps every file and folder as a box sized by the space it uses, so the biggest ones stand out.</Description>

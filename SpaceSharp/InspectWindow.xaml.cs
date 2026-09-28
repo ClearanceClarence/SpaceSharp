@@ -36,47 +36,47 @@ public partial class InspectWindow : Window
 
     private void BuildSingle(FsNode node)
     {
-        Title = $"Inspect: {node.Name}";
+        Title = Strings.Format("Inspect_TitleOne", node.Name);
         Glyph.Text = node.IsDirectory ? "\uE8B7" : "\uE8A5";
         NameText.Text = node.Name;
         PathText.Text = node.FullPath;
-        KindText.Text = node.IsDirectory ? "Folder" : DescribeType(node);
+        KindText.Text = node.IsDirectory ? Strings.Get("Inspect_Folder") : DescribeType(node);
         _copy.AppendLine(node.FullPath);
 
         long size = node.SizeFor(_measure);
-        Fact("Size", SizeFormatter.Format(node.Size) + Exact(node.Size));
-        if (node.Allocated != node.Size) Fact("On disk", SizeFormatter.Format(node.Allocated) + Exact(node.Allocated));
-        if (node.IsHardLinkDuplicate) Fact("Hard link", $"{SizeFormatter.Format(node.LinkedSize)}, already counted elsewhere");
+        Fact(Strings.Get("Inspect_Size"), SizeFormatter.Format(node.Size) + Exact(node.Size));
+        if (node.Allocated != node.Size) Fact(Strings.Get("Inspect_OnDisk"), SizeFormatter.Format(node.Allocated) + Exact(node.Allocated));
+        if (node.IsHardLinkDuplicate) Fact(Strings.Get("Inspect_HardLink"), Strings.Format("Inspect_HardLinkValue", SizeFormatter.Format(node.LinkedSize)));
 
         if (node.Parent is { } parent && parent.SizeFor(_measure) > 0)
-            Fact($"Share of {parent.Name}", Percent(size, parent.SizeFor(_measure)));
+            Fact(Strings.Format("Inspect_ShareOf", parent.Name), Percent(size, parent.SizeFor(_measure)));
         if (_root is not null && !ReferenceEquals(_root, node) && _root.SizeFor(_measure) > 0)
-            Fact($"Share of {_root.Name}", Percent(size, _root.SizeFor(_measure)));
+            Fact(Strings.Format("Inspect_ShareOf", _root.Name), Percent(size, _root.SizeFor(_measure)));
 
         if (node.IsDirectory)
         {
             int folders = node.DescendantDirectories().Count() - 1;
-            Fact("Contains", $"{node.FileCount:N0} files, {folders:N0} folders");
-            Fact("Directly inside", $"{node.Children.Count(c => !c.IsDirectory && c.IsReal):N0} files, {node.Children.Count(c => c.IsDirectory):N0} folders");
-            if (node.FileCount > 0) Fact("Average file", SizeFormatter.Format(node.Size / node.FileCount));
+            Fact(Strings.Get("Inspect_Contains"), Strings.Format("Inspect_FilesFolders", node.FileCount, folders));
+            Fact(Strings.Get("Inspect_DirectlyInside"), Strings.Format("Inspect_FilesFolders", node.Children.Count(c => !c.IsDirectory && c.IsReal), node.Children.Count(c => c.IsDirectory)));
+            if (node.FileCount > 0) Fact(Strings.Get("Inspect_AverageFile"), SizeFormatter.Format(node.Size / node.FileCount));
         }
 
         if (node.LastWriteUtc > DateTime.MinValue)
-            Fact(node.IsDirectory ? "Newest change" : "Modified", DescribeDate(node.LastWriteUtc));
+            Fact(node.IsDirectory ? Strings.Get("Inspect_NewestChange") : Strings.Get("Inspect_Modified"), DescribeDate(node.LastWriteUtc));
         if (node.HasBaseline)
         {
             long change = node.ChangeFor(_measure);
-            Fact("Since last scan", node.BaselineSize is null ? "New" : change == 0 ? "Unchanged"
-                : $"{(change > 0 ? "Grew by" : "Shrank by")} {SizeFormatter.Format(Math.Abs(change))} (was {SizeFormatter.Format(node.BaselineSize.Value)})");
+            Fact(Strings.Get("Inspect_SinceLastScan"), node.BaselineSize is null ? Strings.Get("Inspect_New") : change == 0 ? Strings.Get("Inspect_Unchanged")
+                : Strings.Format(change > 0 ? "Inspect_GrewBy" : "Inspect_ShrankBy", SizeFormatter.Format(Math.Abs(change)), SizeFormatter.Format(node.BaselineSize.Value)));
         }
-        if (node.AccessDenied) Fact("Note", "Some content could not be read (access denied)");
-        Fact("Depth", $"{Depth(node)} levels below the scan root");
+        if (node.AccessDenied) Fact(Strings.Get("Inspect_Note"), Strings.Get("Inspect_AccessDenied"));
+        Fact(Strings.Get("Inspect_Depth"), Strings.Format("Inspect_DepthValue", Depth(node)));
 
         if (node.IsDirectory)
         {
-            Bars("Largest inside", node.Children.Where(c => c.IsReal && c.SizeFor(_measure) > 0).Take(8)
+            Bars(Strings.Get("Inspect_LargestInside"), node.Children.Where(c => c.IsReal && c.SizeFor(_measure) > 0).Take(8)
                 .Select(c => (c.Name + (c.IsDirectory ? "\\" : string.Empty), c.SizeFor(_measure))), size);
-            Bars("By file type", TypeBreakdown(node.DescendantFiles()), size);
+            Bars(Strings.Get("Inspect_ByFileType"), TypeBreakdown(node.DescendantFiles()), size);
         }
     }
 
@@ -84,28 +84,28 @@ public partial class InspectWindow : Window
 
     private void BuildSelection()
     {
-        Title = $"Inspect: {_nodes.Count:N0} items";
+        Title = Strings.Format("Inspect_TitleMany", _nodes.Count);
         Glyph.Text = "\uE8B3";
-        NameText.Text = $"{_nodes.Count:N0} items selected";
+        NameText.Text = Strings.Format("Inspect_ItemsSelected", _nodes.Count);
         var parents = _nodes.Select(n => n.Parent?.FullPath).Where(p => p is not null).Distinct().ToList();
-        PathText.Text = parents.Count == 1 ? parents[0]! : $"In {parents.Count:N0} folders";
-        KindText.Text = $"{_nodes.Count(n => !n.IsDirectory):N0} files, {_nodes.Count(n => n.IsDirectory):N0} folders";
+        PathText.Text = parents.Count == 1 ? parents[0]! : Strings.Format("Inspect_InFolders", parents.Count);
+        KindText.Text = Strings.Format("Inspect_FilesFolders", _nodes.Count(n => !n.IsDirectory), _nodes.Count(n => n.IsDirectory));
         ExplorerButton.Visibility = Visibility.Collapsed;
         PropertiesButton.Visibility = Visibility.Collapsed;
         foreach (var n in _nodes) _copy.AppendLine(n.FullPath);
 
         long size = _nodes.Sum(n => n.SizeFor(_measure));
         long logical = _nodes.Sum(n => n.Size), allocated = _nodes.Sum(n => n.Allocated);
-        Fact("Total size", SizeFormatter.Format(logical) + Exact(logical));
-        if (allocated != logical) Fact("On disk", SizeFormatter.Format(allocated) + Exact(allocated));
-        Fact("Files", $"{_nodes.Sum(n => n.FileCount):N0}");
-        if (_root is not null && _root.SizeFor(_measure) > 0) Fact($"Share of {_root.Name}", Percent(size, _root.SizeFor(_measure)));
+        Fact(Strings.Get("Inspect_TotalSize"), SizeFormatter.Format(logical) + Exact(logical));
+        if (allocated != logical) Fact(Strings.Get("Inspect_OnDisk"), SizeFormatter.Format(allocated) + Exact(allocated));
+        Fact(Strings.Get("Inspect_Files"), $"{_nodes.Sum(n => n.FileCount):N0}");
+        if (_root is not null && _root.SizeFor(_measure) > 0) Fact(Strings.Format("Inspect_ShareOf", _root.Name), Percent(size, _root.SizeFor(_measure)));
         var newest = _nodes.Max(n => n.LastWriteUtc);
-        if (newest > DateTime.MinValue) Fact("Newest change", DescribeDate(newest));
+        if (newest > DateTime.MinValue) Fact(Strings.Get("Inspect_NewestChange"), DescribeDate(newest));
 
-        Bars("Items", _nodes.OrderByDescending(n => n.SizeFor(_measure)).Take(12)
+        Bars(Strings.Get("Inspect_Items"), _nodes.OrderByDescending(n => n.SizeFor(_measure)).Take(12)
             .Select(n => (n.Name + (n.IsDirectory ? "\\" : string.Empty), n.SizeFor(_measure))), size);
-        Bars("By file type", TypeBreakdown(_nodes.SelectMany(n => n.IsDirectory ? n.DescendantFiles() : new[] { n })), size);
+        Bars(Strings.Get("Inspect_ByFileType"), TypeBreakdown(_nodes.SelectMany(n => n.IsDirectory ? n.DescendantFiles() : new[] { n })), size);
     }
 
     // ---------------------------------------------------------------- pieces
@@ -168,29 +168,29 @@ public partial class InspectWindow : Window
             var c = Palette.Categorize(f.Extension);
             sums[c] = sums.GetValueOrDefault(c) + f.SizeFor(_measure);
         }
-        return sums.OrderByDescending(kv => kv.Value).Select(kv => (kv.Key.ToString(), kv.Value));
+        return sums.OrderByDescending(kv => kv.Value).Select(kv => (Strings.Category(kv.Key), kv.Value));
     }
 
     private static string DescribeType(FsNode node)
     {
         string ext = node.Extension;
-        string category = Palette.Categorize(ext).ToString().ToLowerInvariant();
-        return ext.Length == 0 ? $"File, no extension ({category})" : $"{ext.TrimStart('.').ToUpperInvariant()} file ({category})";
+        string category = Strings.Category(Palette.Categorize(ext)).ToLowerInvariant();
+        return ext.Length == 0 ? Strings.Format("Inspect_FileNoExtension", category) : Strings.Format("Inspect_FileWithExtension", ext.TrimStart('.').ToUpperInvariant(), category);
     }
 
     private static string DescribeDate(DateTime utc)
     {
         var local = utc.ToLocalTime();
         var age = DateTime.UtcNow - utc;
-        string ago = age.TotalDays < 1 ? "today"
-                   : age.TotalDays < 2 ? "yesterday"
-                   : age.TotalDays < 30 ? $"{(int)age.TotalDays} days ago"
-                   : age.TotalDays < 365 ? $"{(int)(age.TotalDays / 30)} months ago"
-                   : $"{age.TotalDays / 365:0.#} years ago";
+        string ago = age.TotalDays < 1 ? Strings.Get("Ago_Today")
+                   : age.TotalDays < 2 ? Strings.Get("Ago_Yesterday")
+                   : age.TotalDays < 30 ? Strings.Format("Ago_Days", (int)age.TotalDays)
+                   : age.TotalDays < 365 ? Strings.Format("Ago_Months", (int)(age.TotalDays / 30))
+                   : Strings.Format("Ago_Years", age.TotalDays / 365);
         return $"{local:f}  ({ago})";
     }
 
-    private static string Exact(long bytes) => bytes >= 1024 ? $"  ({bytes:N0} bytes)" : string.Empty;
+    private static string Exact(long bytes) => bytes >= 1024 ? Strings.Format("Inspect_ExactBytes", bytes) : string.Empty;
     private static string Percent(long part, long whole) => $"{100.0 * part / whole:0.##}%";
     private static int Depth(FsNode node) { int d = 0; for (var n = node.Parent; n is not null; n = n.Parent) d++; return d; }
 

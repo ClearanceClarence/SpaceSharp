@@ -61,7 +61,7 @@ It's a single, portable `.exe` with no installer and no dependencies.
 
 **Scanning**
 - Scan a whole drive or any folder, with live counts of files, folders and bytes while it runs
-- Fast NTFS scan: reads the drive's file table directly, mapping a whole drive in seconds (needs administrator; the app offers to restart elevated on the start screen)
+- Fast NTFS scan: reads the drive's file table directly, mapping a whole drive in seconds (needs administrator; the start screen offers to restart elevated on every run without it)
 - Every drive scan is saved, so the app opens with yesterday's map already on screen and F5 rescans; save and open scans as files to compare machines
 - Compare with the previous scan: color by change (grew warm, shrank cool, new in amber), a Changes tab listing what grew most, and "since last scan" in Inspect
 - Rescan a single folder from the right-click menu; the rest of the map stays put
@@ -159,6 +159,7 @@ The gear button in the toolbar (or Ctrl+,) opens the settings window. Every chan
 | **Hover details** | The info card next to the mouse. |
 | **Show side panel** | The panel on the left with your drives and the largest items. |
 | **Animate zoom** | Fly into folders instead of jumping. |
+| **App language** | Same as Windows, English, or Norwegian bokmål; any language with a translation in `Resources/Strings.<culture>.resx` appears in the list on its own. Restart to switch. |
 | **Leave out** | Names to skip, with everything inside them. One wildcard per line, matched against file and folder names. |
 | **Reopen the last scan on startup** | Shows the last map at once, compared with the scan before it. Scans are kept in `%LocalAppData%\SpaceSharp\scans`. On by default. |
 | **Fast NTFS scan** | Reads the drive's Master File Table instead of walking folders, so a whole drive takes seconds. Needs administrator rights and an NTFS volume; otherwise the normal scan runs. On by default. |
@@ -286,7 +287,7 @@ The app's only NuGet dependency is Velopack, used for the installer and updates.
 dotnet test
 ```
 
-Every push and pull request runs the build and the tests on GitHub Actions (`.github/workflows/build.yml`). Releases are built locally with the release script below, not by CI.
+Every push and pull request runs the test suite on GitHub Actions (`.github/workflows/build.yml`); that workflow tests only and never publishes, packs or uploads anything. Releases are built locally with the release script below.
 
 ## Publishing an exe
 
@@ -319,7 +320,7 @@ The same steps by hand, if you prefer:
 ```powershell
 dotnet publish .\SpaceSharp\SpaceSharp.csproj -p:PublishProfile=Velopack
 vpk download github --repoUrl https://github.com/ClearanceClarence/SpaceSharp
-vpk pack --packId SpaceSharp --packVersion 1.3.0 --packDir .\publish\velopack --mainExe SpaceSharp.exe --packTitle SpaceSharp --packAuthors ClearanceClarence --icon .\SpaceSharp\Assets\SpaceSharp.ico --splashImage .\SpaceSharp\Assets\SpaceSharp-256.png --msi --instLocation Either --instWelcome .\installer\welcome.md --instLicense .\installer\license.txt --instConclusion .\installer\conclusion.md
+vpk pack --packId SpaceSharp --packVersion 1.3.1 --packDir .\publish\velopack --mainExe SpaceSharp.exe --packTitle SpaceSharp --packAuthors ClearanceClarence --icon .\SpaceSharp\Assets\SpaceSharp.ico --splashImage .\SpaceSharp\Assets\SpaceSharp-256.png --msi --instLocation Either --instWelcome .\installer\welcome.md --instLicense .\installer\license.txt --instConclusion .\installer\conclusion.md
 .\installer\brand-msi.ps1
 ```
 
@@ -411,6 +412,7 @@ SpaceSharp.Tests/                 xUnit tests for layout, filter, formatting and
 docs/                             landing page (GitHub Pages), screenshots, icon, header and social preview
 tools/make-assets.py              regenerates every icon, preview and installer image from the mark
 tools/screenshot-mockup.html      the app drawn in a browser with sample data, for README and store screenshots
+tools/make-social.py              builds docs/social-preview.png from the mark and a capture of the mockup (tools/window.png)
 installer/                        MSI wizard pages, dialog images, release.ps1 and brand-msi.ps1
 .github/                          issue forms, pull request template, build workflow, Dependabot
 ```

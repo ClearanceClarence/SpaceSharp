@@ -1,6 +1,7 @@
 <Window x:Class="SpaceSharp.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:u="clr-namespace:SpaceSharp.Util"
         xmlns:controls="clr-namespace:SpaceSharp.Controls"
         Title="SpaceSharp"
         Width="1400" Height="880" MinWidth="1040" MinHeight="460"
@@ -17,25 +18,25 @@
                 BorderThickness="0,0,0,1" Padding="10,8">
             <DockPanel>
                 <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
-                    <TextBlock Text="Style" Foreground="{DynamicResource TextDim}" VerticalAlignment="Center"
+                    <TextBlock Text="{u:T Main_Style}" Foreground="{DynamicResource TextDim}" VerticalAlignment="Center"
                                Margin="0,0,8,0" />
                     <ComboBox x:Name="StyleCombo" Width="118" SelectionChanged="ColorSettings_Changed">
-                        <ComboBoxItem Content="Classic" />
-                        <ComboBoxItem Content="Flat" />
-                        <ComboBoxItem Content="Tiles" />
-                        <ComboBoxItem Content="Cards" />
-                        <ComboBoxItem Content="Bands" />
-                        <ComboBoxItem Content="Soft" />
+                        <ComboBoxItem Content="{u:T Main_Classic}" />
+                        <ComboBoxItem Content="{u:T Main_Flat}" />
+                        <ComboBoxItem Content="{u:T Main_Tiles}" />
+                        <ComboBoxItem Content="{u:T Main_Cards}" />
+                        <ComboBoxItem Content="{u:T Main_Bands}" />
+                        <ComboBoxItem Content="{u:T Main_Soft}" />
                     </ComboBox>
-                    <TextBlock Text="Color by" Foreground="{DynamicResource TextDim}" VerticalAlignment="Center"
+                    <TextBlock Text="{u:T Main_ColorBy}" Foreground="{DynamicResource TextDim}" VerticalAlignment="Center"
                                Margin="14,0,8,0" />
                     <ComboBox x:Name="ColorCombo" Width="120" SelectionChanged="ColorSettings_Changed">
-                        <ComboBoxItem Content="Top folder" />
-                        <ComboBoxItem Content="Depth" />
-                        <ComboBoxItem Content="File type" />
-                        <ComboBoxItem Content="Change" />
+                        <ComboBoxItem Content="{u:T Main_TopFolder}" />
+                        <ComboBoxItem Content="{u:T Main_Depth}" />
+                        <ComboBoxItem Content="{u:T Main_FileType}" />
+                        <ComboBoxItem Content="{u:T Main_Change}" />
                     </ComboBox>
-                    <TextBlock Text="Palette" Foreground="{DynamicResource TextDim}" VerticalAlignment="Center"
+                    <TextBlock Text="{u:T Main_Palette}" Foreground="{DynamicResource TextDim}" VerticalAlignment="Center"
                                Margin="14,0,8,0" />
                     <ComboBox x:Name="PaletteCombo" Width="180" MaxDropDownHeight="480"
                               SelectionChanged="ColorSettings_Changed">
@@ -72,36 +73,36 @@
                     </ComboBox>
                     <Border Style="{StaticResource ToolDivider}" />
                     <Button Style="{StaticResource ToolButton}" Tag="&#xE713;"
-                            ToolTip="Settings (Ctrl+,)" Click="SettingsButton_Click" />
+                            ToolTip="{u:T Main_SettingsCtrl}" Click="SettingsButton_Click" />
                     <Button x:Name="ThemeButton" Style="{StaticResource ToolButton}" Tag="&#xE708;"
-                            ToolTip="Theme" Click="ThemeButton_Click" />
-                    <Button Style="{StaticResource ToolButton}" Tag="&#xE946;" ToolTip="About SpaceSharp (F1)"
+                            ToolTip="{u:T Main_Theme}" Click="ThemeButton_Click" />
+                    <Button Style="{StaticResource ToolButton}" Tag="&#xE946;" ToolTip="{u:T Main_AboutSpaceSharpF1}"
                             Click="About_Click" />
                 </StackPanel>
 
                 <StackPanel Orientation="Horizontal">
                     <Button x:Name="ScanFolderButton" Style="{StaticResource AccentButton}"
-                            Tag="&#xE838;" Content="Scan folder" Click="ScanFolder_Click" />
+                            Tag="&#xE838;" Content="{u:T Main_ScanFolder}" Click="ScanFolder_Click" />
                     <Button x:Name="RescanButton" Style="{StaticResource ToolButton}"
-                            Tag="&#xE72C;" ToolTip="Rescan (F5)" Click="Rescan_Click" />
+                            Tag="&#xE72C;" ToolTip="{u:T Main_RescanF5}" Click="Rescan_Click" />
 
                     <Border Style="{StaticResource ToolDivider}" />
 
                     <Button x:Name="UpButton" Style="{StaticResource ToolButton}"
-                            Tag="&#xE74A;" ToolTip="Up one folder (Backspace / mouse back)" Click="Up_Click" />
+                            Tag="&#xE74A;" ToolTip="{u:T Main_UpOneFolderBackspace}" Click="Up_Click" />
                     <Button x:Name="FitButton" Style="{StaticResource ToolButton}"
-                            Tag="&#xE80F;" ToolTip="Show whole map (Home / Ctrl+0)" Click="Fit_Click" />
+                            Tag="&#xE80F;" ToolTip="{u:T Main_ShowWholeMapHome}" Click="Fit_Click" />
                     <Button x:Name="ListsButton" Style="{StaticResource ToolButton}"
-                            Tag="&#xE90C;" ToolTip="Drives and largest items panel (L)" Click="Lists_Click" />
+                            Tag="&#xE90C;" ToolTip="{u:T Main_DrivesAndLargestItems}" Click="Lists_Click" />
 
                     <Border Style="{StaticResource ToolDivider}" />
 
                     <Button x:Name="ZoomOutButton" Style="{StaticResource ToolButton}"
-                            Tag="&#xE71F;" ToolTip="Zoom out (mouse wheel / −)" Click="ZoomOut_Click" />
+                            Tag="&#xE71F;" ToolTip="{u:T Main_ZoomOutMouseWheel}" Click="ZoomOut_Click" />
                     <TextBlock x:Name="ZoomLabel" Width="64" TextAlignment="Center" VerticalAlignment="Center"
                                Foreground="{DynamicResource TextDim}" Text="—" />
                     <Button x:Name="ZoomInButton" Style="{StaticResource ToolButton}"
-                            Tag="&#xE8A3;" ToolTip="Zoom in (mouse wheel / +)" Click="ZoomIn_Click" />
+                            Tag="&#xE8A3;" ToolTip="{u:T Main_ZoomInMouseWheel}" Click="ZoomIn_Click" />
                 </StackPanel>
             </DockPanel>
         </Border>
@@ -111,9 +112,9 @@
                 BorderBrush="{DynamicResource Accent}" BorderThickness="4,0,0,1" Padding="12,6">
             <DockPanel>
                 <Button DockPanel.Dock="Right" Style="{StaticResource ToolButton}" Tag="&#xE711;" Height="28"
-                        ToolTip="Dismiss" Click="CloseAccessBar_Click" />
+                        ToolTip="{u:T Main_Dismiss}" Click="CloseAccessBar_Click" />
                 <Button DockPanel.Dock="Right" Style="{StaticResource AccentButton}" Height="28" Margin="12,0,6,0"
-                        Tag="&#xE7EF;" Content="Restart as administrator" Click="RestartElevated_Click" />
+                        Tag="&#xE7EF;" Content="{u:T Main_RestartAsAdministrator}" Click="RestartElevated_Click" />
                 <TextBlock x:Name="AccessText" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
             </DockPanel>
         </Border>
@@ -123,9 +124,9 @@
                 BorderBrush="{DynamicResource Accent}" BorderThickness="4,0,0,1" Padding="12,6">
             <DockPanel>
                 <Button DockPanel.Dock="Right" Style="{StaticResource ToolButton}" Tag="&#xE711;" Height="28"
-                        ToolTip="Not now" Click="CloseUpdateBar_Click" />
+                        ToolTip="{u:T Main_NotNow}" Click="CloseUpdateBar_Click" />
                 <Button x:Name="InstallUpdateButton" DockPanel.Dock="Right" Style="{StaticResource AccentButton}" Height="28"
-                        Margin="12,0,6,0" Tag="&#xE896;" Content="Install and restart" Click="InstallUpdate_Click" />
+                        Margin="12,0,6,0" Tag="&#xE896;" Content="{u:T Main_InstallAndRestart}" Click="InstallUpdate_Click" />
                 <TextBlock x:Name="UpdateText" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
             </DockPanel>
         </Border>
@@ -136,14 +137,14 @@
             <DockPanel>
                 <Grid DockPanel.Dock="Right" Width="360" Margin="12,0,4,0" VerticalAlignment="Center">
                     <TextBox x:Name="FilterBox" Style="{StaticResource FilterBox}" Height="28" Padding="30,0,56,0"
-                             Tag="Filter, e.g. videos over 500MB older than 1 year"
+                             Tag="{u:T Main_FilterPlaceholder}"
                              TextChanged="FilterBox_TextChanged" PreviewKeyDown="FilterBox_PreviewKeyDown" />
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,0,3,0">
                         <Button x:Name="ClearFilterButton" Style="{StaticResource ToolButton}" Tag="&#xE711;" Height="22"
-                                MinWidth="22" Padding="4,0" Visibility="Collapsed" ToolTip="Clear filter (Esc)"
+                                MinWidth="22" Padding="4,0" Visibility="Collapsed" ToolTip="{u:T Main_ClearFilterEsc}"
                                 Click="ClearFilter_Click" />
                         <Button x:Name="FilterPanelButton" Style="{StaticResource ToolButton}" Tag="&#xE71C;" Height="22"
-                                MinWidth="22" Padding="4,0" ToolTip="Filter options" Click="FilterPanel_Click" />
+                                MinWidth="22" Padding="4,0" ToolTip="{u:T Main_FilterOptions}" Click="FilterPanel_Click" />
                     </StackPanel>
                     <Popup x:Name="FilterPopup" PlacementTarget="{Binding ElementName=FilterBox}" Placement="Bottom"
                            StaysOpen="False" AllowsTransparency="True" PopupAnimation="Fade" VerticalOffset="6">
@@ -162,10 +163,10 @@
                                 <!-- header -->
                                 <DockPanel Grid.Row="0" Margin="16,12,10,10">
                                     <Button DockPanel.Dock="Right" Style="{StaticResource ToolButton}" Tag="&#xE711;" Height="26" MinWidth="26"
-                                            Padding="4,0" ToolTip="Close" Click="FilterPanel_Click" />
-                                    <TextBlock Text="Filter" FontSize="14" FontWeight="SemiBold" VerticalAlignment="Center"
+                                            Padding="4,0" ToolTip="{u:T Main_Close}" Click="FilterPanel_Click" />
+                                    <TextBlock Text="{u:T Main_Filter}" FontSize="14" FontWeight="SemiBold" VerticalAlignment="Center"
                                                Foreground="{DynamicResource Text}" />
-                                    <TextBlock Text="Everything that doesn't match is dimmed on the map." FontSize="11.5" Margin="10,0,0,0"
+                                    <TextBlock Text="{u:T Main_EverythingThatDoesnT}" FontSize="11.5" Margin="10,0,0,0"
                                                VerticalAlignment="Center" Foreground="{DynamicResource TextDim}" TextTrimming="CharacterEllipsis" />
                                 </DockPanel>
                                 <Border Grid.Row="0" Height="1" VerticalAlignment="Bottom" Background="{DynamicResource Stroke}" />
@@ -178,12 +179,12 @@
                                         BorderThickness="0,1,0,0" Padding="16,10">
                                     <DockPanel>
                                         <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
-                                            <Button x:Name="FilterClearButton" Style="{StaticResource ToolButton}" Content="Clear" Height="32"
+                                            <Button x:Name="FilterClearButton" Style="{StaticResource ToolButton}" Content="{u:T Main_Clear}" Height="32"
                                                     MinWidth="84" Margin="0,0,8,0" IsEnabled="False" Click="ClearFilter_Click" />
-                                            <Button x:Name="FilterDoneButton" Style="{StaticResource AccentButton}" Content="Done" Height="32"
+                                            <Button x:Name="FilterDoneButton" Style="{StaticResource AccentButton}" Content="{u:T Main_Done}" Height="32"
                                                     MinWidth="84" Click="FilterPanel_Click" />
                                         </StackPanel>
-                                        <TextBlock x:Name="FilterFooterInfo" Text="No filter" FontSize="12" VerticalAlignment="Center"
+                                        <TextBlock x:Name="FilterFooterInfo" Text="{u:T Main_NoFilter}" FontSize="12" VerticalAlignment="Center"
                                                    Foreground="{DynamicResource TextDim}" TextTrimming="CharacterEllipsis" Margin="0,0,12,0" />
                                     </DockPanel>
                                 </Border>
@@ -192,8 +193,8 @@
                     </Popup>
                 </Grid>
                 <Button x:Name="SelectMatchesButton" DockPanel.Dock="Right" Style="{StaticResource ToolButton}" Height="28"
-                        Tag="&#xE8B3;" Content="Select matches" Visibility="Collapsed" Margin="8,0,0,0"
-                        ToolTip="Select every matching file (Ctrl+A), then Del to recycle them" Click="SelectMatches_Click" />
+                        Tag="&#xE8B3;" Content="{u:T Main_SelectMatches}" Visibility="Collapsed" Margin="8,0,0,0"
+                        ToolTip="{u:T Main_SelectEveryMatchingFile}" Click="SelectMatches_Click" />
                 <TextBlock x:Name="FilterInfo" DockPanel.Dock="Right" Foreground="{DynamicResource Accent}"
                            VerticalAlignment="Center" Margin="12,0,0,0" Visibility="Collapsed" />
                 <WrapPanel x:Name="LegendPanel" DockPanel.Dock="Right" Visibility="Collapsed"
@@ -220,8 +221,8 @@
                 Background="{DynamicResource Panel}" BorderBrush="{DynamicResource Stroke}" BorderThickness="0,0,1,0">
             <DockPanel>
                 <!-- drives -->
-                <TextBlock DockPanel.Dock="Top" Text="Drives" FontSize="15" FontWeight="SemiBold" Margin="14,12,14,4" />
-                <TextBlock DockPanel.Dock="Top" Text="Click a drive to scan it." Foreground="{DynamicResource TextDim}"
+                <TextBlock DockPanel.Dock="Top" Text="{u:T Main_Drives}" FontSize="15" FontWeight="SemiBold" Margin="14,12,14,4" />
+                <TextBlock DockPanel.Dock="Top" Text="{u:T Main_ClickADriveTo}" Foreground="{DynamicResource TextDim}"
                            FontSize="12" Margin="14,0,14,4" />
                 <ListBox x:Name="DriveList" DockPanel.Dock="Top" MaxHeight="320" SelectionChanged="DriveList_SelectionChanged">
                     <ListBox.ItemTemplate>
@@ -257,12 +258,12 @@
                 <Border DockPanel.Dock="Top" Height="1" Background="{DynamicResource Stroke}" Margin="14,8,14,6" />
 
                 <!-- largest items -->
-                <TextBlock DockPanel.Dock="Top" Text="Largest items" FontSize="15" FontWeight="SemiBold" Margin="14,4,14,2" />
+                <TextBlock DockPanel.Dock="Top" Text="{u:T Main_LargestItems}" FontSize="15" FontWeight="SemiBold" Margin="14,4,14,2" />
                 <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="10,4,10,4">
-                    <Button x:Name="TabFiles" Style="{StaticResource TabButton}" Content="Files" Click="Tab_Click" />
-                    <Button x:Name="TabFolders" Style="{StaticResource TabButton}" Content="Folders" Click="Tab_Click" />
-                    <Button x:Name="TabTypes" Style="{StaticResource TabButton}" Content="Types" Click="Tab_Click" />
-                    <Button x:Name="TabChanges" Style="{StaticResource TabButton}" Content="Changes" Click="Tab_Click" Visibility="Collapsed" />
+                    <Button x:Name="TabFiles" Style="{StaticResource TabButton}" Content="{u:T Main_Files}" Click="Tab_Click" />
+                    <Button x:Name="TabFolders" Style="{StaticResource TabButton}" Content="{u:T Main_Folders}" Click="Tab_Click" />
+                    <Button x:Name="TabTypes" Style="{StaticResource TabButton}" Content="{u:T Main_Types}" Click="Tab_Click" />
+                    <Button x:Name="TabChanges" Style="{StaticResource TabButton}" Content="{u:T Main_Changes}" Click="Tab_Click" Visibility="Collapsed" />
                 </StackPanel>
                 <TextBlock x:Name="ListHint" DockPanel.Dock="Top" Foreground="{DynamicResource TextDim}" FontSize="12"
                            Margin="14,0,14,6" TextTrimming="CharacterEllipsis" />
@@ -299,80 +300,80 @@
             <controls:TreemapControl x:Name="Treemap" MapBackground="{DynamicResource MapBg}">
                 <controls:TreemapControl.ContextMenu>
                     <ContextMenu Opened="TreemapMenu_Opened">
-                        <MenuItem x:Name="MenuInspect" Header="Inspect" InputGestureText="Ctrl+I" FontWeight="SemiBold" Click="MenuInspect_Click">
+                        <MenuItem x:Name="MenuInspect" Header="{u:T Main_Inspect}" InputGestureText="{u:T Main_CtrlI}" FontWeight="SemiBold" Click="MenuInspect_Click">
                             <MenuItem.Icon>
                                 <TextBlock Style="{StaticResource MenuIcon}" Text="&#xE946;" />
                             </MenuItem.Icon>
                         </MenuItem>
                         <Separator />
-                        <MenuItem x:Name="MenuFocus" Header="Zoom to folder" InputGestureText="Double-click" Click="MenuFocus_Click">
+                        <MenuItem x:Name="MenuFocus" Header="{u:T Main_ZoomToFolder}" InputGestureText="{u:T Main_DoubleClick}" Click="MenuFocus_Click">
                             <MenuItem.Icon>
                                 <TextBlock Style="{StaticResource MenuIcon}" Text="&#xE8A3;" />
                             </MenuItem.Icon>
                         </MenuItem>
-                        <MenuItem x:Name="MenuUp" Header="Up one folder" InputGestureText="Backspace" Click="Up_Click">
+                        <MenuItem x:Name="MenuUp" Header="{u:T Main_UpOneFolder}" InputGestureText="{u:T Main_Backspace}" Click="Up_Click">
                             <MenuItem.Icon>
                                 <TextBlock Style="{StaticResource MenuIcon}" Text="&#xE74A;" />
                             </MenuItem.Icon>
                         </MenuItem>
-                        <MenuItem x:Name="MenuFit" Header="Show whole map" InputGestureText="Home" Click="Fit_Click">
+                        <MenuItem x:Name="MenuFit" Header="{u:T Main_ShowWholeMap}" InputGestureText="{u:T Main_Home}" Click="Fit_Click">
                             <MenuItem.Icon>
                                 <TextBlock Style="{StaticResource MenuIcon}" Text="&#xE80F;" />
                             </MenuItem.Icon>
                         </MenuItem>
                         <Separator />
-                        <MenuItem x:Name="MenuOpen" Header="Open" InputGestureText="Enter" Click="MenuOpen_Click">
+                        <MenuItem x:Name="MenuOpen" Header="{u:T Main_Open}" InputGestureText="{u:T Main_Enter}" Click="MenuOpen_Click">
                             <MenuItem.Icon>
                                 <TextBlock Style="{StaticResource MenuIcon}" Text="&#xE8E5;" />
                             </MenuItem.Icon>
                         </MenuItem>
-                        <MenuItem x:Name="MenuExplorer" Header="Show in Explorer" Click="MenuExplorer_Click">
+                        <MenuItem x:Name="MenuExplorer" Header="{u:T Main_ShowInExplorer}" Click="MenuExplorer_Click">
                             <MenuItem.Icon>
                                 <TextBlock Style="{StaticResource MenuIcon}" Text="&#xE838;" />
                             </MenuItem.Icon>
                         </MenuItem>
-                        <MenuItem x:Name="MenuProperties" Header="Properties" InputGestureText="Alt+Enter" Click="MenuProperties_Click">
+                        <MenuItem x:Name="MenuProperties" Header="{u:T Main_Properties}" InputGestureText="{u:T Main_AltEnter}" Click="MenuProperties_Click">
                             <MenuItem.Icon>
                                 <TextBlock Style="{StaticResource MenuIcon}" Text="&#xE90F;" />
                             </MenuItem.Icon>
                         </MenuItem>
                         <Separator />
-                        <MenuItem x:Name="MenuCopy" Header="Copy path" InputGestureText="Ctrl+C" Click="MenuCopy_Click">
+                        <MenuItem x:Name="MenuCopy" Header="{u:T Main_CopyPath}" InputGestureText="{u:T Main_CtrlC}" Click="MenuCopy_Click">
                             <MenuItem.Icon>
                                 <TextBlock Style="{StaticResource MenuIcon}" Text="&#xE8C8;" />
                             </MenuItem.Icon>
                         </MenuItem>
-                        <MenuItem x:Name="MenuCopyName" Header="Copy name" Click="MenuCopyName_Click" />
-                        <MenuItem x:Name="MenuFilterType" Header="Show only this file type" Click="MenuFilterType_Click">
+                        <MenuItem x:Name="MenuCopyName" Header="{u:T Main_CopyName}" Click="MenuCopyName_Click" />
+                        <MenuItem x:Name="MenuFilterType" Header="{u:T Main_ShowOnlyThisFile}" Click="MenuFilterType_Click">
                             <MenuItem.Icon>
                                 <TextBlock Style="{StaticResource MenuIcon}" Text="&#xE71C;" />
                             </MenuItem.Icon>
                         </MenuItem>
-                        <MenuItem x:Name="MenuSelectFolder" Header="Select everything in this folder" Click="MenuSelectFolder_Click">
+                        <MenuItem x:Name="MenuSelectFolder" Header="{u:T Main_SelectEverythingInThis}" Click="MenuSelectFolder_Click">
                             <MenuItem.Icon>
                                 <TextBlock Style="{StaticResource MenuIcon}" Text="&#xE8B3;" />
                             </MenuItem.Icon>
                         </MenuItem>
                         <Separator />
-                        <MenuItem x:Name="MenuRescan" Header="Rescan this folder" Click="MenuRescan_Click">
+                        <MenuItem x:Name="MenuRescan" Header="{u:T Main_RescanThisFolder}" Click="MenuRescan_Click">
                             <MenuItem.Icon>
                                 <TextBlock Style="{StaticResource MenuIcon}" Text="&#xE72C;" />
                             </MenuItem.Icon>
                         </MenuItem>
-                        <MenuItem Header="Scan file">
-                            <MenuItem x:Name="MenuSaveScan" Header="Save scan as…" InputGestureText="Ctrl+S" Click="MenuSaveScan_Click" />
-                            <MenuItem Header="Open saved scan…" InputGestureText="Ctrl+O" Click="MenuOpenScan_Click" />
-                            <MenuItem x:Name="MenuCompareScan" Header="Compare with a saved scan…" Click="MenuCompareScan_Click" />
-                            <MenuItem x:Name="MenuClearCompare" Header="Stop comparing" Click="MenuClearCompare_Click" />
+                        <MenuItem Header="{u:T Main_ScanFile}">
+                            <MenuItem x:Name="MenuSaveScan" Header="{u:T Main_SaveScanAs}" InputGestureText="{u:T Main_CtrlS}" Click="MenuSaveScan_Click" />
+                            <MenuItem Header="{u:T Main_OpenSavedScan}" InputGestureText="{u:T Main_CtrlO}" Click="MenuOpenScan_Click" />
+                            <MenuItem x:Name="MenuCompareScan" Header="{u:T Main_CompareWithASaved}" Click="MenuCompareScan_Click" />
+                            <MenuItem x:Name="MenuClearCompare" Header="{u:T Main_StopComparing}" Click="MenuClearCompare_Click" />
                         </MenuItem>
-                        <MenuItem x:Name="MenuExport" Header="Export to CSV">
-                            <MenuItem Header="Largest files" Click="MenuExportFiles_Click" />
-                            <MenuItem x:Name="MenuExportFolder" Header="This folder" Click="MenuExportFolder_Click" />
-                            <MenuItem x:Name="MenuExportMatches" Header="Filter matches" Click="MenuExportMatches_Click" />
-                            <MenuItem x:Name="MenuExportChanges" Header="Changes since last scan" Click="MenuExportChanges_Click" />
+                        <MenuItem x:Name="MenuExport" Header="{u:T Main_ExportToCSV}">
+                            <MenuItem Header="{u:T Main_LargestFiles}" Click="MenuExportFiles_Click" />
+                            <MenuItem x:Name="MenuExportFolder" Header="{u:T Main_ThisFolder}" Click="MenuExportFolder_Click" />
+                            <MenuItem x:Name="MenuExportMatches" Header="{u:T Main_FilterMatches}" Click="MenuExportMatches_Click" />
+                            <MenuItem x:Name="MenuExportChanges" Header="{u:T Main_ChangesSinceLastScan}" Click="MenuExportChanges_Click" />
                         </MenuItem>
                         <Separator />
-                        <MenuItem x:Name="MenuDelete" Header="Move to Recycle Bin" InputGestureText="Del"
+                        <MenuItem x:Name="MenuDelete" Header="{u:T Main_MoveToRecycleBin}" InputGestureText="{u:T Main_Del}"
                                   Foreground="{DynamicResource Danger}" Click="MenuDelete_Click">
                             <MenuItem.Icon>
                                 <TextBlock Style="{StaticResource MenuIcon}" Text="&#xE74D;" />
@@ -385,7 +386,7 @@
             <StackPanel x:Name="EmptyHint" HorizontalAlignment="Center" VerticalAlignment="Center" Width="460">
                 <Image Source="/Assets/SpaceSharp-256.png" Width="88" Height="88" HorizontalAlignment="Center"
                        RenderOptions.BitmapScalingMode="HighQuality" IsHitTestVisible="False" />
-                <TextBlock Text="Click a drive on the left, or choose a folder to scan." HorizontalAlignment="Center"
+                <TextBlock Text="{u:T Main_ClickADriveOn}" HorizontalAlignment="Center"
                            Foreground="{DynamicResource TextDim}" FontSize="15" Margin="0,14,0,0" IsHitTestVisible="False" />
 
                 <!-- fast NTFS scan needs administrator rights; shown until the user decides -->
@@ -396,19 +397,16 @@
                             <TextBlock DockPanel.Dock="Left" Text="&#xE945;" FontFamily="{StaticResource IconFont}" FontSize="22"
                                        Foreground="{DynamicResource Accent}" VerticalAlignment="Top" Margin="0,2,14,0" />
                             <StackPanel>
-                                <TextBlock Text="Map a whole drive in seconds" FontSize="15" FontWeight="SemiBold" />
+                                <TextBlock Text="{u:T Main_MapAWholeDrive}" FontSize="15" FontWeight="SemiBold" />
                                 <TextBlock Foreground="{DynamicResource TextDim}" TextWrapping="Wrap" Margin="0,4,0,0" LineHeight="19"
-                                           Text="SpaceSharp can read the drive's file table directly instead of walking every folder. That needs administrator rights, so the app has to restart once. Folders and other file systems scan the normal way either way." />
+                                           Text="{u:T Main_SpaceSharpCanReadThe}" />
                             </StackPanel>
                         </DockPanel>
                         <DockPanel Margin="0,14,0,0">
                             <Button DockPanel.Dock="Right" Style="{StaticResource AccentButton}" Height="32" MinWidth="150"
-                                    Tag="&#xE7EF;" Content="Restart as administrator" Click="FastScanRestart_Click" />
+                                    Tag="&#xE7EF;" Content="{u:T Main_RestartAsAdministrator}" Click="FastScanRestart_Click" />
                             <Button DockPanel.Dock="Right" Style="{StaticResource ToolButton}" Height="32" Margin="0,0,8,0"
-                                    Content="Not now" ToolTip="Ask again next time" Click="FastScanLater_Click" />
-                            <Button Style="{StaticResource ToolButton}" Height="32" HorizontalAlignment="Left" Padding="6,0"
-                                    Content="Don't ask again" ToolTip="Keep the normal scan when not running as administrator. Settings › Scanning brings this back."
-                                    Click="FastScanDismiss_Click" />
+                                    Content="{u:T Main_NotNow}" ToolTip="{u:T Main_AskAgainNextTime}" Click="FastScanLater_Click" />
                         </DockPanel>
                     </StackPanel>
                 </Border>
@@ -450,9 +448,9 @@
                             <TextBlock x:Name="ScanPercentText" DockPanel.Dock="Right" FontSize="26" FontWeight="SemiBold"
                                        Foreground="{DynamicResource Accent}" VerticalAlignment="Center" Margin="16,0,0,0" />
                             <StackPanel VerticalAlignment="Center">
-                                <TextBlock x:Name="ScanTitle" Text="Scanning…" FontSize="20" FontWeight="SemiBold" />
+                                <TextBlock x:Name="ScanTitle" Text="{u:T Main_Scanning}" FontSize="20" FontWeight="SemiBold" />
                                 <TextBlock x:Name="ScanSubtitle" Foreground="{DynamicResource TextDim}" Margin="0,2,0,0"
-                                           Text="Reading the folder tree. The map appears when it's done." />
+                                           Text="{u:T Main_ReadingTheFolderTree}" />
                             </StackPanel>
                         </DockPanel>
 
@@ -468,19 +466,19 @@
                             <Border Grid.Column="0" Background="{DynamicResource Control}" CornerRadius="8" Padding="14,10">
                                 <StackPanel>
                                     <TextBlock x:Name="ScanSizeText" Text="0 B" FontSize="24" FontWeight="SemiBold" />
-                                    <TextBlock Text="found so far" Foreground="{DynamicResource TextDim}" FontSize="12" />
+                                    <TextBlock Text="{u:T Main_FoundSoFar}" Foreground="{DynamicResource TextDim}" FontSize="12" />
                                 </StackPanel>
                             </Border>
                             <Border Grid.Column="2" Background="{DynamicResource Control}" CornerRadius="8" Padding="14,10">
                                 <StackPanel>
                                     <TextBlock x:Name="ScanFilesText" Text="0" FontSize="24" FontWeight="SemiBold" />
-                                    <TextBlock Text="files" Foreground="{DynamicResource TextDim}" FontSize="12" />
+                                    <TextBlock Text="{u:T Main_Files2}" Foreground="{DynamicResource TextDim}" FontSize="12" />
                                 </StackPanel>
                             </Border>
                             <Border Grid.Column="4" Background="{DynamicResource Control}" CornerRadius="8" Padding="14,10">
                                 <StackPanel>
                                     <TextBlock x:Name="ScanFoldersText" Text="0" FontSize="24" FontWeight="SemiBold" />
-                                    <TextBlock Text="folders" Foreground="{DynamicResource TextDim}" FontSize="12" />
+                                    <TextBlock Text="{u:T Main_Folders2}" Foreground="{DynamicResource TextDim}" FontSize="12" />
                                 </StackPanel>
                             </Border>
                         </Grid>
@@ -508,8 +506,8 @@
 
                         <DockPanel Margin="0,18,0,0">
                             <Button x:Name="CancelButton" DockPanel.Dock="Right" Style="{StaticResource ToolButton}" Tag="&#xE711;"
-                                    Content="Cancel" Click="Cancel_Click" />
-                            <TextBlock Text="Esc also cancels" Foreground="{DynamicResource TextDim}" FontSize="12" VerticalAlignment="Center" />
+                                    Content="{u:T Main_Cancel}" Click="Cancel_Click" />
+                            <TextBlock Text="{u:T Main_EscAlsoCancels}" Foreground="{DynamicResource TextDim}" FontSize="12" VerticalAlignment="Center" />
                         </DockPanel>
                     </StackPanel>
                 </Border>

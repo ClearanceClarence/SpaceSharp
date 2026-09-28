@@ -2,6 +2,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Text;
 using SpaceSharp.Models;
+using SpaceSharp.Util;
 
 namespace SpaceSharp.Services;
 
@@ -119,8 +120,8 @@ public static class ScanFile
         using var file = File.OpenRead(path);
         using var gzip = new GZipStream(file, CompressionMode.Decompress);
         using var r = new BinaryReader(gzip, Encoding.UTF8);
-        if (r.ReadUInt32() != Magic) throw new InvalidDataException("Not a SpaceSharp scan file.");
-        if (r.ReadByte() != Version) throw new InvalidDataException("This scan file was written by a newer SpaceSharp.");
+        if (r.ReadUInt32() != Magic) throw new InvalidDataException(Strings.Get("ScanFile_NotAScan"));
+        if (r.ReadByte() != Version) throw new InvalidDataException(Strings.Get("ScanFile_Newer"));
         string rootPath = r.ReadString();
         var when = new DateTime(r.ReadInt64(), DateTimeKind.Utc);
         string method = r.ReadString();

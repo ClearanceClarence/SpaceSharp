@@ -53,11 +53,11 @@ public static class TopLists
         return top.Select(n =>
         {
             long change = n.ChangeFor(measure);
-            string what = n.BaselineSize is null ? "new" : change > 0 ? "grew" : "shrank";
+            string what = n.BaselineSize is null ? Strings.Get(n.IsDirectory ? "Changes_NewFolder" : "Changes_New") : change > 0 ? Strings.Get(n.IsDirectory ? "Changes_GrewFolder" : "Changes_Grew") : Strings.Get(n.IsDirectory ? "Changes_ShrankFolder" : "Changes_Shrank");
             return new TopRow
             {
                 Name = n.Name,
-                Detail = $"{what}{(n.IsDirectory ? " folder" : string.Empty)} · {n.Parent?.FullPath}",
+                Detail = $"{what} · {n.Parent?.FullPath}",
                 SizeText = (change > 0 ? "+" : "−") + SizeFormatter.Format(Math.Abs(change)),
                 Fraction = largest > 0 ? (double)Math.Abs(change) / largest : 0,
                 Swatch = change > 0 ? Palette.GrewBrush : Palette.ShrankBrush,
@@ -75,7 +75,7 @@ public static class TopLists
     private static List<TopRow> LargestFolders(FsNode root, SizeMeasure measure)
     {
         var top = TopN(root.DescendantDirectories().Where(d => !ReferenceEquals(d, root)), n => n.SizeFor(measure));
-        return ToRows(top, measure, n => $"{n.FileCount:N0} files · {n.Parent?.FullPath}");
+        return ToRows(top, measure, n => Strings.Format("TopList_FilesIn", n.FileCount, n.Parent?.FullPath ?? string.Empty));
     }
 
     private static List<TopRow> ByType(FsNode root, SizeMeasure measure, ColorScheme scheme)
@@ -83,7 +83,7 @@ public static class TopLists
         var totals = new Dictionary<string, (long Bytes, int Count)>(StringComparer.OrdinalIgnoreCase);
         foreach (var file in root.DescendantFiles())
         {
-            string ext = file.Extension.Length == 0 ? "(no extension)" : file.Extension;
+            string ext = file.Extension.Length == 0 ? Strings.Get("TopList_NoExtension") : file.Extension;
             totals.TryGetValue(ext, out var t);
             totals[ext] = (t.Bytes + file.SizeFor(measure), t.Count + 1);
         }
@@ -95,7 +95,7 @@ public static class TopLists
         return ordered.Select(kv => new TopRow
         {
             Name = kv.Key,
-            Detail = $"{kv.Value.Count:N0} files · {Palette.Categorize(kv.Key).ToString().ToLowerInvariant()}",
+            Detail = Strings.Format("TopList_FilesOfType", kv.Value.Count, Strings.Category(Palette.Categorize(kv.Key)).ToLowerInvariant()),
             SizeText = SizeFormatter.Format(kv.Value.Bytes),
             Fraction = largest > 0 ? (double)kv.Value.Bytes / largest : 0,
             Swatch = categories[Palette.Categorize(kv.Key)],

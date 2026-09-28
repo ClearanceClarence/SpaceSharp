@@ -1,7 +1,8 @@
 <Window x:Class="SpaceSharp.InspectWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Inspect"
+        xmlns:u="clr-namespace:SpaceSharp.Util"
+        Title="{u:T InspectWin_Inspect}"
         Width="640" SizeToContent="Height" MaxHeight="760" ResizeMode="NoResize"
         WindowStartupLocation="CenterOwner" ShowInTaskbar="False"
         Icon="/Assets/SpaceSharp.ico"
@@ -12,13 +13,13 @@
         <Border DockPanel.Dock="Bottom" Background="{DynamicResource Panel}" BorderBrush="{DynamicResource Stroke}"
                 BorderThickness="0,1,0,0" Padding="16,12">
             <DockPanel>
-                <Button DockPanel.Dock="Right" Style="{StaticResource AccentButton}" Content="Close" MinWidth="84"
+                <Button DockPanel.Dock="Right" Style="{StaticResource AccentButton}" Content="{u:T InspectWin_Close}" MinWidth="84"
                         IsDefault="True" IsCancel="True" Click="Close_Click" />
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
-                    <Button Style="{StaticResource ToolButton}" Tag="&#xE8C8;" Content="Copy details" Click="Copy_Click" />
-                    <Button x:Name="ExplorerButton" Style="{StaticResource ToolButton}" Tag="&#xE838;" Content="Show in Explorer"
+                    <Button Style="{StaticResource ToolButton}" Tag="&#xE8C8;" Content="{u:T InspectWin_CopyDetails}" Click="Copy_Click" />
+                    <Button x:Name="ExplorerButton" Style="{StaticResource ToolButton}" Tag="&#xE838;" Content="{u:T InspectWin_ShowInExplorer}"
                             Margin="6,0,0,0" Click="Explorer_Click" />
-                    <Button x:Name="PropertiesButton" Style="{StaticResource ToolButton}" Tag="&#xE946;" Content="Properties"
+                    <Button x:Name="PropertiesButton" Style="{StaticResource ToolButton}" Tag="&#xE946;" Content="{u:T InspectWin_Properties}"
                             Margin="6,0,0,0" Click="Properties_Click" />
                 </StackPanel>
             </DockPanel>

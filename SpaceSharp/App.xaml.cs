@@ -17,6 +17,7 @@ public partial class App : Application
             StartupScanPath = Path.GetFullPath(e.Args[0]);
         DispatcherUnhandledException += OnDispatcherUnhandledException;
 
+        AppLanguages.Apply(AppSettings.Current.Language);   // before any window, so every string and format follows it
         var theme = Enum.TryParse<AppTheme>(AppSettings.Current.Theme, out var saved) ? saved : AppTheme.System;
         ThemeManager.Initialize(theme);
     }
@@ -33,11 +34,11 @@ public partial class App : Application
         var message = new StringBuilder();
         for (Exception? ex = e.Exception; ex is not null; ex = ex.InnerException)
         {
-            if (message.Length > 0) message.AppendLine().AppendLine("Caused by:");
+            if (message.Length > 0) message.AppendLine().AppendLine(Strings.Get("Crash_CausedBy"));
             message.AppendLine(ex.Message);
         }
 
-        MessageBox.Show(message.ToString(), "Unexpected error", MessageBoxButton.OK, MessageBoxImage.Error);
+        Dialog.Error(Current?.MainWindow, Strings.Get("Crash_Title"), message.ToString());
         e.Handled = true;
     }
 }

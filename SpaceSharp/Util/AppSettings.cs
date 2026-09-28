@@ -27,10 +27,10 @@ internal sealed class AppSettings
     public bool IncludeHidden { get; set; } = true;
     public bool DetectHardLinks { get; set; }
     public bool FastNtfsScan { get; set; } = true;   // read the MFT for whole-drive scans (needs administrator)
-    public bool FastScanBarDismissed { get; set; }
     public string ExcludePatterns { get; set; } = string.Empty;   // one wildcard per line, matched against names
     public string? LastScanRoot { get; set; }                       // what to reopen on startup
-    public bool ReopenLastScan { get; set; } = true;   // the startup notice about administrator rights was dismissed
+    public bool ReopenLastScan { get; set; } = true;
+    public string? Language { get; set; }                          // culture name such as "nb"; null means same as Windows   // the startup notice about administrator rights was dismissed
     public bool ConfirmDelete { get; set; } = true;
     public bool CheckForUpdates { get; set; } = true;
     public bool ShowSidePanel { get; set; } = true;
@@ -52,10 +52,10 @@ internal sealed class AppSettings
         AnimateZoom = d.AnimateZoom;
         IncludeHidden = d.IncludeHidden;
         FastNtfsScan = d.FastNtfsScan;
-        FastScanBarDismissed = d.FastScanBarDismissed;
         ExcludePatterns = d.ExcludePatterns;
         LastScanRoot = d.LastScanRoot;
         ReopenLastScan = d.ReopenLastScan;
+        Language = d.Language;
         DetectHardLinks = d.DetectHardLinks;
         ConfirmDelete = d.ConfirmDelete;
         CheckForUpdates = d.CheckForUpdates;

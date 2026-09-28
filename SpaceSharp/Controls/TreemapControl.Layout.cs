@@ -214,7 +214,7 @@ public sealed partial class TreemapControl
         }
         if (count < 2) return null;
 
-        string kind = folders == 0 ? "files" : folders == count ? "folders" : "items";
+        string kind = folders == 0 ? Strings.Get("Group_Files") : folders == count ? Strings.Get("Group_Folders") : Strings.Get("Group_Items");
         group = new FsNode($"{count:N0} {kind}", folder.FullPath, NodeKind.Group, folder)
         {
             Size = size,

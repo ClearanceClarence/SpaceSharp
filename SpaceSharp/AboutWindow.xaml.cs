@@ -12,29 +12,29 @@ public partial class AboutWindow : Window
 {
     private static readonly (string Keys, string Action)[] Shortcuts =
     {
-        ("Double-click / Enter", "Zoom the map to a folder"),
-        ("Wheel / + / −", "Zoom in or out"),
-        ("Drag", "Pan while zoomed in"),
-        ("Backspace / Mouse back", "Up one folder"),
-        ("Home / Ctrl+0", "Show the whole map"),
-        ("F5", "Rescan"),
-        ("Ctrl+click", "Add to selection"),
-        ("Shift+click", "Select a range"),
-        ("Ctrl+F", "Filter the map"),
-        ("Ctrl+A", "Select every file matching the filter"),
-        ("L", "Largest files, folders and types panel"),
-        ("Ctrl+C", "Copy the selected paths"),
-        ("Ctrl+I", "Inspect the selection"),
-        ("Ctrl+S", "Save the scan to a file"),
-        ("Ctrl+O", "Open a saved scan"),
-        ("Alt+Enter", "Windows Properties for the selected item"),
-        ("Del", "Move the selected item to the Recycle Bin"),
-        ("S", "Next map style"),
-        ("K", "Next color mode"),
-        ("G", "Toggle grouping of small items"),
-        ("Esc", "Cancel a scan"),
-        ("Ctrl+,", "Settings"),
-        ("F1", "Open this window")
+        ("Double-click / Enter", Strings.Get("Key_ZoomToFolder")),
+        ("Wheel / + / −", Strings.Get("Key_ZoomInOut")),
+        ("Drag", Strings.Get("Key_Pan")),
+        ("Backspace / Mouse back", Strings.Get("Key_Up")),
+        ("Home / Ctrl+0", Strings.Get("Key_WholeMap")),
+        ("F5", Strings.Get("Key_Rescan")),
+        ("Ctrl+click", Strings.Get("Key_AddSelection")),
+        ("Shift+click", Strings.Get("Key_SelectRange")),
+        ("Ctrl+F", Strings.Get("Key_Filter")),
+        ("Ctrl+A", Strings.Get("Key_SelectMatches")),
+        ("L", Strings.Get("Key_Panel")),
+        ("Ctrl+C", Strings.Get("Key_Copy")),
+        ("Ctrl+I", Strings.Get("Key_Inspect")),
+        ("Ctrl+S", Strings.Get("Key_SaveScan")),
+        ("Ctrl+O", Strings.Get("Key_OpenScan")),
+        ("Alt+Enter", Strings.Get("Key_Properties")),
+        ("Del", Strings.Get("Key_Delete")),
+        ("S", Strings.Get("Key_NextStyle")),
+        ("K", Strings.Get("Key_NextColor")),
+        ("G", Strings.Get("Key_Grouping")),
+        ("Esc", Strings.Get("Key_CancelScan")),
+        ("Ctrl+,", Strings.Get("Key_Settings")),
+        ("F1", Strings.Get("Key_About"))
     };
 
     private readonly string _version;
@@ -47,9 +47,9 @@ public partial class AboutWindow : Window
         var assembly = Assembly.GetExecutingAssembly();
         _version = AppInfo.Version;
 
-        VersionText.Text = $"Version {_version}" + (Updater.Instance.IsInstalled ? string.Empty : "  ·  portable");
+        VersionText.Text = Strings.Format("About_Version", _version) + (Updater.Instance.IsInstalled ? string.Empty : Strings.Get("About_Portable"));
         UpdateButton.Visibility = Updater.Instance.IsInstalled ? Visibility.Visible : Visibility.Collapsed;
-        DescriptionText.Text = assembly.GetCustomAttribute<AssemblyDescriptionAttribute>()?.Description ?? string.Empty;
+        DescriptionText.Text = Strings.Get("About_Description");
         CopyrightText.Text = assembly.GetCustomAttribute<AssemblyCopyrightAttribute>()?.Copyright ?? string.Empty;
         SystemText.Text = SystemDescription();
 
@@ -57,7 +57,7 @@ public partial class AboutWindow : Window
     }
 
     private static string SystemDescription() =>
-        $"{RuntimeInformation.FrameworkDescription} on {RuntimeInformation.OSDescription} " +
+        Strings.Format("About_SystemLine", RuntimeInformation.FrameworkDescription, RuntimeInformation.OSDescription) + " " +
         $"({RuntimeInformation.ProcessArchitecture.ToString().ToLowerInvariant()})";
 
     private void BuildShortcuts()
@@ -118,22 +118,22 @@ public partial class AboutWindow : Window
         }
         catch (Exception ex)
         {
-            MessageBox.Show(this, ex.Message, "Copy failed", MessageBoxButton.OK, MessageBoxImage.Warning);
+            Dialog.Error(this, Strings.Get("About_CopyFailed"), ex.Message);
         }
     }
 
     private async void CheckUpdates_Click(object sender, RoutedEventArgs e)
     {
         UpdateButton.IsEnabled = false;
-        UpdateButton.Content = "Checking…";
+        UpdateButton.Content = Strings.Get("About_Checking");
         var update = await Updater.Instance.CheckAsync();
         if (update is null)
         {
-            UpdateButton.Content = "You're up to date";
+            UpdateButton.Content = Strings.Get("About_UpToDate");
             return;
         }
 
-        UpdateButton.Content = $"Install {Updater.Instance.AvailableVersion} and restart";
+        UpdateButton.Content = Strings.Format("About_InstallAndRestart", Updater.Instance.AvailableVersion ?? string.Empty);
         UpdateButton.IsEnabled = true;
         UpdateButton.Click -= CheckUpdates_Click;
         UpdateButton.Click += async (_, _) =>
@@ -145,7 +145,7 @@ public partial class AboutWindow : Window
             }
             catch (Exception ex)
             {
-                MessageBox.Show(this, ex.Message, "Update failed", MessageBoxButton.OK, MessageBoxImage.Error);
+                Dialog.Error(this, Strings.Get("About_UpdateFailed"), ex.Message);
                 UpdateButton.IsEnabled = true;
             }
         };
@@ -176,8 +176,7 @@ public partial class AboutWindow : Window
         }
         catch (Exception ex)
         {
-            MessageBox.Show(this, $"Couldn't open the browser.\n\n{url}\n\n{ex.Message}", "SpaceSharp",
-                MessageBoxButton.OK, MessageBoxImage.Warning);
+            Dialog.Error(this, "SpaceSharp", Strings.Format("About_BrowserFailed", url, ex.Message));
         }
     }
 

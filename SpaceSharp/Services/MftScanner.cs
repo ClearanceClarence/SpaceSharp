@@ -4,6 +4,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using Microsoft.Win32.SafeHandles;
 using SpaceSharp.Models;
+using SpaceSharp.Util;
 
 namespace SpaceSharp.Services;
 
@@ -101,7 +102,7 @@ internal sealed class MftScanner
     public FsNode Scan(CancellationToken ct)
     {
         using var handle = CreateFile(_volume, GenericRead, FileShareReadWrite, IntPtr.Zero, OpenExisting, 0, IntPtr.Zero);
-        if (handle.IsInvalid) throw new UnauthorizedAccessException($"Cannot open volume {_volume}. Administrator rights are needed to read the file table.");
+        if (handle.IsInvalid) throw new UnauthorizedAccessException(Strings.Format("Mft_CannotOpen", _volume));
 
         var (bytesPerRecord, bytesPerCluster, mftStartLcn, mftValidLength) = VolumeData(handle);
         int recordCount = (int)(mftValidLength / bytesPerRecord);
@@ -204,10 +205,10 @@ internal sealed class MftScanner
                     ParseRecord(buffer.AsSpan(off, bytesPerRecord), recordIndex);
                 done += read;
                 if ((recordIndex & 0x3FFF) == 0)
-                    _progress(_files, _directories, _bytes, $"Reading the file table: {recordIndex:N0} of {recordCount:N0} records");
+                    _progress(_files, _directories, _bytes, Strings.Format("Mft_Reading", recordIndex, recordCount));
             }
         }
-        _progress(_files, _directories, _bytes, "Building the map");
+        _progress(_files, _directories, _bytes, Strings.Get("Mft_Building"));
     }
 
     // ------------------------------------------------------------------ parsing

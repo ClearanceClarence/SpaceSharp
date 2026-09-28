@@ -127,7 +127,7 @@ public sealed class FsNode
     internal void AddFreeSpace(long freeBytes)
     {
         FreeBytes = Math.Max(0, freeBytes);
-        FreeSpaceNode = new FsNode("Free space", FullPath, NodeKind.FreeSpace, this)
+        FreeSpaceNode = new FsNode(Util.Strings.Get("Tip_FreeSpace"), FullPath, NodeKind.FreeSpace, this)
         {
             Size = FreeBytes,
             Allocated = FreeBytes

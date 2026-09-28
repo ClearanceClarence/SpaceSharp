@@ -1,5 +1,6 @@
 using System.Collections.Concurrent;
 using SpaceSharp.Models;
+using SpaceSharp.Util;
 
 namespace SpaceSharp.Services;
 
@@ -88,7 +89,7 @@ public sealed class DiskScanner
         {
             var root = new DirectoryInfo(rootPath);
             if (!root.Exists)
-                throw new DirectoryNotFoundException($"The folder \"{rootPath}\" does not exist.");
+                throw new DirectoryNotFoundException(Strings.Format("Scan_FolderMissing", rootPath));
 
             LastMethod = "folder walk";
             MftSkippedReason = null;

@@ -2,10 +2,22 @@
 
 All notable changes to SpaceSharp. The newest release is at the top.
 
+## Unreleased
+
+### Translations
+- Ready for translation: every piece of user-visible text (about 450 strings across the map, menus, settings, filter panel, Inspect, About, dialogs and status line) now comes from `Resources/Strings.resx`. Settings › Language lists every language that has a `Strings.<culture>.resx` in the build, with "Same as Windows" as the default, and switching restarts the app. Ships in English and Norwegian bokmål; see CONTRIBUTING to add a language. The filter grammar stays English on purpose.
+- Norwegian bokmål is the first translation (`Resources/Strings.nb.resx`); Settings › Språk lists it next to "Same as Windows" and English.
+
+### Changes
+- Every prompt and error (delete confirmation, language switch, reset, failures) uses the app's own dialog in the app's colors and type instead of the Windows message box.
+- Tests cover the scan file, comparison, folder splicing, exclusion patterns and the translations: every key used in code or XAML must exist, every translation must match the English keys and placeholders, and Norwegian must load. The GitHub workflow only runs the tests; it never builds, packs or uploads release assets.
+- The README header is redrawn as a quiet abstract treemap in the brand colors, with no screenshot.
+- The start-screen offer to restart as administrator appears on every run without administrator rights; "Not now" hides it for the run.
+
 ## 1.3.0
 
 ### Fast NTFS scan
-- Whole drives are scanned by reading the NTFS Master File Table directly, the way WizTree does, so a drive with a million files is mapped in a few seconds. Needs administrator rights; on the start screen the app offers to restart elevated ("Don't ask again" hides the card). Single folders, non-NTFS volumes and non-elevated runs use the folder walk as before. Hard links are always counted once on the fast path. Settings › Scanning › Fast NTFS scan turns it off. The status line says "file table" when it was used.
+- Whole drives are scanned by reading the NTFS Master File Table directly, the way WizTree does, so a drive with a million files is mapped in a few seconds. Needs administrator rights; on the start screen the app offers to restart elevated every time it runs without administrator rights ("Not now" hides it for this run; the Fast NTFS scan setting turns it off). Single folders, non-NTFS volumes and non-elevated runs use the folder walk as before. Hard links are always counted once on the fast path. Settings › Scanning › Fast NTFS scan turns it off. The status line says "file table" when it was used.
 
 ### Saved scans and comparison
 - Every drive or folder scan is saved automatically (`%LocalAppData%\SpaceSharp\scans`). The app opens with the last map already on screen; F5 rescans. Ctrl+S saves a scan as a file, Ctrl+O opens one, so a scan of another machine can be looked at anywhere.

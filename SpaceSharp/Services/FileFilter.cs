@@ -172,13 +172,13 @@ public sealed class FilterSpec
         var parts = new List<string>();
         if (Patterns.Count > 0) parts.Add(string.Join(" or ", Patterns));
         foreach (var w in Words) parts.Add($"\"{w}\"");
-        if (Types.Count > 0) parts.Add(string.Join("/", Types.Select(t => t.ToString().ToLowerInvariant())));
-        if (MinBytes is { } min) parts.Add("over " + SizeFormatter.Format(min));
-        if (MaxBytes is { } max) parts.Add("under " + SizeFormatter.Format(max));
-        if (OlderThanDays is { } older) parts.Add("untouched for " + Period(older));
-        if (NewerThanDays is { } newer) parts.Add("modified in the last " + Period(newer));
-        if (Kind == ItemKind.Files) parts.Add("files only");
-        if (Kind == ItemKind.Folders) parts.Add("folders only");
+        if (Types.Count > 0) parts.Add(string.Join("/", Types.Select(t => Strings.Category(t).ToLowerInvariant())));
+        if (MinBytes is { } min) parts.Add(Strings.Format("Describe_Over", SizeFormatter.Format(min)));
+        if (MaxBytes is { } max) parts.Add(Strings.Format("Describe_Under", SizeFormatter.Format(max)));
+        if (OlderThanDays is { } older) parts.Add(Strings.Format("Describe_Untouched", PeriodLocalized(older)));
+        if (NewerThanDays is { } newer) parts.Add(Strings.Format("Describe_Modified", PeriodLocalized(newer)));
+        if (Kind == ItemKind.Files) parts.Add(Strings.Get("Describe_FilesOnly"));
+        if (Kind == ItemKind.Folders) parts.Add(Strings.Get("Describe_FoldersOnly"));
         return string.Join(", ", parts);
     }
 
@@ -204,6 +204,13 @@ public sealed class FilterSpec
     }
 
     private static string Plural(int n, string unit) => n == 1 ? $"1 {unit}" : $"{n} {unit}s";
+
+    /// <summary>Like <see cref="Period"/> but in the app's language, for the status line. Filter text itself stays English.</summary>
+    public static string PeriodLocalized(int days)
+    {
+        (int n, string unit) = days % 365 == 0 ? (days / 365, "Year") : days % 30 == 0 ? (days / 30, "Month") : days % 7 == 0 ? (days / 7, "Week") : (days, "Day");
+        return n == 1 ? Strings.Get("Period_" + unit) : Strings.Format("Period_" + unit + "s", n);
+    }
 }
 
 /// <summary>A <see cref="FilterSpec"/> compiled against a size measure, ready to test nodes.</summary>

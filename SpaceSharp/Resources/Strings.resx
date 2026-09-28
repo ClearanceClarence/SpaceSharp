@@ -1,0 +1,517 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!--
+    SpaceSharp user-visible text, English (the neutral language).
+    Translations live next to this file as Strings.<culture>.resx, for example Strings.nb.resx.
+    Every translation file that exists appears automatically in Settings > Language.
+  -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+
+  <data name="Settings_Language" xml:space="preserve"><value>Language</value></data>
+  <data name="Settings_Language_AppLanguage" xml:space="preserve"><value>App language</value></data>
+  <data name="Settings_Language_Description" xml:space="preserve"><value>Languages appear here as translations are added. Takes effect after a restart.</value></data>
+  <data name="Settings_Language_System" xml:space="preserve"><value>Same as Windows ({0})</value><comment>{0} is the language Windows would give, for example "English"</comment></data>
+  <data name="Settings_Language_RestartTitle" xml:space="preserve"><value>Switch language</value></data>
+  <data name="Settings_Language_RestartMessage" xml:space="preserve"><value>SpaceSharp switches to {0} the next time it starts. Restart now?</value></data>
+  <data name="Settings_Language_RestartNow" xml:space="preserve"><value>Restart now</value></data>
+  <data name="Settings_Language_Later" xml:space="preserve"><value>Later</value></data>
+  <data name="About_AboutSpaceSharp" xml:space="preserve"><value>About SpaceSharp</value></data>
+  <data name="About_CheckForUpdates" xml:space="preserve"><value>Check for updates</value></data>
+  <data name="About_Checking" xml:space="preserve"><value>Checking…</value></data>
+  <data name="About_Close" xml:space="preserve"><value>Close</value></data>
+  <data name="About_CopyFailed" xml:space="preserve"><value>Copy failed</value></data>
+  <data name="About_CopyVersionInfo" xml:space="preserve"><value>Copy version info</value></data>
+  <data name="About_Credits" xml:space="preserve"><value>Credits</value></data>
+  <data name="About_Feedback" xml:space="preserve"><value>Feedback</value></data>
+  <data name="About_FoundAProblemOr" xml:space="preserve"><value>Found a problem or have an idea? Both go to the project's GitHub page. Bug reports open with the version and system fields already filled in.</value></data>
+  <data name="About_InstallAndRestart" xml:space="preserve"><value>Install {0} and restart</value></data>
+  <data name="About_Portable" xml:space="preserve"><value>  ·  portable</value></data>
+  <data name="About_ReportABug" xml:space="preserve"><value>Report a bug</value></data>
+  <data name="About_Shortcuts" xml:space="preserve"><value>Shortcuts</value></data>
+  <data name="About_SuggestAFeature" xml:space="preserve"><value>Suggest a feature</value></data>
+  <data name="About_System" xml:space="preserve"><value>System</value></data>
+  <data name="About_UpToDate" xml:space="preserve"><value>You're up to date</value></data>
+  <data name="About_UpdateFailed" xml:space="preserve"><value>Update failed</value></data>
+  <data name="About_Version" xml:space="preserve"><value>Version {0}</value></data>
+  <data name="Access_DeniedMany" xml:space="preserve"><value>{0:N0} protected folders couldn't be read, so the map is missing their contents.</value></data>
+  <data name="Access_DeniedOne" xml:space="preserve"><value>1 protected folder couldn't be read, so the map is missing its contents.</value></data>
+  <data name="Ago_Days" xml:space="preserve"><value>{0} days ago</value></data>
+  <data name="Ago_Hours" xml:space="preserve"><value>{0} hours ago</value></data>
+  <data name="Ago_JustNow" xml:space="preserve"><value>just now</value></data>
+  <data name="Ago_Minutes" xml:space="preserve"><value>{0} minutes ago</value></data>
+  <data name="Ago_Months" xml:space="preserve"><value>{0} months ago</value></data>
+  <data name="Ago_Today" xml:space="preserve"><value>today</value></data>
+  <data name="Ago_Years" xml:space="preserve"><value>{0:0.#} years ago</value></data>
+  <data name="Ago_Yesterday" xml:space="preserve"><value>yesterday</value></data>
+  <data name="Category_Archives" xml:space="preserve"><value>Archives</value></data>
+  <data name="Category_Audio" xml:space="preserve"><value>Audio</value></data>
+  <data name="Category_Code" xml:space="preserve"><value>Code</value></data>
+  <data name="Category_Documents" xml:space="preserve"><value>Documents</value></data>
+  <data name="Category_Images" xml:space="preserve"><value>Images</value></data>
+  <data name="Category_Other" xml:space="preserve"><value>Other</value></data>
+  <data name="Category_Programs" xml:space="preserve"><value>Programs</value></data>
+  <data name="Category_Video" xml:space="preserve"><value>Video</value></data>
+  <data name="Changes_Grew" xml:space="preserve"><value>grew</value></data>
+  <data name="Changes_GrewFolder" xml:space="preserve"><value>grew folder</value></data>
+  <data name="Changes_New" xml:space="preserve"><value>new</value></data>
+  <data name="Changes_NewFolder" xml:space="preserve"><value>new folder</value></data>
+  <data name="Changes_Shrank" xml:space="preserve"><value>shrank</value></data>
+  <data name="Changes_ShrankFolder" xml:space="preserve"><value>shrank folder</value></data>
+  <data name="ColorModeName_Change" xml:space="preserve"><value>Change since last scan</value></data>
+  <data name="ColorModeName_Depth" xml:space="preserve"><value>Folder depth</value></data>
+  <data name="ColorModeName_FileType" xml:space="preserve"><value>File type</value></data>
+  <data name="ColorModeName_TopFolder" xml:space="preserve"><value>Top folder</value></data>
+  <data name="ColorMode_Change" xml:space="preserve"><value>change since last scan</value></data>
+  <data name="ColorMode_Depth" xml:space="preserve"><value>depth</value></data>
+  <data name="ColorMode_FileType" xml:space="preserve"><value>file type</value></data>
+  <data name="ColorMode_TopFolder" xml:space="preserve"><value>top folder</value></data>
+  <data name="Crash_CausedBy" xml:space="preserve"><value>Caused by:</value></data>
+  <data name="Crash_Title" xml:space="preserve"><value>Unexpected error</value></data>
+  <data name="Crumb_Info" xml:space="preserve"><value>{0} · {1:N0} files</value></data>
+  <data name="Crumb_NoScan" xml:space="preserve"><value>No scan yet</value></data>
+  <data name="Delete_AndMore" xml:space="preserve"><value>
+… and {0:N0} more</value></data>
+  <data name="Delete_ErrorTitle" xml:space="preserve"><value>Delete</value></data>
+  <data name="Delete_Partial" xml:space="preserve"><value>Not everything could be deleted.
+
+{0}</value></data>
+  <data name="Delete_Question" xml:space="preserve"><value>Move {0} to the Recycle Bin?
+
+{1}</value></data>
+  <data name="Delete_Title" xml:space="preserve"><value>Move to Recycle Bin</value></data>
+  <data name="Delete_WhatFile" xml:space="preserve"><value>the file "{0}" ({1})</value></data>
+  <data name="Delete_WhatFolder" xml:space="preserve"><value>the folder "{0}" ({1:N0} files, {2})</value></data>
+  <data name="Delete_WhatMany" xml:space="preserve"><value>{0:N0} items ({1:N0} files, {2})</value></data>
+  <data name="Describe_FilesOnly" xml:space="preserve"><value>files only</value></data>
+  <data name="Describe_FoldersOnly" xml:space="preserve"><value>folders only</value></data>
+  <data name="Describe_Modified" xml:space="preserve"><value>modified in the last {0}</value></data>
+  <data name="Describe_Over" xml:space="preserve"><value>over {0}</value></data>
+  <data name="Describe_Under" xml:space="preserve"><value>under {0}</value></data>
+  <data name="Describe_Untouched" xml:space="preserve"><value>untouched for {0}</value></data>
+  <data name="Dialog_ChooseFolder" xml:space="preserve"><value>Choose a folder to scan</value></data>
+  <data name="Dialog_CompareScan" xml:space="preserve"><value>Compare with a saved scan</value></data>
+  <data name="Dialog_CouldNotOpenScan" xml:space="preserve"><value>Couldn't open the scan</value></data>
+  <data name="Dialog_CouldNotRestart" xml:space="preserve"><value>Couldn't restart</value></data>
+  <data name="Dialog_CsvFilter" xml:space="preserve"><value>CSV (*.csv)|*.csv</value></data>
+  <data name="Dialog_ExportCsv" xml:space="preserve"><value>Export to CSV</value></data>
+  <data name="Dialog_OpenScan" xml:space="preserve"><value>Open a saved scan</value></data>
+  <data name="Dialog_RescanFailed" xml:space="preserve"><value>Rescan failed</value></data>
+  <data name="Dialog_SaveScan" xml:space="preserve"><value>Save scan</value></data>
+  <data name="Dialog_ScanFailed" xml:space="preserve"><value>Scan failed</value></data>
+  <data name="Dialog_ScanFilter" xml:space="preserve"><value>SpaceSharp scan (*.sscan)|*.sscan</value></data>
+  <data name="Drive_Free" xml:space="preserve"><value>{0} free</value></data>
+  <data name="Drive_UsedOf" xml:space="preserve"><value>{0} used of {1} · {2}</value></data>
+  <data name="Filter_1Month" xml:space="preserve"><value>1 month</value></data>
+  <data name="Filter_1Year" xml:space="preserve"><value>1 year</value></data>
+  <data name="Filter_2Years" xml:space="preserve"><value>2 years</value></data>
+  <data name="Filter_3Months" xml:space="preserve"><value>3 months</value></data>
+  <data name="Filter_5Years" xml:space="preserve"><value>5 years</value></data>
+  <data name="Filter_6Months" xml:space="preserve"><value>6 months</value></data>
+  <data name="Filter_AnySize" xml:space="preserve"><value>Any size</value></data>
+  <data name="Filter_AnyTime" xml:space="preserve"><value>Any time</value></data>
+  <data name="Filter_FilesAndFolders" xml:space="preserve"><value>Files and folders</value></data>
+  <data name="Filter_FilesOnly" xml:space="preserve"><value>Files only</value></data>
+  <data name="Filter_FoldersOnly" xml:space="preserve"><value>Folders only</value></data>
+  <data name="Filter_LargerThan" xml:space="preserve"><value>Larger than</value></data>
+  <data name="Filter_MatchCount" xml:space="preserve"><value>{0:N0} files · {1} match</value></data>
+  <data name="Filter_Matches" xml:space="preserve"><value>{0:N0} files · {1}: {2}</value></data>
+  <data name="Filter_Name" xml:space="preserve"><value>Name</value></data>
+  <data name="Filter_NamePlaceholder" xml:space="preserve"><value>Part of the name, or a pattern like *.iso</value></data>
+  <data name="Filter_NoFilter" xml:space="preserve"><value>No filter: everything is shown</value></data>
+  <data name="Filter_NotModifiedFor" xml:space="preserve"><value>Not modified for</value></data>
+  <data name="Filter_NothingMatches" xml:space="preserve"><value>Nothing matches: {0}</value></data>
+  <data name="Filter_NothingMatchesShort" xml:space="preserve"><value>Nothing matches</value></data>
+  <data name="Filter_QuickFilters" xml:space="preserve"><value>Quick filters</value></data>
+  <data name="Filter_Show" xml:space="preserve"><value>Show</value></data>
+  <data name="Filter_SmallerThan" xml:space="preserve"><value>Smaller than</value></data>
+  <data name="Filter_Type" xml:space="preserve"><value>Type</value></data>
+  <data name="Hover_AccessDenied" xml:space="preserve"><value>    ⚠ some content could not be read</value></data>
+  <data name="Hover_FileSize" xml:space="preserve"><value> ({0} file size)</value></data>
+  <data name="Hover_Files" xml:space="preserve"><value>    {0:N0} files</value></data>
+  <data name="Hover_FreeSpaceOn" xml:space="preserve"><value>Free space on </value></data>
+  <data name="Hover_HardLink" xml:space="preserve"><value>    hard link, {0} already counted elsewhere</value></data>
+  <data name="Hover_OnDisk" xml:space="preserve"><value> ({0} on disk)</value></data>
+  <data name="Hover_ShareOf" xml:space="preserve"><value>  ({0:0.#}% of {1})</value></data>
+  <data name="Hover_TooSmallIn" xml:space="preserve"><value> too small to show in </value></data>
+  <data name="Hover_ZoomToSee" xml:space="preserve"><value>    zoom in to see them</value></data>
+  <data name="InspectWin_Close" xml:space="preserve"><value>Close</value></data>
+  <data name="InspectWin_CopyDetails" xml:space="preserve"><value>Copy details</value></data>
+  <data name="InspectWin_Inspect" xml:space="preserve"><value>Inspect</value></data>
+  <data name="InspectWin_Properties" xml:space="preserve"><value>Properties</value></data>
+  <data name="InspectWin_ShowInExplorer" xml:space="preserve"><value>Show in Explorer</value></data>
+  <data name="Inspect_AccessDenied" xml:space="preserve"><value>Some content could not be read (access denied)</value></data>
+  <data name="Inspect_AverageFile" xml:space="preserve"><value>Average file</value></data>
+  <data name="Inspect_ByFileType" xml:space="preserve"><value>By file type</value></data>
+  <data name="Inspect_Contains" xml:space="preserve"><value>Contains</value></data>
+  <data name="Inspect_Depth" xml:space="preserve"><value>Depth</value></data>
+  <data name="Inspect_DepthValue" xml:space="preserve"><value>{0} levels below the scan root</value></data>
+  <data name="Inspect_DirectlyInside" xml:space="preserve"><value>Directly inside</value></data>
+  <data name="Inspect_ExactBytes" xml:space="preserve"><value>  ({0:N0} bytes)</value></data>
+  <data name="Inspect_FileNoExtension" xml:space="preserve"><value>File, no extension ({0})</value></data>
+  <data name="Inspect_FileWithExtension" xml:space="preserve"><value>{0} file ({1})</value></data>
+  <data name="Inspect_Files" xml:space="preserve"><value>Files</value></data>
+  <data name="Inspect_FilesFolders" xml:space="preserve"><value>{0:N0} files, {1:N0} folders</value></data>
+  <data name="Inspect_Folder" xml:space="preserve"><value>Folder</value></data>
+  <data name="Inspect_GrewBy" xml:space="preserve"><value>Grew by {0} (was {1})</value></data>
+  <data name="Inspect_HardLink" xml:space="preserve"><value>Hard link</value></data>
+  <data name="Inspect_HardLinkValue" xml:space="preserve"><value>{0}, already counted elsewhere</value></data>
+  <data name="Inspect_InFolders" xml:space="preserve"><value>In {0:N0} folders</value></data>
+  <data name="Inspect_Items" xml:space="preserve"><value>Items</value></data>
+  <data name="Inspect_ItemsSelected" xml:space="preserve"><value>{0:N0} items selected</value></data>
+  <data name="Inspect_LargestInside" xml:space="preserve"><value>Largest inside</value></data>
+  <data name="Inspect_Modified" xml:space="preserve"><value>Modified</value></data>
+  <data name="Inspect_New" xml:space="preserve"><value>New</value></data>
+  <data name="Inspect_NewestChange" xml:space="preserve"><value>Newest change</value></data>
+  <data name="Inspect_Note" xml:space="preserve"><value>Note</value></data>
+  <data name="Inspect_ShareOf" xml:space="preserve"><value>Share of {0}</value></data>
+  <data name="Inspect_ShrankBy" xml:space="preserve"><value>Shrank by {0} (was {1})</value></data>
+  <data name="Inspect_SinceLastScan" xml:space="preserve"><value>Since last scan</value></data>
+  <data name="Inspect_Size" xml:space="preserve"><value>Size</value></data>
+  <data name="Inspect_TitleMany" xml:space="preserve"><value>Inspect: {0:N0} items</value></data>
+  <data name="Inspect_TitleOne" xml:space="preserve"><value>Inspect: {0}</value></data>
+  <data name="Inspect_TotalSize" xml:space="preserve"><value>Total size</value></data>
+  <data name="Inspect_Unchanged" xml:space="preserve"><value>Unchanged</value></data>
+  <data name="Key_About" xml:space="preserve"><value>Open this window</value></data>
+  <data name="Key_AddSelection" xml:space="preserve"><value>Add to selection</value></data>
+  <data name="Key_CancelScan" xml:space="preserve"><value>Cancel a scan</value></data>
+  <data name="Key_Copy" xml:space="preserve"><value>Copy the selected paths</value></data>
+  <data name="Key_Delete" xml:space="preserve"><value>Move the selected item to the Recycle Bin</value></data>
+  <data name="Key_Filter" xml:space="preserve"><value>Filter the map</value></data>
+  <data name="Key_Grouping" xml:space="preserve"><value>Toggle grouping of small items</value></data>
+  <data name="Key_Inspect" xml:space="preserve"><value>Inspect the selection</value></data>
+  <data name="Key_NextColor" xml:space="preserve"><value>Next color mode</value></data>
+  <data name="Key_NextStyle" xml:space="preserve"><value>Next map style</value></data>
+  <data name="Key_OpenScan" xml:space="preserve"><value>Open a saved scan</value></data>
+  <data name="Key_Pan" xml:space="preserve"><value>Pan while zoomed in</value></data>
+  <data name="Key_Panel" xml:space="preserve"><value>Largest files, folders and types panel</value></data>
+  <data name="Key_Properties" xml:space="preserve"><value>Windows Properties for the selected item</value></data>
+  <data name="Key_Rescan" xml:space="preserve"><value>Rescan</value></data>
+  <data name="Key_SaveScan" xml:space="preserve"><value>Save the scan to a file</value></data>
+  <data name="Key_SelectMatches" xml:space="preserve"><value>Select every file matching the filter</value></data>
+  <data name="Key_SelectRange" xml:space="preserve"><value>Select a range</value></data>
+  <data name="Key_Settings" xml:space="preserve"><value>Settings</value></data>
+  <data name="Key_Up" xml:space="preserve"><value>Up one folder</value></data>
+  <data name="Key_WholeMap" xml:space="preserve"><value>Show the whole map</value></data>
+  <data name="Key_ZoomInOut" xml:space="preserve"><value>Zoom in or out</value></data>
+  <data name="Key_ZoomToFolder" xml:space="preserve"><value>Zoom the map to a folder</value></data>
+  <data name="LabelSize_Large" xml:space="preserve"><value>Large</value></data>
+  <data name="LabelSize_Larger" xml:space="preserve"><value>Larger</value></data>
+  <data name="LabelSize_Normal" xml:space="preserve"><value>Normal</value></data>
+  <data name="LabelSize_Smaller" xml:space="preserve"><value>Smaller</value></data>
+  <data name="LabelSize_Smallest" xml:space="preserve"><value>Smallest</value></data>
+  <data name="List_ByType" xml:space="preserve"><value>Space by file type in {0}. Click a type to filter the map.</value></data>
+  <data name="List_ChangesSince" xml:space="preserve"><value>Biggest changes since {0}</value></data>
+  <data name="List_ChangesSinceCompared" xml:space="preserve"><value>Biggest changes since the compared scan</value></data>
+  <data name="List_HintNoScan" xml:space="preserve"><value>Scan a drive or folder to see the largest items.</value></data>
+  <data name="List_LargestFiles" xml:space="preserve"><value>Largest files in {0}</value></data>
+  <data name="List_LargestFolders" xml:space="preserve"><value>Largest folders in {0}</value></data>
+  <data name="Main_AboutSpaceSharpF1" xml:space="preserve"><value>About SpaceSharp (F1)</value></data>
+  <data name="Main_AltEnter" xml:space="preserve"><value>Alt+Enter</value></data>
+  <data name="Main_AskAgainNextTime" xml:space="preserve"><value>Ask again next time</value></data>
+  <data name="Main_Backspace" xml:space="preserve"><value>Backspace</value></data>
+  <data name="Main_Bands" xml:space="preserve"><value>Bands</value></data>
+  <data name="Main_Cancel" xml:space="preserve"><value>Cancel</value></data>
+  <data name="Main_Cards" xml:space="preserve"><value>Cards</value></data>
+  <data name="Main_Change" xml:space="preserve"><value>Change</value></data>
+  <data name="Main_Changes" xml:space="preserve"><value>Changes</value></data>
+  <data name="Main_ChangesSinceLastScan" xml:space="preserve"><value>Changes since last scan</value></data>
+  <data name="Main_Classic" xml:space="preserve"><value>Classic</value></data>
+  <data name="Main_Clear" xml:space="preserve"><value>Clear</value></data>
+  <data name="Main_ClearFilterEsc" xml:space="preserve"><value>Clear filter (Esc)</value></data>
+  <data name="Main_ClickADriveOn" xml:space="preserve"><value>Click a drive on the left, or choose a folder to scan.</value></data>
+  <data name="Main_ClickADriveTo" xml:space="preserve"><value>Click a drive to scan it.</value></data>
+  <data name="Main_Close" xml:space="preserve"><value>Close</value></data>
+  <data name="Main_ColorBy" xml:space="preserve"><value>Color by</value></data>
+  <data name="Main_CompareWithASaved" xml:space="preserve"><value>Compare with a saved scan…</value></data>
+  <data name="Main_CopyName" xml:space="preserve"><value>Copy name</value></data>
+  <data name="Main_CopyPath" xml:space="preserve"><value>Copy path</value></data>
+  <data name="Main_CtrlC" xml:space="preserve"><value>Ctrl+C</value></data>
+  <data name="Main_CtrlI" xml:space="preserve"><value>Ctrl+I</value></data>
+  <data name="Main_CtrlO" xml:space="preserve"><value>Ctrl+O</value></data>
+  <data name="Main_CtrlS" xml:space="preserve"><value>Ctrl+S</value></data>
+  <data name="Main_Del" xml:space="preserve"><value>Del</value></data>
+  <data name="Main_Depth" xml:space="preserve"><value>Depth</value></data>
+  <data name="Main_Dismiss" xml:space="preserve"><value>Dismiss</value></data>
+  <data name="Main_Done" xml:space="preserve"><value>Done</value></data>
+  <data name="Main_DoubleClick" xml:space="preserve"><value>Double-click</value></data>
+  <data name="Main_Drives" xml:space="preserve"><value>Drives</value></data>
+  <data name="Main_DrivesAndLargestItems" xml:space="preserve"><value>Drives and largest items panel (L)</value></data>
+  <data name="Main_Enter" xml:space="preserve"><value>Enter</value></data>
+  <data name="Main_EscAlsoCancels" xml:space="preserve"><value>Esc also cancels</value></data>
+  <data name="Main_EverythingThatDoesnT" xml:space="preserve"><value>Everything that doesn't match is dimmed on the map.</value></data>
+  <data name="Main_ExportToCSV" xml:space="preserve"><value>Export to CSV</value></data>
+  <data name="Main_FileType" xml:space="preserve"><value>File type</value></data>
+  <data name="Main_Files" xml:space="preserve"><value>Files</value></data>
+  <data name="Main_Files2" xml:space="preserve"><value>files</value></data>
+  <data name="Main_Filter" xml:space="preserve"><value>Filter</value></data>
+  <data name="Main_FilterMatches" xml:space="preserve"><value>Filter matches</value></data>
+  <data name="Main_FilterOptions" xml:space="preserve"><value>Filter options</value></data>
+  <data name="Main_Flat" xml:space="preserve"><value>Flat</value></data>
+  <data name="Main_Folders" xml:space="preserve"><value>Folders</value></data>
+  <data name="Main_Folders2" xml:space="preserve"><value>folders</value></data>
+  <data name="Main_FoundSoFar" xml:space="preserve"><value>found so far</value></data>
+  <data name="Main_Home" xml:space="preserve"><value>Home</value></data>
+  <data name="Main_Inspect" xml:space="preserve"><value>Inspect</value></data>
+  <data name="Main_InstallAndRestart" xml:space="preserve"><value>Install and restart</value></data>
+  <data name="Main_LargestFiles" xml:space="preserve"><value>Largest files</value></data>
+  <data name="Main_LargestItems" xml:space="preserve"><value>Largest items</value></data>
+  <data name="Main_MapAWholeDrive" xml:space="preserve"><value>Map a whole drive in seconds</value></data>
+  <data name="Main_MoveToRecycleBin" xml:space="preserve"><value>Move to Recycle Bin</value></data>
+  <data name="Main_NoFilter" xml:space="preserve"><value>No filter</value></data>
+  <data name="Main_NotNow" xml:space="preserve"><value>Not now</value></data>
+  <data name="Main_Open" xml:space="preserve"><value>Open</value></data>
+  <data name="Main_OpenSavedScan" xml:space="preserve"><value>Open saved scan…</value></data>
+  <data name="Main_Palette" xml:space="preserve"><value>Palette</value></data>
+  <data name="Main_Properties" xml:space="preserve"><value>Properties</value></data>
+  <data name="Main_ReadingTheFolderTree" xml:space="preserve"><value>Reading the folder tree. The map appears when it's done.</value></data>
+  <data name="Main_RescanF5" xml:space="preserve"><value>Rescan (F5)</value></data>
+  <data name="Main_RescanThisFolder" xml:space="preserve"><value>Rescan this folder</value></data>
+  <data name="Main_RestartAsAdministrator" xml:space="preserve"><value>Restart as administrator</value></data>
+  <data name="Main_SaveScanAs" xml:space="preserve"><value>Save scan as…</value></data>
+  <data name="Main_ScanFile" xml:space="preserve"><value>Scan file</value></data>
+  <data name="Main_ScanFolder" xml:space="preserve"><value>Scan folder</value></data>
+  <data name="Main_Scanning" xml:space="preserve"><value>Scanning…</value></data>
+  <data name="Main_SelectEveryMatchingFile" xml:space="preserve"><value>Select every matching file (Ctrl+A), then Del to recycle them</value></data>
+  <data name="Main_SelectEverythingInThis" xml:space="preserve"><value>Select everything in this folder</value></data>
+  <data name="Main_SelectMatches" xml:space="preserve"><value>Select matches</value></data>
+  <data name="Main_SettingsCtrl" xml:space="preserve"><value>Settings (Ctrl+,)</value></data>
+  <data name="Main_ShowInExplorer" xml:space="preserve"><value>Show in Explorer</value></data>
+  <data name="Main_ShowOnlyThisFile" xml:space="preserve"><value>Show only this file type</value></data>
+  <data name="Main_ShowWholeMap" xml:space="preserve"><value>Show whole map</value></data>
+  <data name="Main_ShowWholeMapHome" xml:space="preserve"><value>Show whole map (Home / Ctrl+0)</value></data>
+  <data name="Main_Soft" xml:space="preserve"><value>Soft</value></data>
+  <data name="Main_SpaceSharpCanReadThe" xml:space="preserve"><value>SpaceSharp can read the drive's file table directly instead of walking every folder. That needs administrator rights, so the app has to restart once. Folders and other file systems scan the normal way either way.</value></data>
+  <data name="Main_StopComparing" xml:space="preserve"><value>Stop comparing</value></data>
+  <data name="Main_Style" xml:space="preserve"><value>Style</value></data>
+  <data name="Main_Theme" xml:space="preserve"><value>Theme</value></data>
+  <data name="Main_ThisFolder" xml:space="preserve"><value>This folder</value></data>
+  <data name="Main_Tiles" xml:space="preserve"><value>Tiles</value></data>
+  <data name="Main_TopFolder" xml:space="preserve"><value>Top folder</value></data>
+  <data name="Main_Types" xml:space="preserve"><value>Types</value></data>
+  <data name="Main_UpOneFolder" xml:space="preserve"><value>Up one folder</value></data>
+  <data name="Main_UpOneFolderBackspace" xml:space="preserve"><value>Up one folder (Backspace / mouse back)</value></data>
+  <data name="Main_ZoomInMouseWheel" xml:space="preserve"><value>Zoom in (mouse wheel / +)</value></data>
+  <data name="Main_ZoomOutMouseWheel" xml:space="preserve"><value>Zoom out (mouse wheel / −)</value></data>
+  <data name="Main_ZoomToFolder" xml:space="preserve"><value>Zoom to folder</value></data>
+  <data name="MapStyle_Bands" xml:space="preserve"><value>Bands</value></data>
+  <data name="MapStyle_Cards" xml:space="preserve"><value>Cards</value></data>
+  <data name="MapStyle_Classic" xml:space="preserve"><value>Classic</value></data>
+  <data name="MapStyle_Flat" xml:space="preserve"><value>Flat</value></data>
+  <data name="MapStyle_Soft" xml:space="preserve"><value>Soft</value></data>
+  <data name="MapStyle_Tiles" xml:space="preserve"><value>Tiles</value></data>
+  <data name="Menu_ContentsOf" xml:space="preserve"><value>Contents of {0}</value></data>
+  <data name="Menu_Delete" xml:space="preserve"><value>Move to Recycle Bin</value></data>
+  <data name="Menu_DeleteMany" xml:space="preserve"><value>Move {0:N0} items to Recycle Bin</value></data>
+  <data name="Menu_Inspect" xml:space="preserve"><value>Inspect</value></data>
+  <data name="Menu_InspectMany" xml:space="preserve"><value>Inspect {0:N0} items</value></data>
+  <data name="Menu_RescanName" xml:space="preserve"><value>Rescan {0}</value></data>
+  <data name="Menu_RescanThis" xml:space="preserve"><value>Rescan this folder</value></data>
+  <data name="Menu_SelectIn" xml:space="preserve"><value>Select everything in {0}</value></data>
+  <data name="Menu_SelectInThis" xml:space="preserve"><value>Select everything in this folder</value></data>
+  <data name="Menu_ShowOnlyExt" xml:space="preserve"><value>Show only *{0} files</value></data>
+  <data name="Menu_ShowOnlyType" xml:space="preserve"><value>Show only this file type</value></data>
+  <data name="Menu_ThisFolder" xml:space="preserve"><value>This folder</value></data>
+  <data name="Mft_Building" xml:space="preserve"><value>Building the map</value></data>
+  <data name="Mft_CannotOpen" xml:space="preserve"><value>Cannot open volume {0}. Administrator rights are needed to read the file table.</value></data>
+  <data name="Mft_Reading" xml:space="preserve"><value>Reading the file table: {0:N0} of {1:N0} records</value></data>
+  <data name="Palette_GroupBuiltIn" xml:space="preserve"><value>Built in</value></data>
+  <data name="Palette_GroupCustom" xml:space="preserve"><value>Custom</value></data>
+  <data name="Palettes_CouldNotOpen" xml:space="preserve"><value>Couldn't open the palettes folder</value></data>
+  <data name="Palettes_LoadedMany" xml:space="preserve"><value> {0} custom palettes loaded.</value></data>
+  <data name="Palettes_LoadedOne" xml:space="preserve"><value> 1 custom palette loaded.</value></data>
+  <data name="Palettes_NotLoaded" xml:space="preserve"><value> Not loaded: </value></data>
+  <data name="Palettes_Note" xml:space="preserve"><value>Add your own: one JSON file per palette in the palettes folder. The folder comes with an example and a README.</value></data>
+  <data name="Palettes_OpenFolder" xml:space="preserve"><value>Open folder</value></data>
+  <data name="Palettes_Reload" xml:space="preserve"><value>Reload</value></data>
+  <data name="Period_Day" xml:space="preserve"><value>1 day</value></data>
+  <data name="Period_Days" xml:space="preserve"><value>{0} days</value></data>
+  <data name="Period_Month" xml:space="preserve"><value>1 month</value></data>
+  <data name="Period_Months" xml:space="preserve"><value>{0} months</value></data>
+  <data name="Period_Week" xml:space="preserve"><value>1 week</value></data>
+  <data name="Period_Weeks" xml:space="preserve"><value>{0} weeks</value></data>
+  <data name="Period_Year" xml:space="preserve"><value>1 year</value></data>
+  <data name="Period_Years" xml:space="preserve"><value>{0} years</value></data>
+  <data name="Preset_BigAndOld" xml:space="preserve"><value>Big and old</value></data>
+  <data name="Preset_BigVideos" xml:space="preserve"><value>Big videos</value></data>
+  <data name="Preset_InstallersArchives" xml:space="preserve"><value>Installers &amp; archives</value></data>
+  <data name="Preset_LargeFiles" xml:space="preserve"><value>Large files</value></data>
+  <data name="Preset_RecentlyChanged" xml:space="preserve"><value>Recently changed</value></data>
+  <data name="Preset_Untouched2Years" xml:space="preserve"><value>Untouched for 2 years</value></data>
+  <data name="ScanFile_Newer" xml:space="preserve"><value>This scan file was written by a newer SpaceSharp.</value></data>
+  <data name="ScanFile_NotAScan" xml:space="preserve"><value>Not a SpaceSharp scan file.</value></data>
+  <data name="Scan_FolderMissing" xml:space="preserve"><value>The folder "{0}" does not exist.</value></data>
+  <data name="Scan_Rate" xml:space="preserve"><value>{0:0} files/s</value></data>
+  <data name="Scan_RateK" xml:space="preserve"><value>{0:0.0}k files/s</value></data>
+  <data name="Scan_ReadingMft" xml:space="preserve"><value>Reading the NTFS file table directly. Every file on the drive in one pass.</value></data>
+  <data name="Scan_ReadingMftSized" xml:space="preserve"><value>Reading the NTFS file table directly, {0} of used space. Every file on the drive in one pass.</value></data>
+  <data name="Scan_ReadingTree" xml:space="preserve"><value>Reading the folder tree. The map appears when it's done.</value></data>
+  <data name="Scan_ReadingUsed" xml:space="preserve"><value>Reading {0} of used space. The map appears when it's done.</value></data>
+  <data name="Scan_Title" xml:space="preserve"><value>Scanning {0}</value></data>
+  <data name="Scan_TitleMft" xml:space="preserve"><value>Scanning {0} from the file table</value></data>
+  <data name="Setting_GroupingName" xml:space="preserve"><value>Grouping of small items</value></data>
+  <data name="SettingsWin_Close" xml:space="preserve"><value>Close</value></data>
+  <data name="SettingsWin_ResetToDefaults" xml:space="preserve"><value>Reset to defaults</value></data>
+  <data name="SettingsWin_Settings" xml:space="preserve"><value>Settings</value></data>
+  <data name="Settings_AnimateZoom" xml:space="preserve"><value>Animate zoom</value></data>
+  <data name="Settings_AnimateZoom_Desc" xml:space="preserve"><value>Fly into folders instead of jumping to them.</value></data>
+  <data name="Settings_Appearance" xml:space="preserve"><value>Appearance</value></data>
+  <data name="Settings_CheckUpdates" xml:space="preserve"><value>Check for updates on startup</value></data>
+  <data name="Settings_CheckUpdates_Desc" xml:space="preserve"><value>Looks for a new version on GitHub a few seconds after SpaceSharp starts, and offers to install it.</value></data>
+  <data name="Settings_CheckUpdates_Portable" xml:space="preserve"><value>Only available when SpaceSharp was installed with the setup program. The portable exe doesn't update itself.</value></data>
+  <data name="Settings_ColorBy" xml:space="preserve"><value>Color by</value></data>
+  <data name="Settings_ColorBy_Desc" xml:space="preserve"><value>Top folder: one hue per top-level folder, lighter with each level inside. Folder depth: a different color per level. File type: files colored by type. Change: what grew or shrank since the previous scan of the same place.</value></data>
+  <data name="Settings_ConfirmDelete" xml:space="preserve"><value>Confirm before moving to the Recycle Bin</value></data>
+  <data name="Settings_ConfirmDelete_Desc" xml:space="preserve"><value>Ask before deleting. Deleted items can always be restored from the Recycle Bin.</value></data>
+  <data name="Settings_CustomPalettes" xml:space="preserve"><value>Custom palettes</value></data>
+  <data name="Settings_FastScan" xml:space="preserve"><value>Fast NTFS scan</value></data>
+  <data name="Settings_FastScan_Desc" xml:space="preserve"><value>Reads the drive's file table directly, so a whole drive is mapped in seconds instead of minutes. Needs administrator rights; without them, or on other file systems and single folders, the normal scan is used. Hard links are always counted once.</value></data>
+  <data name="Settings_GroupSmall" xml:space="preserve"><value>Group small items</value></data>
+  <data name="Settings_GroupSmall_Desc" xml:space="preserve"><value>Folders with hundreds of small files show one "312 files" box instead of a grid of specks. Zooming in shows them individually. Shortcut: G.</value></data>
+  <data name="Settings_HardLinks" xml:space="preserve"><value>Count hard links once</value></data>
+  <data name="Settings_HardLinks_Desc" xml:space="preserve"><value>Reads every file's link count so data with several names, such as Windows' WinSxS folder, is counted once. Slower on large drives.</value></data>
+  <data name="Settings_HoverDetails" xml:space="preserve"><value>Hover details</value></data>
+  <data name="Settings_HoverDetails_Desc" xml:space="preserve"><value>Show a small card with size, size on disk, file count and last modified date next to the mouse.</value></data>
+  <data name="Settings_IncludeHidden" xml:space="preserve"><value>Include hidden and system files</value></data>
+  <data name="Settings_IncludeHidden_Desc" xml:space="preserve"><value>Off leaves out files and folders with the Hidden or System attribute, such as pagefile.sys.</value></data>
+  <data name="Settings_LabelSize" xml:space="preserve"><value>Label size</value></data>
+  <data name="Settings_LabelSize_Desc" xml:space="preserve"><value>Text size on the map, from Smallest to Larger. Title bars shrink and grow to match.</value></data>
+  <data name="Settings_LeaveOut" xml:space="preserve"><value>Leave out</value></data>
+  <data name="Settings_LeaveOut_Desc" xml:space="preserve"><value>Names to skip, with everything inside them. One wildcard per line, matched against file and folder names, not paths. Examples: node_modules, $Recycle.Bin, *.tmp</value></data>
+  <data name="Settings_Map" xml:space="preserve"><value>Map</value></data>
+  <data name="Settings_MapStyle" xml:space="preserve"><value>Map style</value></data>
+  <data name="Settings_MapStyle_Desc" xml:space="preserve"><value>How boxes are drawn. Classic: title bars, borders and soft shading. Flat: plain fills and thin lines. Tiles: flat, gapped, rounded. Cards: raised folders. Bands: dark title band. Soft: rounded pastel blocks.</value></data>
+  <data name="Settings_MergeChains" xml:space="preserve"><value>Merge single-folder chains</value></data>
+  <data name="Settings_MergeChains_Desc" xml:space="preserve"><value>Draw folders that only contain one folder (Users › you › AppData › Local) as one box with a combined title.</value></data>
+  <data name="Settings_OutlinedLabels" xml:space="preserve"><value>Outlined labels</value></data>
+  <data name="Settings_OutlinedLabels_Desc" xml:space="preserve"><value>A thin contrasting outline around every label, so text stays readable on any color. Recommended if you find the map hard to read.</value></data>
+  <data name="Settings_Palette" xml:space="preserve"><value>Palette</value></data>
+  <data name="Settings_PaletteCustomSuffix" xml:space="preserve"><value>{0}  (custom)</value></data>
+  <data name="Settings_Palette_Desc" xml:space="preserve"><value>The colors used for boxes in the map.</value></data>
+  <data name="Settings_Reopen" xml:space="preserve"><value>Reopen the last scan on startup</value></data>
+  <data name="Settings_Reopen_Desc" xml:space="preserve"><value>Shows yesterday's map the moment the app opens, compared with the scan before it. Every drive scan is kept in %LocalAppData%\SpaceSharp\scans; F5 rescans.</value></data>
+  <data name="Settings_ResetQuestion" xml:space="preserve"><value>Reset every setting to its default value?</value></data>
+  <data name="Settings_ResetTitle" xml:space="preserve"><value>Reset settings</value></data>
+  <data name="Settings_Safety" xml:space="preserve"><value>Safety</value></data>
+  <data name="Settings_Scanning" xml:space="preserve"><value>Scanning</value></data>
+  <data name="Settings_Scanning_Desc" xml:space="preserve"><value>Changes here take effect on the next scan (F5).</value></data>
+  <data name="Settings_ShowFreeSpace" xml:space="preserve"><value>Show free space</value></data>
+  <data name="Settings_ShowFreeSpace_Desc" xml:space="preserve"><value>Add a gray block for the unused space when a whole drive is scanned. It grows when you delete files.</value></data>
+  <data name="Settings_SidePanel" xml:space="preserve"><value>Show side panel</value></data>
+  <data name="Settings_SidePanel_Desc" xml:space="preserve"><value>The panel on the left with your drives and the largest files, folders and types. Shortcut: L.</value></data>
+  <data name="Settings_SizeMeasure" xml:space="preserve"><value>Size measure</value></data>
+  <data name="Settings_SizeMeasure_Desc" xml:space="preserve"><value>Size on disk uses the compressed size of compressed, sparse and cloud files and rounds every file up to whole clusters, like Explorer's "Size on disk".</value></data>
+  <data name="Settings_Theme" xml:space="preserve"><value>Theme</value></data>
+  <data name="Settings_Theme_Desc" xml:space="preserve"><value>Follow the Windows setting, or always use light or dark.</value></data>
+  <data name="Settings_Updates" xml:space="preserve"><value>Updates</value></data>
+  <data name="SizeMeasure_FileSize" xml:space="preserve"><value>File size</value></data>
+  <data name="SizeMeasure_OnDisk" xml:space="preserve"><value>Size on disk</value></data>
+  <data name="Status_ColorBy" xml:space="preserve"><value>Color by: {0}</value></data>
+  <data name="Status_ComparedWith" xml:space="preserve"><value>  Compared with {0}.</value></data>
+  <data name="Status_ComparedWithSuffix" xml:space="preserve"><value>  ·  compared with the scan from {0}</value></data>
+  <data name="Status_Comparing" xml:space="preserve"><value>Comparing with the scan from {0}.</value></data>
+  <data name="Status_ComparingDifferentMethod" xml:space="preserve"><value>Comparing with the scan from {0}. It was made differently ({1} vs {2}), so some differences are down to that, not to the disk.</value></data>
+  <data name="Status_ComparingOtherRoot" xml:space="preserve"><value>Comparing with a scan of {0} from {1}; names are matched folder by folder.</value></data>
+  <data name="Status_ComparisonCleared" xml:space="preserve"><value>Comparison cleared.</value></data>
+  <data name="Status_Exported" xml:space="preserve"><value>Exported {0:N0} rows to {1} (a basic CSV: fixed columns, more options later)</value></data>
+  <data name="Status_FileTableSuffix" xml:space="preserve"><value> · file table</value></data>
+  <data name="Status_MapStyle" xml:space="preserve"><value>Map style: {0}</value></data>
+  <data name="Status_MovedMany" xml:space="preserve"><value>Moved {0:N0} items, {1}, to the Recycle Bin</value></data>
+  <data name="Status_MovedOne" xml:space="preserve"><value>Moved {0} to the Recycle Bin</value></data>
+  <data name="Status_OpenedScan" xml:space="preserve"><value>{0} {1}: {2:N0} files · {3}. F5 rescans.</value></data>
+  <data name="Status_OpenedVerb" xml:space="preserve"><value>Opened the scan from</value></data>
+  <data name="Status_OpeningLastScan" xml:space="preserve"><value>Opening the last scan…</value></data>
+  <data name="Status_PreviousScanDifferent" xml:space="preserve"><value>The previous scan was made differently ({0} vs {1}), so it isn't compared. The next scan of the same kind will be.</value></data>
+  <data name="Status_RescanCancelled" xml:space="preserve"><value>Rescan cancelled</value></data>
+  <data name="Status_Rescanned" xml:space="preserve"><value>Rescanned {0}: {1:N0} files · {2}</value></data>
+  <data name="Status_Rescanning" xml:space="preserve"><value>Rescanning {0}…</value></data>
+  <data name="Status_Saved" xml:space="preserve"><value>Saved {0}</value></data>
+  <data name="Status_ScanCancelled" xml:space="preserve"><value>Scan cancelled</value></data>
+  <data name="Status_ScanSummary1" xml:space="preserve"><value>{0:N0} files · {1:N0} folders · </value></data>
+  <data name="Status_ScanSummary2" xml:space="preserve"><value>{0} · {1:0.0} s</value></data>
+  <data name="Status_Selection" xml:space="preserve"><value>{0:N0} items selected · {1} · {2:N0} files    Del moves them to the Recycle Bin</value></data>
+  <data name="Theme_Dark" xml:space="preserve"><value>Theme: Dark</value></data>
+  <data name="Theme_DarkName" xml:space="preserve"><value>Dark</value></data>
+  <data name="Theme_Light" xml:space="preserve"><value>Theme: Light</value></data>
+  <data name="Theme_LightName" xml:space="preserve"><value>Light</value></data>
+  <data name="Theme_MatchWindows" xml:space="preserve"><value>Match Windows</value></data>
+  <data name="Theme_System" xml:space="preserve"><value>Theme: Match Windows ({0})</value></data>
+  <data name="Theme_WordDark" xml:space="preserve"><value>dark</value></data>
+  <data name="Theme_WordLight" xml:space="preserve"><value>light</value></data>
+  <data name="Tip_AccessDenied" xml:space="preserve"><value>Some content could not be read</value></data>
+  <data name="Tip_ChangeModeNeedsBaseline" xml:space="preserve"><value>Scan the same drive or folder twice, or open a saved scan to compare with.</value></data>
+  <data name="Tip_Files" xml:space="preserve"><value>Files</value></data>
+  <data name="Tip_Folders" xml:space="preserve"><value>Folders</value></data>
+  <data name="Tip_FoldersInside" xml:space="preserve"><value>{0:N0} directly inside</value></data>
+  <data name="Tip_FreeSpace" xml:space="preserve"><value>Free space</value></data>
+  <data name="Tip_Hint" xml:space="preserve"><value>Right-click for actions · Ctrl+I to inspect</value></data>
+  <data name="Tip_HintGroup" xml:space="preserve"><value>Zoom in to see these items</value></data>
+  <data name="Tip_In" xml:space="preserve"><value>in {0}</value></data>
+  <data name="Tip_Largest" xml:space="preserve"><value>Largest</value></data>
+  <data name="Tip_NoExtension" xml:space="preserve"><value>no extension · {0}</value></data>
+  <data name="Tip_Note" xml:space="preserve"><value>Note</value></data>
+  <data name="Tip_OfDrive" xml:space="preserve"><value>Of drive</value></data>
+  <data name="Tip_OnDisk" xml:space="preserve"><value>On disk</value></data>
+  <data name="Tip_PercentOf" xml:space="preserve"><value>{0:0.#}% of {1}</value></data>
+  <data name="Tip_PercentOf2" xml:space="preserve"><value>{0:0.##}% of {1}</value></data>
+  <data name="Tip_Share" xml:space="preserve"><value>Share</value></data>
+  <data name="Tip_Size" xml:space="preserve"><value>Size</value></data>
+  <data name="Tip_SizeHardLink" xml:space="preserve"><value>{0} (hard link, counted elsewhere)</value></data>
+  <data name="Toggle_State" xml:space="preserve"><value>{0} {1}</value></data>
+  <data name="TopList_FilesIn" xml:space="preserve"><value>{0:N0} files · {1}</value></data>
+  <data name="TopList_FilesOfType" xml:space="preserve"><value>{0:N0} files · {1}</value></data>
+  <data name="TopList_NoExtension" xml:space="preserve"><value>(no extension)</value></data>
+  <data name="Update_Available" xml:space="preserve"><value>SpaceSharp {0} is available. You're on {1}.</value></data>
+  <data name="Update_Downloading" xml:space="preserve"><value>Downloading update… {0}%</value></data>
+  <data name="Update_Failed" xml:space="preserve"><value>The update could not be installed: {0}</value></data>
+  <data name="Word_Off" xml:space="preserve"><value>off</value></data>
+  <data name="Word_On" xml:space="preserve"><value>on</value></data>
+  <data name="Dialog_Ok" xml:space="preserve"><value>OK</value></data>
+  <data name="Dialog_Cancel" xml:space="preserve"><value>Cancel</value></data>
+  <data name="Settings_ResetButton" xml:space="preserve"><value>Reset</value></data>
+  <data name="About_BrowserFailed" xml:space="preserve"><value>Couldn't open the browser.
+
+{0}
+
+{1}</value></data>
+  <data name="About_Description" xml:space="preserve"><value>See where your disk space went. SpaceSharp maps every file and folder as a box sized by the space it uses, so the biggest ones stand out.</value></data>
+  <data name="About_SystemLine" xml:space="preserve"><value>{0} on {1}</value></data>
+  <data name="About_CreditsText" xml:space="preserve"><value>Squarified treemap layout by Bruls, Huizing and van Wijk (2000). Inspired by SpaceMonger. Interface icons from Segoe Fluent Icons.</value></data>
+  <data name="Settings_SavedIn" xml:space="preserve"><value>Settings are saved in %AppData%\SpaceSharp\settings.json.</value></data>
+  <data name="Main_FilterPlaceholder" xml:space="preserve"><value>Filter, e.g. videos over 500MB older than 1 year</value></data>
+  <data name="Group_Files" xml:space="preserve"><value>files</value></data>
+  <data name="Group_Folders" xml:space="preserve"><value>folders</value></data>
+  <data name="Group_Items" xml:space="preserve"><value>items</value></data>
+  <data name="Drive_Removable" xml:space="preserve"><value>Removable</value></data>
+  <data name="Drive_Network" xml:space="preserve"><value>Network</value></data>
+  <data name="Drive_Optical" xml:space="preserve"><value>Optical</value></data>
+</root>

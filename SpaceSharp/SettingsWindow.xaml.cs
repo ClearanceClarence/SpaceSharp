@@ -30,70 +30,73 @@ public partial class SettingsWindow : Window
     {
         Body.Children.Clear();
 
-        Section("Appearance");
-        Row("Theme", "Follow the Windows setting, or always use light or dark.",
-            Combo(new[] { "Match Windows", "Light", "Dark" }, (int)ThemeManager.Choice,
+        Section(Strings.Get("Settings_Language"));
+        Row(Strings.Get("Settings_Language_AppLanguage"), Strings.Get("Settings_Language_Description"), LanguageCombo());
+
+        Section(Strings.Get("Settings_Appearance"));
+        Row(Strings.Get("Settings_Theme"), Strings.Get("Settings_Theme_Desc"),
+            Combo(new[] { Strings.Get("Theme_MatchWindows"), Strings.Get("Theme_LightName"), Strings.Get("Theme_DarkName") }, (int)ThemeManager.Choice,
                 i => _settings.Theme = ((AppTheme)i).ToString()));
-        Row("Palette", "The colors used for boxes in the map.",
-            Combo(Palette.Schemes.Select(s => s.IsCustom ? $"{s.Name}  (custom)" : s.Name).ToArray(), Palette.Schemes.ToList().IndexOf(Palette.Find(_settings.Palette)),
+        Row(Strings.Get("Settings_Palette"), Strings.Get("Settings_Palette_Desc"),
+            Combo(Palette.Schemes.Select(s => s.IsCustom ? Strings.Format("Settings_PaletteCustomSuffix", s.Name) : s.Name).ToArray(), Palette.Schemes.ToList().IndexOf(Palette.Find(_settings.Palette)),
                 i => _settings.Palette = Palette.Schemes[i].Name));
-        Row("Color by", "Top folder: one hue per top-level folder, lighter with each level inside. Folder depth: a different color per level. File type: files colored by type. Change: what grew or shrank since the previous scan of the same place.",
-            Combo(new[] { "Top folder", "Folder depth", "File type", "Change since last scan" },
+        Row(Strings.Get("Settings_ColorBy"), Strings.Get("Settings_ColorBy_Desc"),
+            Combo(new[] { Strings.Get("ColorModeName_TopFolder"), Strings.Get("ColorModeName_Depth"), Strings.Get("ColorModeName_FileType"), Strings.Get("ColorModeName_Change") },
                 Enum.TryParse<ColorMode>(_settings.ColorMode, out var colorMode) ? (int)colorMode : 0,
                 i => _settings.ColorMode = ((ColorMode)i).ToString()));
-        Row("Map style", "How boxes are drawn. Classic: title bars, borders and soft shading. Flat: plain fills and thin lines. Tiles: flat, gapped, rounded. Cards: raised folders. Bands: dark title band. Soft: rounded pastel blocks.",
-            Combo(Enum.GetNames<MapStyle>(), Math.Max(0, Array.IndexOf(Enum.GetNames<MapStyle>(), _settings.MapStyle ?? "Classic")),
+        Row(Strings.Get("Settings_MapStyle"), Strings.Get("Settings_MapStyle_Desc"),
+            Combo(Enum.GetNames<MapStyle>().Select(n => Strings.Get("MapStyle_" + n)).ToArray(), Math.Max(0, Array.IndexOf(Enum.GetNames<MapStyle>(), _settings.MapStyle ?? "Classic")),
                 i => _settings.MapStyle = Enum.GetNames<MapStyle>()[i]));
-        Row("Label size", "Text size on the map, from Smallest to Larger. Title bars shrink and grow to match.",
-            Combo(LabelSizes, Array.IndexOf(LabelSizes, _settings.LabelSize ?? "Normal"),
+        Row(Strings.Get("Settings_LabelSize"), Strings.Get("Settings_LabelSize_Desc"),
+            Combo(LabelSizes.Select(n => Strings.Get("LabelSize_" + n)).ToArray(), Array.IndexOf(LabelSizes, _settings.LabelSize ?? "Normal"),
                 i => _settings.LabelSize = LabelSizes[i]));
-        Row("Outlined labels", "A thin contrasting outline around every label, so text stays readable on any color. Recommended if you find the map hard to read.",
+        Row(Strings.Get("Settings_OutlinedLabels"), Strings.Get("Settings_OutlinedLabels_Desc"),
             Switch(_settings.LabelHalo, v => _settings.LabelHalo = v));
 
-        Row("Custom palettes", PaletteNote(),
+        Row(Strings.Get("Settings_CustomPalettes"), PaletteNote(),
             PaletteButtons());
 
-        Section("Map");
-        Row("Size measure", "Size on disk uses the compressed size of compressed, sparse and cloud files and rounds every file up to whole clusters, like Explorer's \"Size on disk\".",
-            Combo(new[] { "File size", "Size on disk" }, _settings.SizeOnDisk ? 1 : 0, i => _settings.SizeOnDisk = i == 1));
-        Row("Show free space", "Add a gray block for the unused space when a whole drive is scanned. It grows when you delete files.",
+        Section(Strings.Get("Settings_Map"));
+        Row(Strings.Get("Settings_SizeMeasure"), Strings.Get("Settings_SizeMeasure_Desc"),
+            Combo(new[] { Strings.Get("SizeMeasure_FileSize"), Strings.Get("SizeMeasure_OnDisk") }, _settings.SizeOnDisk ? 1 : 0, i => _settings.SizeOnDisk = i == 1));
+        Row(Strings.Get("Settings_ShowFreeSpace"), Strings.Get("Settings_ShowFreeSpace_Desc"),
             Switch(_settings.ShowFreeSpace, v => _settings.ShowFreeSpace = v));
-        Row("Merge single-folder chains", "Draw folders that only contain one folder (Users › you › AppData › Local) as one box with a combined title.",
+        Row(Strings.Get("Settings_MergeChains"), Strings.Get("Settings_MergeChains_Desc"),
             Switch(_settings.MergeChains, v => _settings.MergeChains = v));
-        Row("Group small items", "Folders with hundreds of small files show one \"312 files\" box instead of a grid of specks. Zooming in shows them individually. Shortcut: G.",
+        Row(Strings.Get("Settings_GroupSmall"), Strings.Get("Settings_GroupSmall_Desc"),
             Switch(_settings.GroupSmallItems, v => _settings.GroupSmallItems = v));
-        Row("Hover details", "Show a small card with size, size on disk, file count and last modified date next to the mouse.",
+        Row(Strings.Get("Settings_HoverDetails"), Strings.Get("Settings_HoverDetails_Desc"),
             Switch(_settings.ShowTooltips, v => _settings.ShowTooltips = v));
-        Row("Show side panel", "The panel on the left with your drives and the largest files, folders and types. Shortcut: L.",
+        Row(Strings.Get("Settings_SidePanel"), Strings.Get("Settings_SidePanel_Desc"),
             Switch(_settings.ShowSidePanel, v => _settings.ShowSidePanel = v));
-        Row("Animate zoom", "Fly into folders instead of jumping to them.",
+        Row(Strings.Get("Settings_AnimateZoom"), Strings.Get("Settings_AnimateZoom_Desc"),
             Switch(_settings.AnimateZoom, v => _settings.AnimateZoom = v));
 
-        Section("Scanning", "Changes here take effect on the next scan (F5).");
-        Row("Fast NTFS scan", "Reads the drive's file table directly, so a whole drive is mapped in seconds instead of minutes. Needs administrator rights; without them, or on other file systems and single folders, the normal scan is used. Hard links are always counted once.",
+        Section(Strings.Get("Settings_Scanning"), Strings.Get("Settings_Scanning_Desc"));
+        Row(Strings.Get("Settings_FastScan"), Strings.Get("Settings_FastScan_Desc"),
             Switch(_settings.FastNtfsScan, v => _settings.FastNtfsScan = v));
-        Row("Leave out", "Names to skip, with everything inside them. One wildcard per line, matched against file and folder names, not paths. Examples: node_modules, $Recycle.Bin, *.tmp",
+        Row(Strings.Get("Settings_LeaveOut"), Strings.Get("Settings_LeaveOut_Desc"),
             MultiLine(_settings.ExcludePatterns, v => _settings.ExcludePatterns = v));
-        Row("Reopen the last scan on startup", "Shows yesterday's map the moment the app opens, compared with the scan before it. Every drive scan is kept in %LocalAppData%\\SpaceSharp\\scans; F5 rescans.",
+        Row(Strings.Get("Settings_Reopen"), Strings.Get("Settings_Reopen_Desc"),
             Switch(_settings.ReopenLastScan, v => _settings.ReopenLastScan = v));
-        Row("Include hidden and system files", "Off leaves out files and folders with the Hidden or System attribute, such as pagefile.sys.",
+        Row(Strings.Get("Settings_IncludeHidden"), Strings.Get("Settings_IncludeHidden_Desc"),
             Switch(_settings.IncludeHidden, v => _settings.IncludeHidden = v));
-        Row("Count hard links once", "Reads every file's link count so data with several names, such as Windows' WinSxS folder, is counted once. Slower on large drives.",
+        Row(Strings.Get("Settings_HardLinks"), Strings.Get("Settings_HardLinks_Desc"),
             Switch(_settings.DetectHardLinks, v => _settings.DetectHardLinks = v));
 
-        Section("Updates");
-        Row("Check for updates on startup", Updater.Instance.IsInstalled
-                ? "Looks for a new version on GitHub a few seconds after SpaceSharp starts, and offers to install it."
-                : "Only available when SpaceSharp was installed with the setup program. The portable exe doesn't update itself.",
+        Section(Strings.Get("Settings_Updates"));
+        Row(Strings.Get("Settings_CheckUpdates"), Updater.Instance.IsInstalled
+                ? Strings.Get("Settings_CheckUpdates_Desc")
+                : Strings.Get("Settings_CheckUpdates_Portable"),
             Switch(_settings.CheckForUpdates, v => _settings.CheckForUpdates = v));
 
-        Section("Safety");
-        Row("Confirm before moving to the Recycle Bin", "Ask before deleting. Deleted items can always be restored from the Recycle Bin.",
+        Section(Strings.Get("Settings_Safety"));
+        Row(Strings.Get("Settings_ConfirmDelete"), Strings.Get("Settings_ConfirmDelete_Desc"),
             Switch(_settings.ConfirmDelete, v => _settings.ConfirmDelete = v));
 
         var note = Themed(new TextBlock
         {
-            Text = "Settings are saved in %AppData%\\SpaceSharp\\settings.json.",
+            Text = Strings.Get("Settings_SavedIn"),
             FontSize = 12, Margin = new Thickness(0, 0, 0, 8), TextWrapping = TextWrapping.Wrap
         }, TextBlock.ForegroundProperty, "TextDim");
         Body.Children.Add(note);
@@ -149,12 +152,34 @@ public partial class SettingsWindow : Window
         return box;
     }
 
+    private ComboBox LanguageCombo()
+    {
+        var cultures = AppLanguages.Available();
+        var labels = new List<string> { Strings.Format("Settings_Language_System", AppLanguages.DisplayName(AppLanguages.SystemCulture)) };
+        labels.AddRange(cultures.Select(AppLanguages.DisplayName));
+        int selected = 0;
+        if (!string.IsNullOrWhiteSpace(_settings.Language))
+        {
+            int i = cultures.ToList().FindIndex(c => string.Equals(c.Name, _settings.Language, StringComparison.OrdinalIgnoreCase));
+            if (i >= 0) selected = i + 1;
+        }
+        return Combo(labels.ToArray(), selected, i =>
+        {
+            string? chosen = i == 0 ? null : cultures[i - 1].Name;
+            if (chosen == _settings.Language) return;
+            _settings.Language = chosen;
+            _settings.Save();
+            string name = i == 0 ? AppLanguages.DisplayName(AppLanguages.SystemCulture) : AppLanguages.DisplayName(cultures[i - 1]);
+            if (Dialog.Confirm(this, Strings.Get("Settings_Language_RestartTitle"), Strings.Format("Settings_Language_RestartMessage", name), Strings.Get("Settings_Language_RestartNow"), Strings.Get("Settings_Language_Later"))) _main.RestartApp();
+        });
+    }
+
     private static string PaletteNote()
     {
         int custom = Palette.Schemes.Count(s => !IsBuiltIn(s));
-        string note = "Add your own: one JSON file per palette in the palettes folder. The folder comes with an example and a README.";
-        if (custom > 0) note += $" {custom} custom palette{(custom == 1 ? string.Empty : "s")} loaded.";
-        if (CustomPalettes.LastErrors.Count > 0) note += " Not loaded: " + string.Join("; ", CustomPalettes.LastErrors);
+        string note = Strings.Get("Palettes_Note");
+        if (custom > 0) note += custom == 1 ? Strings.Get("Palettes_LoadedOne") : Strings.Format("Palettes_LoadedMany", custom);
+        if (CustomPalettes.LastErrors.Count > 0) note += Strings.Get("Palettes_NotLoaded") + string.Join("; ", CustomPalettes.LastErrors);
         return note;
     }
 
@@ -163,7 +188,7 @@ public partial class SettingsWindow : Window
     private StackPanel PaletteButtons()
     {
         var panel = new StackPanel { Orientation = Orientation.Horizontal };
-        var open = new Button { Style = (Style)FindResource("ToolButton"), Content = "Open folder", Tag = "\uE838", Height = 30 };
+        var open = new Button { Style = (Style)FindResource("ToolButton"), Content = Strings.Get("Palettes_OpenFolder"), Tag = "\uE838", Height = 30 };
         open.Click += (_, _) =>
         {
             try
@@ -173,10 +198,10 @@ public partial class SettingsWindow : Window
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.ComponentModel.Win32Exception)
             {
-                MessageBox.Show(this, ex.Message, "Couldn't open the palettes folder", MessageBoxButton.OK, MessageBoxImage.Error);
+                Dialog.Error(this, Strings.Get("Palettes_CouldNotOpen"), ex.Message);
             }
         };
-        var reload = new Button { Style = (Style)FindResource("ToolButton"), Content = "Reload", Tag = "\uE72C", Height = 30, Margin = new Thickness(6, 0, 0, 0) };
+        var reload = new Button { Style = (Style)FindResource("ToolButton"), Content = Strings.Get("Palettes_Reload"), Tag = "\uE72C", Height = 30, Margin = new Thickness(6, 0, 0, 0) };
         reload.Click += (_, _) =>
         {
             Palette.Reload();
@@ -225,9 +250,7 @@ public partial class SettingsWindow : Window
 
     private void Reset_Click(object sender, RoutedEventArgs e)
     {
-        var answer = MessageBox.Show(this, "Reset every setting to its default value?", "Reset settings",
-            MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.No);
-        if (answer != MessageBoxResult.Yes) return;
+        if (!Dialog.Confirm(this, Strings.Get("Settings_ResetTitle"), Strings.Get("Settings_ResetQuestion"), Strings.Get("Settings_ResetButton"))) return;
 
         _settings.ResetToDefaults();
         _main.ApplySettings();

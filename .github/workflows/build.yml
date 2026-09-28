@@ -1,22 +1,23 @@
-name: Build
+name: Tests
+
+# Test only. This workflow never publishes, packs or uploads anything built from SpaceSharp;
+# releases are built locally with installer/release.ps1 and uploaded by hand.
 
 on:
   push:
     branches: [main]
-    paths-ignore: ['docs/**', '**.md']
+    paths-ignore: ['docs/**', '**.md', 'tools/**']
   pull_request:
     branches: [main]
-    paths-ignore: ['docs/**', '**.md']
+    paths-ignore: ['docs/**', '**.md', 'tools/**']
   workflow_dispatch:
 
-# Build and test only. This workflow never publishes or creates releases; releases are built
-# locally with installer/release.ps1 and uploaded by hand.
 permissions:
   contents: read
 
 jobs:
-  build:
-    name: Build and test
+  test:
+    name: Run the test suite
     runs-on: windows-latest
 
     steps:
@@ -26,18 +27,5 @@ jobs:
         with:
           dotnet-version: 10.0.x
 
-      - name: Restore
-        run: dotnet restore
-
-      - name: Build
-        run: dotnet build --configuration Release --no-restore
-
       - name: Test
-        run: dotnet test --configuration Release --no-build --logger "trx;LogFileName=results.trx" --results-directory TestResults
-
-      - name: Upload test results
-        if: always()
-        uses: actions/upload-artifact@v6
-        with:
-          name: test-results
-          path: TestResults/*.trx
+        run: dotnet test .\SpaceSharp.Tests\SpaceSharp.Tests.csproj --configuration Release
