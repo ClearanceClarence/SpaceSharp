@@ -256,6 +256,7 @@
   .dialog .br { display:grid; grid-template-columns:1fr 80px 56px; margin:2px 0 6px; } .dialog .br .s { text-align:right; } .dialog .br .p { text-align:right; color:var(--dim); }
   .dialog .br .bar { grid-column:1 / span 3; height:4px; border-radius:2px; background:var(--control); margin-top:3px; position:relative; } .dialog .br .bar i { position:absolute; left:0; top:0; bottom:0; border-radius:2px; background:var(--accent); }
   .start { position:absolute; inset:0; background:var(--mapbg); display:flex; flex-direction:column; }
+  .start[hidden] { display:none; }
   .start-center { flex:1; display:flex; align-items:center; justify-content:center; }
   .start-center > div { width:520px; }
   .start-head { display:flex; align-items:center; gap:14px; } .start-mark svg { width:44px; height:44px; display:block; }
