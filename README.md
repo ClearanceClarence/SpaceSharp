@@ -9,7 +9,7 @@
 
 <p align="center">
   <a href="https://github.com/ClearanceClarence/SpaceSharp/releases/latest"><img src="https://img.shields.io/github/v/release/ClearanceClarence/SpaceSharp?label=version&color=F5B82E" alt="Latest version"></a>
-  <a href="https://github.com/ClearanceClarence/SpaceSharp/actions/workflows/build.yml"><img src="https://img.shields.io/github/actions/workflow/status/ClearanceClarence/SpaceSharp/build.yml?branch=main&label=build&color=6FC2B0" alt="Build status"></a>
+  <a href="https://github.com/ClearanceClarence/SpaceSharp/actions/workflows/tests.yml"><img src="https://img.shields.io/github/actions/workflow/status/ClearanceClarence/SpaceSharp/tests.yml?branch=main&label=tests&color=6FC2B0" alt="Test status"></a>
   <a href="CHANGELOG.md"><img src="https://img.shields.io/badge/changelog-read-6FC2B0" alt="Changelog"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-F5B82E" alt="MIT License"></a>
   <img src="https://img.shields.io/badge/platform-Windows%2010%20%7C%2011-74A6CC" alt="Windows 10 and 11">
@@ -497,4 +497,4 @@ Nothing is written anywhere else, and nothing leaves the machine except the upda
 
 SpaceSharp is released under the [MIT License](LICENSE). You're free to use, modify and share it, including in commercial projects, as long as the copyright notice is kept.
 
-Made by ClearanceClarence.
+Made by ClearanceClarence.
