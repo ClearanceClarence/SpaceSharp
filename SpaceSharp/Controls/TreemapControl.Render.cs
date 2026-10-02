@@ -16,7 +16,7 @@ public sealed partial class TreemapControl
     private static readonly Typeface NormalFace = new(new FontFamily("Segoe UI"), FontStyles.Normal, FontWeights.Normal, FontStretches.Normal);
     private static readonly Typeface HeaderFace = new(new FontFamily("Segoe UI"), FontStyles.Normal, FontWeights.SemiBold, FontStretches.Normal);
 
-    private static readonly Brush BackgroundBrush = Frozen(new SolidColorBrush(Color.FromRgb(0x17, 0x17, 0x1C)));
+    private static readonly Brush BackgroundBrush = Frozen(new SolidColorBrush(Color.FromRgb(0x0D, 0x11, 0x17)));
     private static readonly Brush HeaderShade = Frozen(new SolidColorBrush(Color.FromArgb(0x30, 0x00, 0x00, 0x00)));
     private static readonly Brush TextBrush = Frozen(new SolidColorBrush(Color.FromRgb(0x14, 0x14, 0x18)));
     private static readonly Brush HoverFill = Frozen(new SolidColorBrush(Color.FromArgb(0x40, 0xFF, 0xFF, 0xFF)));
@@ -77,7 +77,7 @@ public sealed partial class TreemapControl
         {
             fill = _mapStyle switch
             {
-                MapStyle.Cards => Tint(fill, MapBackground is SolidColorBrush bg ? bg.Color : Color.FromRgb(0x17, 0x17, 0x1C), 0.15, 1),
+                MapStyle.Cards => Tint(fill, MapBackground is SolidColorBrush bg ? bg.Color : Color.FromRgb(0x0D, 0x11, 0x17), 0.15, 1),
                 MapStyle.Bands => Tint(fill, Colors.White, 0.22, 2),
                 MapStyle.Soft => Tint(fill, Colors.White, 0.15, 3),
                 _ => fill
@@ -248,7 +248,7 @@ public sealed partial class TreemapControl
         if (_dimmed.TryGetValue(fill, out var dim)) return dim;
 
         var c = fill is SolidColorBrush s ? s.Color : Colors.Gray;
-        var bg = MapBackground is SolidColorBrush b ? b.Color : Color.FromRgb(0x17, 0x17, 0x1C);
+        var bg = MapBackground is SolidColorBrush b ? b.Color : Color.FromRgb(0x0D, 0x11, 0x17);
         // Desaturate toward gray first, then blend 65% into the background.
         byte gray = (byte)Math.Round(0.299 * c.R + 0.587 * c.G + 0.114 * c.B);
         Color faded = Color.FromRgb(

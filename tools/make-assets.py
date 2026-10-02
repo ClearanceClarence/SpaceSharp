@@ -31,13 +31,13 @@ def ensure_fonts():
 
 AMBER = (0xF5, 0xB8, 0x2E)
 AMBER_DEEP = (0xD9, 0x9A, 0x12)
-CHARCOAL = (0x1E, 0x1E, 0x24)
-BASE = (0x16, 0x16, 0x1B)
-PANEL = (0x2A, 0x2A, 0x33)
-LINE = (0x44, 0x44, 0x4F)
+CHARCOAL = (0x16, 0x1B, 0x22)   # Graphite window; also the icon tile
+BASE = (0x0D, 0x11, 0x17)       # Graphite base, the same as GitHub's dark page
+PANEL = (0x21, 0x26, 0x2D)
+LINE = (0x30, 0x36, 0x3D)
 OFFWHITE = (0xF4, 0xF4, 0xF7)
-MUTED = (0xB9, 0xB9, 0xC4)
-HINT = (0x8C, 0x8C, 0x99)
+MUTED = (0xB1, 0xBA, 0xC4)
+HINT = (0x8B, 0x94, 0x9E)
 
 # The nine cells of the mark, in a 100 x 100 box: (x, y, w, h, alpha). Largest first from the top left.
 CELLS = [
@@ -212,7 +212,8 @@ def header(w=1280, h=360):
     """README header: mark, wordmark and tagline, with a quiet abstract treemap on the right. No screenshot,
     no labels, only the shape the app is about, in the brand's amber steps."""
     S = 2
-    im = Image.new('RGBA', (w * S, h * S), BASE + (255,))
+    GITHUB = (0x0D, 0x11, 0x17)   # GitHub's dark page background, so the image has no visible edge on the README
+    im = Image.new('RGBA', (w * S, h * S), GITHUB + (255,))
     d = ImageDraw.Draw(im)
     # abstract map: a handful of boxes, largest first from the top left, brightness following size
     x0, y0, mw, mh = 720 * S, 0, 560 * S, h * S
@@ -223,13 +224,13 @@ def header(w=1280, h=360):
     ]
     for bx, by, bw, bh, a in boxes:
         d.rounded_rectangle([x0 + bx * S, y0 + by * S, x0 + (bx + bw) * S - 1, y0 + (by + bh) * S - 1], radius=6 * S,
-                            fill=blend(AMBER, BASE, a * 0.34))
+                            fill=blend(AMBER, GITHUB, a * 0.34))
     # fade the map's left edge so the words sit on a clean surface
     fade = Image.new('RGBA', (w * S, h * S), (0, 0, 0, 0))
     fd = ImageDraw.Draw(fade)
     span = 300 * S
     for i in range(span):
-        fd.line([(x0 + i, 0), (x0 + i, h * S)], fill=BASE + (int(255 * (1 - i / span) ** 1.4),))
+        fd.line([(x0 + i, 0), (x0 + i, h * S)], fill=GITHUB + (int(255 * (1 - i / span) ** 1.4),))
     im.alpha_composite(fade)
     d = ImageDraw.Draw(im)
     paste_mark(im, 112 * S, (72 * S, (h // 2 - 56) * S), tile=PANEL)

@@ -2,7 +2,7 @@
 
 All notable changes to SpaceSharp. The newest release is at the top.
 
-## Unreleased
+## 1.4.0
 
 ### Translations
 - Ready for translation: every piece of user-visible text (about 450 strings across the map, menus, settings, filter panel, Inspect, About, dialogs and status line) now comes from `Resources/Strings.resx`. Settings › Language lists every language that has a `Strings.<culture>.resx` in the build, with "Same as Windows" as the default, and switching restarts the app. Ships in English and Norwegian bokmål; see CONTRIBUTING to add a language. The filter grammar stays English on purpose.
@@ -15,7 +15,8 @@ All notable changes to SpaceSharp. The newest release is at the top.
 ### Changes
 - Every prompt and error (delete confirmation, language switch, reset, failures) uses the app's own dialog in the app's colors and type instead of the Windows message box.
 - Tests cover the scan file, comparison, folder splicing, exclusion patterns and the translations: every key used in code or XAML must exist, every translation must match the English keys and placeholders, and Norwegian must load. The GitHub workflow only runs the tests; it never builds, packs or uploads release assets.
-- The README header is redrawn as a quiet abstract treemap in the brand colors, with no screenshot.
+- The dark theme moves to Graphite: GitHub's dark greys (#0D1117 base, #161B22 panels, #21262D controls) replace the warmer charcoal, so the app, the README and the repository page share one set of tones and the amber reads richer. The icon tile, installer images, website, screenshot tool and social images follow.
+- The README header is redrawn as a quiet abstract treemap on GitHub's page color, with no screenshot.
 - The start-screen offer to restart as administrator appears on every run without administrator rights; "Not now" hides it for the run.
 
 ## 1.3.0

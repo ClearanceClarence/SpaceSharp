@@ -331,7 +331,7 @@ The same steps by hand, if you prefer:
 ```powershell
 dotnet publish .\SpaceSharp\SpaceSharp.csproj -p:PublishProfile=Velopack
 vpk download github --repoUrl https://github.com/ClearanceClarence/SpaceSharp
-vpk pack --packId SpaceSharp --packVersion 1.3.1 --packDir .\publish\velopack --mainExe SpaceSharp.exe --packTitle SpaceSharp --packAuthors ClearanceClarence --icon .\SpaceSharp\Assets\SpaceSharp.ico --splashImage .\SpaceSharp\Assets\SpaceSharp-256.png --msi --instLocation Either --instWelcome .\installer\welcome.md --instLicense .\installer\license.txt --instConclusion .\installer\conclusion.md
+vpk pack --packId SpaceSharp --packVersion 1.4.0 --packDir .\publish\velopack --mainExe SpaceSharp.exe --packTitle SpaceSharp --packAuthors ClearanceClarence --icon .\SpaceSharp\Assets\SpaceSharp.ico --splashImage .\SpaceSharp\Assets\SpaceSharp-256.png --msi --instLocation Either --instWelcome .\installer\welcome.md --instLicense .\installer\license.txt --instConclusion .\installer\conclusion.md
 .\installer\brand-msi.ps1
 ```
 
@@ -450,7 +450,7 @@ Extensions and their categories are listed in `BuildExtensionMap()` in `Util/Pal
 These come from `SpaceSharp.csproj` (`Version`, `Authors`, `Copyright`, `Description`) and appear in the About window and in the exe's file properties.
 
 **Icon**
-The mark is nine cells on a charcoal tile; the gutters form the `#` in Sharp and brightness follows size. Every brand asset is generated from one definition in `tools/make-assets.py` (Python 3 with Pillow; it downloads Bricolage Grotesque from its GitHub repository for the wordmark). Running it rewrites `Assets/SpaceSharp.svg`, `SpaceSharp-small.svg` (the four-cell version used at 16 to 24 px), `SpaceSharp.ico`, `SpaceSharp-256.png`, the icons and previews in `docs/`, and the two installer bitmaps, so change the cells or colors there rather than editing the files by hand.
+The mark is nine cells on a graphite tile (`#161B22`, the same grey as the app window); the gutters form the `#` in Sharp and brightness follows size. Every brand asset is generated from one definition in `tools/make-assets.py` (Python 3 with Pillow; it downloads Bricolage Grotesque from its GitHub repository for the wordmark). Running it rewrites `Assets/SpaceSharp.svg`, `SpaceSharp-small.svg` (the four-cell version used at 16 to 24 px), `SpaceSharp.ico`, `SpaceSharp-256.png`, the icons and previews in `docs/`, and the two installer bitmaps, so change the cells or colors there rather than editing the files by hand.
 
 ## Where things are stored
 
