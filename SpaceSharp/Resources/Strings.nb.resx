@@ -513,4 +513,11 @@
   <data name="Drive_Removable" xml:space="preserve"><value>Flyttbar</value></data>
   <data name="Drive_Network" xml:space="preserve"><value>Nettverk</value></data>
   <data name="Drive_Optical" xml:space="preserve"><value>Optisk</value></data>
+  <data name="Settings_Windows" xml:space="preserve"><value>Windows</value></data>
+  <data name="Settings_ExplorerMenu" xml:space="preserve"><value>«Skann med SpaceSharp» i Utforsker</value></data>
+  <data name="Settings_ExplorerMenu_Desc" xml:space="preserve"><value>Legger til et valg i høyreklikkmenyen for mapper, stasjoner og mappebakgrunnen i Filutforsker. Bare for denne Windows-brukeren; krever ikke administratorrettigheter. Peker på denne kopien av SpaceSharp, så slå det av før du flytter den portable exe-filen.</value></data>
+  <data name="Explorer_ScanWith" xml:space="preserve"><value>Skann med SpaceSharp</value></data>
+  <data name="Settings_CommandLine" xml:space="preserve"><value>Kommandolinje</value></data>
+  <data name="Settings_CommandLine_Desc" xml:space="preserve"><value>Start SpaceSharp fra en snarvei, et skript eller Kjør-boksen med en stasjon, en mappe eller en lagret skanning.</value></data>
+  <data name="Inspect_OnDisk" xml:space="preserve"><value>På disk</value></data>
 </root>

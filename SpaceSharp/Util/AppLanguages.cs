@@ -37,7 +37,8 @@ public static class AppLanguages
     {
         if (!string.IsNullOrWhiteSpace(setting))
         {
-            try { return CultureInfo.GetCultureInfo(setting); } catch (CultureNotFoundException) { }
+            // predefinedOnly: .NET would otherwise invent a culture for any well-formed name ("not" for "not-a-code").
+            try { return CultureInfo.GetCultureInfo(setting, predefinedOnly: true); } catch (CultureNotFoundException) { }
         }
         return SystemCulture;
     }

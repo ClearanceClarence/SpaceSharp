@@ -514,4 +514,11 @@
   <data name="Drive_Removable" xml:space="preserve"><value>Removable</value></data>
   <data name="Drive_Network" xml:space="preserve"><value>Network</value></data>
   <data name="Drive_Optical" xml:space="preserve"><value>Optical</value></data>
+  <data name="Settings_Windows" xml:space="preserve"><value>Windows</value></data>
+  <data name="Settings_ExplorerMenu" xml:space="preserve"><value>"Scan with SpaceSharp" in Explorer</value></data>
+  <data name="Settings_ExplorerMenu_Desc" xml:space="preserve"><value>Adds an entry to the right-click menu of folders, drives and the folder background in File Explorer. For this Windows user only; no administrator rights needed. Points at this copy of SpaceSharp, so turn it off before moving the portable exe.</value></data>
+  <data name="Explorer_ScanWith" xml:space="preserve"><value>Scan with SpaceSharp</value></data>
+  <data name="Settings_CommandLine" xml:space="preserve"><value>Command line</value></data>
+  <data name="Settings_CommandLine_Desc" xml:space="preserve"><value>Start SpaceSharp from a shortcut, a script or the Run box with a drive, a folder or a saved scan.</value></data>
+  <data name="Inspect_OnDisk" xml:space="preserve"><value>On disk</value></data>
 </root>

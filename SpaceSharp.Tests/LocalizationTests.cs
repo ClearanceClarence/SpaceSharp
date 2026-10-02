@@ -36,11 +36,16 @@ public class LocalizationTests
         foreach (string file in Directory.EnumerateFiles(app, "*.*", SearchOption.AllDirectories))
         {
             if (!file.EndsWith(".cs") && !file.EndsWith(".xaml")) continue;
+            if (file.EndsWith("Strings.cs")) continue; // the helper's own doc comment shows the call with a placeholder key
             if (file.Contains(Path.DirectorySeparatorChar + "obj" + Path.DirectorySeparatorChar) || file.Contains(Path.DirectorySeparatorChar + "bin" + Path.DirectorySeparatorChar)) continue;
             string text = File.ReadAllText(file);
             foreach (var p in patterns)
                 foreach (Match m in p.Matches(text))
-                    used.TryAdd(m.Groups[1].Value, Path.GetFileName(file));
+                {
+                    string key = m.Groups[1].Value;
+                    if (key.EndsWith('_')) continue; // a prefix completed at runtime ("MapStyle_" + name); covered by DynamicKeysExistForEveryEnumValue
+                    used.TryAdd(key, Path.GetFileName(file));
+                }
         }
         Assert.True(used.Count > 300, $"expected hundreds of keys in use, found {used.Count}");
         var missing = used.Where(kv => !keys.Contains(kv.Key)).Select(kv => $"{kv.Key} ({kv.Value})").OrderBy(x => x).ToList();

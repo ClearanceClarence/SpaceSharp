@@ -66,6 +66,17 @@ vpk pack `
     --instConclusion .\installer\conclusion.md
 if ($LASTEXITCODE) { throw "vpk pack failed" }
 
+"== Naming the MSI"
+# vpk names the MSI after its own rules (they have changed between versions); the release, the website and
+# the winget manifest all expect exactly SpaceSharp-win-x64.msi, so rename whatever came out.
+$msi = Get-ChildItem .\Releases\*.msi | Select-Object -First 1
+if (-not $msi) { throw "vpk pack produced no .msi" }
+if ($msi.Name -ne "SpaceSharp-win-x64.msi") {
+    Remove-Item .\Releases\SpaceSharp-win-x64.msi -ErrorAction SilentlyContinue
+    Rename-Item $msi.FullName "SpaceSharp-win-x64.msi"
+    "Renamed $($msi.Name) -> SpaceSharp-win-x64.msi"
+}
+
 "== Branding the MSI"
 & (Join-Path $PSScriptRoot "brand-msi.ps1")
 

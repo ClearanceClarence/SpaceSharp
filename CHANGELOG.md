@@ -8,6 +8,10 @@ All notable changes to SpaceSharp. The newest release is at the top.
 - Ready for translation: every piece of user-visible text (about 450 strings across the map, menus, settings, filter panel, Inspect, About, dialogs and status line) now comes from `Resources/Strings.resx`. Settings › Language lists every language that has a `Strings.<culture>.resx` in the build, with "Same as Windows" as the default, and switching restarts the app. Ships in English and Norwegian bokmål; see CONTRIBUTING to add a language. The filter grammar stays English on purpose.
 - Norwegian bokmål is the first translation (`Resources/Strings.nb.resx`); Settings › Språk lists it next to "Same as Windows" and English.
 
+### Command line and Explorer
+- `SpaceSharp.exe D:\` scans right away, `SpaceSharp.exe scan.sscan` opens a saved scan, `--compare old.sscan D:\` scans and compares, `--help` lists the options.
+- Settings › Windows › "Scan with SpaceSharp" in Explorer adds a right-click entry for folders, drives and the folder background (current user only, no administrator rights). The entry is refreshed to point at the running exe on every start while the setting is on.
+
 ### Changes
 - Every prompt and error (delete confirmation, language switch, reset, failures) uses the app's own dialog in the app's colors and type instead of the Windows message box.
 - Tests cover the scan file, comparison, folder splicing, exclusion patterns and the translations: every key used in code or XAML must exist, every translation must match the English keys and placeholders, and Norwegian must load. The GitHub workflow only runs the tests; it never builds, packs or uploads release assets.

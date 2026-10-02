@@ -232,6 +232,17 @@ The smallest valid file:
 
 Comments and trailing commas are allowed in the files. A file that can't be read is listed with the reason on the Settings page, and the rest still load.
 
+## Command line and Explorer
+
+| | |
+|---|---|
+| `SpaceSharp.exe D:\` | Scan a drive or folder right away |
+| `SpaceSharp.exe scan.sscan` | Open a saved scan (`--open` does the same) |
+| `SpaceSharp.exe --compare old.sscan D:\` | Scan `D:\` and compare it with a saved scan |
+| `SpaceSharp.exe --help` | Show these options |
+
+Settings › Windows › **"Scan with SpaceSharp" in Explorer** adds an entry to the right-click menu of folders, drives and the folder background in File Explorer. It is written for the current Windows user only and needs no administrator rights; turn it off before moving the portable exe, since the entry points at the file.
+
 ## Keyboard and mouse
 
 | Input | Action |

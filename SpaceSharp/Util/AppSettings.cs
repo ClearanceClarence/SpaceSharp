@@ -30,7 +30,8 @@ internal sealed class AppSettings
     public string ExcludePatterns { get; set; } = string.Empty;   // one wildcard per line, matched against names
     public string? LastScanRoot { get; set; }                       // what to reopen on startup
     public bool ReopenLastScan { get; set; } = true;
-    public string? Language { get; set; }                          // culture name such as "nb"; null means same as Windows   // the startup notice about administrator rights was dismissed
+    public string? Language { get; set; }
+    public bool ExplorerMenu { get; set; }                         // "Scan with SpaceSharp" in Explorer's right-click menu                          // culture name such as "nb"; null means same as Windows   // the startup notice about administrator rights was dismissed
     public bool ConfirmDelete { get; set; } = true;
     public bool CheckForUpdates { get; set; } = true;
     public bool ShowSidePanel { get; set; } = true;
@@ -56,6 +57,7 @@ internal sealed class AppSettings
         LastScanRoot = d.LastScanRoot;
         ReopenLastScan = d.ReopenLastScan;
         Language = d.Language;
+        ExplorerMenu = d.ExplorerMenu;
         DetectHardLinks = d.DetectHardLinks;
         ConfirmDelete = d.ConfirmDelete;
         CheckForUpdates = d.CheckForUpdates;

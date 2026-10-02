@@ -100,13 +100,21 @@ public partial class MainWindow : Window
         if (IsElevated) Title += "  (Administrator)";
         FastScanCard.Visibility = _settings.FastNtfsScan && !IsElevated ? Visibility.Visible : Visibility.Collapsed;
 
-        // Started with a folder argument (e.g. after "Restart as administrator"): scan it right away.
-        if (App.StartupScanPath is { } startPath)
-            Loaded += async (_, _) => await StartScanAsync(startPath);
+        // Command line: a folder or drive scans right away (also how "Restart as administrator" comes back),
+        // a .sscan file opens, and --compare sets the baseline for the scan that follows.
+        if (App.Args.OpenFile is { } openFile)
+            Loaded += async (_, _) => await OpenScanFileAsync(openFile);
+        else if (App.StartupScanPath is { } startPath)
+            Loaded += async (_, _) =>
+            {
+                await StartScanAsync(startPath);
+                if (App.Args.CompareFile is { } compareFile && _root is not null) await CompareWithFileAsync(compareFile);
+            };
+        else if (_settings.ReopenLastScan && _settings.LastScanRoot is { } last)
+            Loaded += async (_, _) => await ReopenLastScanAsync(last);
 
         Loaded += async (_, _) => await CheckForUpdatesAsync();
-        if (App.StartupScanPath is null && _settings.ReopenLastScan && _settings.LastScanRoot is { } last)
-            Loaded += async (_, _) => await ReopenLastScanAsync(last);
+        if (_settings.ExplorerMenu) ExplorerIntegration.Install(Strings.Get("Explorer_ScanWith")); // keep the entry pointing at this exe
     }
 
     // ============================================================ saved scans
@@ -276,9 +284,15 @@ public partial class MainWindow : Window
         if (IsScanning) return;
         var dialog = new OpenFileDialog { Title = Strings.Get("Dialog_OpenScan"), Filter = Strings.Get("Dialog_ScanFilter"), InitialDirectory = ScanFile.Folder };
         if (dialog.ShowDialog(this) != true) return;
+        await OpenScanFileAsync(dialog.FileName);
+    }
+
+    private async Task OpenScanFileAsync(string file)
+    {
+        if (IsScanning) return;
         try
         {
-            var (root, info) = await Task.Run(() => ScanFile.Load(dialog.FileName));
+            var (root, info) = await Task.Run(() => ScanFile.Load(file));
             ShowLoadedScan(root, info, null, Strings.Get("Status_OpenedVerb"));
         }
         catch (Exception ex) when (ex is IOException or InvalidDataException or EndOfStreamException or UnauthorizedAccessException)
@@ -294,12 +308,18 @@ public partial class MainWindow : Window
         if (_root is null) return;
         var dialog = new OpenFileDialog { Title = Strings.Get("Dialog_CompareScan"), Filter = Strings.Get("Dialog_ScanFilter"), InitialDirectory = ScanFile.Folder };
         if (dialog.ShowDialog(this) != true) return;
+        await CompareWithFileAsync(dialog.FileName);
+    }
+
+    private async Task CompareWithFileAsync(string file)
+    {
+        if (_root is null) return;
         var root = _root;
         try
         {
             var info = await Task.Run(() =>
             {
-                var (old, oldInfo) = ScanFile.Load(dialog.FileName, addFreeSpace: false);
+                var (old, oldInfo) = ScanFile.Load(file, addFreeSpace: false);
                 ScanCompare.Apply(root, old);
                 return oldInfo;
             });

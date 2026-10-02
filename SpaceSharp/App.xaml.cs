@@ -8,18 +8,27 @@ namespace SpaceSharp;
 public partial class App : Application
 {
     /// <summary>Folder passed on the command line, scanned as soon as the window opens.</summary>
-    public static string? StartupScanPath { get; private set; }
+    public static string? StartupScanPath => Args.ScanPath;
+
+    /// <summary>Everything the app was started with; see <see cref="CommandLine"/>.</summary>
+    public static CommandLine Args { get; private set; } = new();
 
     protected override void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
-        if (e.Args.Length > 0 && Directory.Exists(e.Args[0]))
-            StartupScanPath = Path.GetFullPath(e.Args[0]);
+        Args = CommandLine.Parse(e.Args);
         DispatcherUnhandledException += OnDispatcherUnhandledException;
 
         AppLanguages.Apply(AppSettings.Current.Language);   // before any window, so every string and format follows it
         var theme = Enum.TryParse<AppTheme>(AppSettings.Current.Theme, out var saved) ? saved : AppTheme.System;
         ThemeManager.Initialize(theme);
+
+        if (Args.ShowHelp)
+        {
+            // A WPF app has no console of its own; the in-app dialog is what "--help" can show.
+            Dialog.Info(null, "SpaceSharp", CommandLine.HelpText.TrimEnd());
+            Shutdown();
+        }
     }
 
     protected override void OnExit(ExitEventArgs e)

@@ -72,6 +72,27 @@ public partial class SettingsWindow : Window
         Row(Strings.Get("Settings_AnimateZoom"), Strings.Get("Settings_AnimateZoom_Desc"),
             Switch(_settings.AnimateZoom, v => _settings.AnimateZoom = v));
 
+        Section(Strings.Get("Settings_Windows"));
+        Row(Strings.Get("Settings_ExplorerMenu"), Strings.Get("Settings_ExplorerMenu_Desc"),
+            Switch(_settings.ExplorerMenu, v =>
+            {
+                _settings.ExplorerMenu = v;
+                try
+                {
+                    if (v) ExplorerIntegration.Install(Strings.Get("Explorer_ScanWith")); else ExplorerIntegration.Uninstall();
+                }
+                catch (Exception ex) when (ex is System.Security.SecurityException or UnauthorizedAccessException or IOException)
+                {
+                    Dialog.Error(this, Strings.Get("Settings_ExplorerMenu"), ex.Message);
+                }
+            }));
+        Row(Strings.Get("Settings_CommandLine"), Strings.Get("Settings_CommandLine_Desc"), null);
+        _card!.Children.Add(Themed(new TextBox
+        {
+            Text = CommandLine.HelpText.TrimEnd(), IsReadOnly = true, BorderThickness = new Thickness(0), Background = System.Windows.Media.Brushes.Transparent,
+            FontFamily = new System.Windows.Media.FontFamily("Consolas"), FontSize = 12, Margin = new Thickness(16, 0, 16, 12), TextWrapping = TextWrapping.NoWrap
+        }, TextBox.ForegroundProperty, "TextDim"));
+
         Section(Strings.Get("Settings_Scanning"), Strings.Get("Settings_Scanning_Desc"));
         Row(Strings.Get("Settings_FastScan"), Strings.Get("Settings_FastScan_Desc"),
             Switch(_settings.FastNtfsScan, v => _settings.FastNtfsScan = v));
@@ -117,7 +138,7 @@ public partial class SettingsWindow : Window
         Body.Children.Add(new Border { Style = (Style)FindResource("SettingsCard"), Child = _card });
     }
 
-    private void Row(string title, string description, FrameworkElement control)
+    private void Row(string title, string description, FrameworkElement? control)
     {
         var grid = new Grid { Margin = new Thickness(16, 12, 16, 12) };
         grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
@@ -130,10 +151,13 @@ public partial class SettingsWindow : Window
             Text = description, FontSize = 12, TextWrapping = TextWrapping.Wrap, Margin = new Thickness(0, 2, 0, 0)
         }, TextBlock.ForegroundProperty, "TextDim"));
 
-        control.VerticalAlignment = VerticalAlignment.Center;
-        Grid.SetColumn(control, 1);
         grid.Children.Add(text);
-        grid.Children.Add(control);
+        if (control is not null)
+        {
+            control.VerticalAlignment = VerticalAlignment.Center;
+            Grid.SetColumn(control, 1);
+            grid.Children.Add(control);
+        }
 
         var card = _card!;
         if (card.Children.Count > 0)
