@@ -1,5 +1,7 @@
 # Contributing to SpaceSharp
 
+Everyone taking part is expected to follow the [code of conduct](CODE_OF_CONDUCT.md). UI changes should keep to the notes at the end of [ACCESSIBILITY.md](ACCESSIBILITY.md).
+
 Thanks for your interest. SpaceSharp is a small project, so the process is light.
 
 ## Ways to help

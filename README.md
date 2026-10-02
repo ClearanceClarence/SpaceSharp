@@ -495,7 +495,7 @@ Nothing is written anywhere else, and nothing leaves the machine except the upda
 - **Found a bug?** [Report it](https://github.com/ClearanceClarence/SpaceSharp/issues/new?template=bug_report.yml). The About window (F1) has a **Report a bug** button that opens the same form with your version and Windows details already filled in.
 - **Have an idea?** [Suggest a feature](https://github.com/ClearanceClarence/SpaceSharp/issues/new?template=feature_request.yml).
 - Anything else: open a [blank issue](https://github.com/ClearanceClarence/SpaceSharp/issues/new).
-- Want to help with code, palettes or translations? See [CONTRIBUTING.md](CONTRIBUTING.md).
+- Want to help with code, palettes or translations? See [CONTRIBUTING.md](CONTRIBUTING.md). Everyone taking part follows the [code of conduct](CODE_OF_CONDUCT.md). What works and what does not for screen readers, keyboard and low vision is in [ACCESSIBILITY.md](ACCESSIBILITY.md).
 - What changed in each release is in [CHANGELOG.md](CHANGELOG.md).
 
 ## Credits

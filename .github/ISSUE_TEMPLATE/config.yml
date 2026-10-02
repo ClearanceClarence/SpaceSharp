@@ -7,6 +7,12 @@ contact_links:
   - name: Website
     url: https://clearanceclarence.github.io/SpaceSharp/
     about: Downloads, a live preview of the app, and the short answers.
+  - name: Accessibility
+    url: https://github.com/ClearanceClarence/SpaceSharp/blob/main/ACCESSIBILITY.md
+    about: What works with screen readers, keyboard and high contrast, what does not yet, and how to report it.
+  - name: Code of conduct
+    url: https://github.com/ClearanceClarence/SpaceSharp/blob/main/CODE_OF_CONDUCT.md
+    about: What is expected of everyone here, and how to report a problem privately.
   - name: Security
     url: https://github.com/ClearanceClarence/SpaceSharp/blob/main/SECURITY.md
     about: How to report a vulnerability privately.
