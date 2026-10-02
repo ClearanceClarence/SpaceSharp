@@ -98,7 +98,7 @@ public partial class MainWindow : Window
         UpdateNavigation();
 
         if (IsElevated) Title += "  (Administrator)";
-        FastScanCard.Visibility = _settings.FastNtfsScan && !IsElevated ? Visibility.Visible : Visibility.Collapsed;
+        FastScanLine.Visibility = _settings.FastNtfsScan && !IsElevated ? Visibility.Visible : Visibility.Collapsed;
 
         // Command line: a folder or drive scans right away (also how "Restart as administrator" comes back),
         // a .sscan file opens, and --compare sets the baseline for the scan that follows.
@@ -114,10 +114,53 @@ public partial class MainWindow : Window
             Loaded += async (_, _) => await ReopenLastScanAsync(last);
 
         Loaded += async (_, _) => await CheckForUpdatesAsync();
+        Loaded += (_, _) => Task.Run(() => ScanFile.Prune(_settings.KeepScansDays)); // old automatic saves go quietly in the background
         if (_settings.ExplorerMenu) ExplorerIntegration.Install(Strings.Get("Explorer_ScanWith")); // keep the entry pointing at this exe
     }
 
     // ============================================================ saved scans
+
+    /// <summary>The start screen's list of recent saved scans, one click to reopen.</summary>
+    private void BuildRecentScans()
+    {
+        RecentRows.Children.Clear();
+        var recent = ScanFile.RecentAutoSaves();
+        RecentCard.Visibility = recent.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
+        EmptyTitle.Text = recent.Count > 0 ? Strings.Get("Start_PickADriveOrContinue") : Strings.Get("Start_PickADrive");
+        EmptySubtitle.Text = recent.Count > 0 ? Strings.Get("Start_RecentHint") : Strings.Get("Start_FirstHint");
+        foreach (var info in recent)
+        {
+            var grid = new Grid { Margin = new Thickness(14, 0, 12, 0), Height = 42 };
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(90) });
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+            bool drive = DiskScanner.IsDriveRoot(info.RootPath);
+            var icon = new TextBlock { Text = drive ? "\uEDA2" : "\uE8B7", FontFamily = (FontFamily)FindResource("IconFont"), FontSize = 14, VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(0, 0, 14, 0) };
+            icon.SetResourceReference(TextBlock.ForegroundProperty, "TextDim");
+            var name = new TextBlock { Text = info.RootPath.TrimEnd('\\'), VerticalAlignment = VerticalAlignment.Center, TextTrimming = TextTrimming.CharacterEllipsis };
+            var when = new TextBlock { Text = Ago(info.ScannedUtc), FontSize = 12.5, VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(12, 0, 0, 0) };
+            when.SetResourceReference(TextBlock.ForegroundProperty, "TextDim");
+            var size = new TextBlock { Text = SizeFormatter.Format(info.Bytes), FontSize = 12.5, VerticalAlignment = VerticalAlignment.Center, TextAlignment = TextAlignment.Right };
+            size.SetResourceReference(TextBlock.ForegroundProperty, "TextDim");
+            var chevron = new TextBlock { Text = "\uE76C", FontFamily = (FontFamily)FindResource("IconFont"), FontSize = 11, VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(10, 0, 0, 0) };
+            chevron.SetResourceReference(TextBlock.ForegroundProperty, "TextDim");
+            Grid.SetColumn(name, 1); Grid.SetColumn(when, 2); Grid.SetColumn(size, 3); Grid.SetColumn(chevron, 4);
+            grid.Children.Add(icon); grid.Children.Add(name); grid.Children.Add(when); grid.Children.Add(size); grid.Children.Add(chevron);
+
+            var button = new Button { Content = grid, Style = (Style)FindResource("ListRowButton"), HorizontalContentAlignment = HorizontalAlignment.Stretch, ToolTip = info.Path };
+            string file = info.Path;
+            button.Click += async (_, _) => await OpenScanFileAsync(file);
+            if (RecentRows.Children.Count > 0)
+            {
+                var rule = new Border { Height = 1, Margin = new Thickness(14, 0, 0, 0) };
+                rule.SetResourceReference(Border.BackgroundProperty, "Stroke");
+                RecentRows.Children.Add(rule);
+            }
+            RecentRows.Children.Add(button);
+        }
+    }
 
     private DateTime _scanTimeUtc = DateTime.MinValue;
     private ScanFileInfo? _baselineInfo;
@@ -450,27 +493,8 @@ public partial class MainWindow : Window
         await Task.Delay(TimeSpan.FromSeconds(4)); // let the window settle first
         if (await Updater.Instance.CheckAsync() is null) return;
 
-        UpdateText.Text = Strings.Format("Update_Available", Updater.Instance.AvailableVersion ?? string.Empty, Updater.Instance.CurrentVersion ?? string.Empty);
-        InstallUpdateButton.IsEnabled = true;
-        UpdateBar.Visibility = Visibility.Visible;
+        UpdateWindow.Show(this);
     }
-
-    private async void InstallUpdate_Click(object sender, RoutedEventArgs e)
-    {
-        InstallUpdateButton.IsEnabled = false;
-        try
-        {
-            await Updater.Instance.InstallAndRestartAsync(percent =>
-                Dispatcher.BeginInvoke(() => UpdateText.Text = Strings.Format("Update_Downloading", percent)));
-        }
-        catch (Exception ex)
-        {
-            UpdateText.Text = Strings.Format("Update_Failed", ex.Message);
-            InstallUpdateButton.IsEnabled = true;
-        }
-    }
-
-    private void CloseUpdateBar_Click(object sender, RoutedEventArgs e) => UpdateBar.Visibility = Visibility.Collapsed;
 
     private static bool IsElevated
     {
@@ -546,6 +570,16 @@ public partial class MainWindow : Window
         Treemap.SizeMode = _settings.SizeOnDisk ? SizeMeasure.SizeOnDisk : SizeMeasure.FileSize;
         var mapStyle = Enum.TryParse<MapStyle>(_settings.MapStyle, out var style) ? style : MapStyle.Classic;
         Treemap.MapStyle = mapStyle;
+        Treemap.Density = Enum.TryParse<MapDensity>(_settings.Density, out var density) ? density : MapDensity.Normal;
+        Treemap.Bias = _settings.Bias;
+        Treemap.Padding = _settings.Padding;
+        Treemap.BorderThickness = _settings.BorderThickness;
+        Treemap.FontFamilyName = _settings.MapFont;
+        Treemap.FileCenterNames = _settings.FileCenterNames;
+        Treemap.FileShowSizes = _settings.FileShowSizes;
+        Treemap.FolderCenterNames = _settings.FolderCenterNames;
+        Treemap.FolderShowSizes = _settings.FolderShowSizes;
+        Treemap.FolderShowCounts = _settings.FolderShowCounts;
         Treemap.LabelScale = _settings.LabelSize switch { "Smallest" => 0.7, "Smaller" => 0.85, "Large" => 1.2, "Larger" => 1.4, _ => 1.0 };
         Treemap.LabelHalo = _settings.LabelHalo;
 
@@ -554,7 +588,6 @@ public partial class MainWindow : Window
         _applyingSettings = false;
         Treemap.AnimateZoom = _settings.AnimateZoom;
         Treemap.MergeSingleFolderChains = _settings.MergeChains;
-        Treemap.GroupSmallItems = _settings.GroupSmallItems;
         if (mode == ColorMode.ByChange) BuildChangeLegend(); else BuildLegend(scheme);
         LegendPanel.Visibility = mode is ColorMode.ByFileType or ColorMode.ByChange ? Visibility.Visible : Visibility.Collapsed;
 
@@ -715,7 +748,7 @@ public partial class MainWindow : Window
     private void FastScanRestart_Click(object sender, RoutedEventArgs e) => RestartElevated();
 
     /// <summary>"Not now": hides the card until the next start. The card comes back every start without administrator rights; turning off Fast NTFS scan in Settings is the way to stop it.</summary>
-    private void FastScanLater_Click(object sender, RoutedEventArgs e) => FastScanCard.Visibility = Visibility.Collapsed;
+    private void FastScanLater_Click(object sender, RoutedEventArgs e) => FastScanLine.Visibility = Visibility.Collapsed;
 
     /// <summary>Starts a fresh copy and closes this one, for a language switch.</summary>
     public void RestartApp()
@@ -906,6 +939,7 @@ public partial class MainWindow : Window
         UpButton.IsEnabled = !IsScanning && focus?.Parent is not null;
         RescanButton.IsEnabled = !IsScanning && _lastScanPath is not null;
         EmptyHint.Visibility = _root is null && !IsScanning ? Visibility.Visible : Visibility.Collapsed;
+        if (EmptyHint.Visibility == Visibility.Visible) BuildRecentScans();
         UpdateBreadcrumb(focus);
         UpdateZoomControls();
     }
@@ -1646,8 +1680,15 @@ public partial class MainWindow : Window
                 break;
             }
             case Key.G when !ctrl:
-                ToggleSetting(v => _settings.GroupSmallItems = v, _settings.GroupSmallItems, Strings.Get("Setting_GroupingName"));
+            {
+                // G flips between the chosen density and no grouping at all, and back.
+                var current = Enum.TryParse<MapDensity>(_settings.Density, out var d) ? d : MapDensity.Normal;
+                if (current == MapDensity.Everything) { _settings.Density = _settings.DensityBeforeEverything ?? MapDensity.Normal.ToString(); }
+                else { _settings.DensityBeforeEverything = current.ToString(); _settings.Density = MapDensity.Everything.ToString(); }
+                ApplySettings();
+                StatusScan.Text = Strings.Format("Status_Density", Strings.Get("Density_" + _settings.Density));
                 break;
+            }
             default:
                 return;
         }

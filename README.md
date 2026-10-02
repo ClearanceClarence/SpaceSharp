@@ -4,7 +4,7 @@
 
 <p align="center">
   See where your disk space went.<br>
-  A fast, zoomable treemap of your drives for Windows, in the spirit of SpaceMonger.
+  A fast, zoomable treemap of your drives for Windows, in the spirit of <a href="https://www.stardock.com/products/spacemonger/">SpaceMonger</a>.
 </p>
 
 <p align="center">
@@ -31,6 +31,14 @@
   <img src="docs/screenshot.png" alt="SpaceSharp showing a drive as a treemap, with sample data">
   <br>
   <sub>Illustration with sample data</sub>
+</p>
+
+<p align="center">
+  <a href="docs/shot-filter.png"><img src="docs/shot-filter.png" width="32%" alt="The filter panel, with matches highlighted on the map"></a>
+  <a href="docs/shot-inspect.png"><img src="docs/shot-inspect.png" width="32%" alt="The Inspect window for a folder"></a>
+  <a href="docs/shot-flat.png"><img src="docs/shot-flat.png" width="32%" alt="The Flat map style"></a>
+  <br>
+  <sub>Filter panel · Inspect · Flat style</sub>
 </p>
 
 ---
@@ -150,16 +158,20 @@ The gear button in the toolbar (or Ctrl+,) opens the settings window. Every chan
 | **Theme** | Match Windows, Light or Dark. |
 | **Palette** and **Color by** | The same choices as in the toolbar. |
 | **Map style** | Classic (with soft shading), Flat, Tiles, Cards, Bands or Soft. Same layout, different look; S cycles. |
+| **Treemap › Density** | How many small items are drawn before grouping or leaving them out: Sparse, Normal, Dense, Maximum, or Everything for no grouping at all. G switches to Everything and back. |
+| **Treemap › Bias** | Horizontal, Equal or Vertical: whether the layout favors wide or tall boxes. Equal is the plain squarified layout. |
+| **Treemap › Padding, Border, Font** | Extra space around boxes, border width for the styles that draw one, and the label typeface. |
+| **Treemap › Files, Folders** | Center names, show sizes, and for folders show file counts in the title. |
 | **Label size** | Smallest, Smaller, Normal, Large or Larger text on the map. Title bars shrink and grow to match. |
 | **Outlined labels** | A thin contrasting outline around every label. Recommended if the map is hard to read. |
 | **Size measure** | File size, or size on disk: the compressed size of compressed, sparse and cloud files, rounded up to whole clusters, like Explorer's "Size on disk". |
 | **Show free space** | Adds a gray block for the drive's unused space when a whole drive is scanned. Off by default. |
 | **Merge single-folder chains** | Draw folders that only contain one folder as a single box with a combined title. |
-| **Group small items** | Replace children that would be smaller than about 30 × 22 px with a single "N files" box. |
 | **Hover details** | The info card next to the mouse. |
 | **Show side panel** | The panel on the left with your drives and the largest items. |
 | **Animate zoom** | Fly into folders instead of jumping. |
 | **App language** | Same as Windows, English, or Norwegian bokmål; any language with a translation in `Resources/Strings.<culture>.resx` appears in the list on its own. Restart to switch. |
+| **Keep saved scans for** | A week to forever; automatic saves older than this are deleted at startup (default 90 days). A button deletes them all now. Scans you saved as files are never touched. |
 | **Leave out** | Names to skip, with everything inside them. One wildcard per line, matched against file and folder names. |
 | **Reopen the last scan on startup** | Shows the last map at once, compared with the scan before it. Scans are kept in `%LocalAppData%\SpaceSharp\scans`. On by default. |
 | **Fast NTFS scan** | Reads the drive's Master File Table instead of walking folders, so a whole drive takes seconds. Needs administrator rights and an NTFS volume; otherwise the normal scan runs. On by default. |
@@ -267,7 +279,7 @@ Settings › Windows › **"Scan with SpaceSharp" in Explorer** adds an entry to
 | Del | Move the selected items to the Recycle Bin |
 | S | Next map style |
 | K | Next color mode (top folder, depth, file type, change) |
-| G | Toggle grouping of small items |
+| G | Switch Density to Everything (no grouping) and back |
 | Esc | Cancel a scan |
 | F1 | About |
 
@@ -298,7 +310,7 @@ The app's only NuGet dependency is Velopack, used for the installer and updates.
 dotnet test
 ```
 
-Every push and pull request runs the test suite on GitHub Actions (`.github/workflows/build.yml`); that workflow tests only and never publishes, packs or uploads anything. Releases are built locally with the release script below.
+Every push and pull request runs the test suite on GitHub Actions (`.github/workflows/tests.yml`); that workflow tests only and never publishes, packs or uploads anything. Releases are built locally with the release script below.
 
 ## Publishing an exe
 
@@ -331,7 +343,7 @@ The same steps by hand, if you prefer:
 ```powershell
 dotnet publish .\SpaceSharp\SpaceSharp.csproj -p:PublishProfile=Velopack
 vpk download github --repoUrl https://github.com/ClearanceClarence/SpaceSharp
-vpk pack --packId SpaceSharp --packVersion 1.4.0 --packDir .\publish\velopack --mainExe SpaceSharp.exe --packTitle SpaceSharp --packAuthors ClearanceClarence --icon .\SpaceSharp\Assets\SpaceSharp.ico --splashImage .\SpaceSharp\Assets\SpaceSharp-256.png --msi --instLocation Either --instWelcome .\installer\welcome.md --instLicense .\installer\license.txt --instConclusion .\installer\conclusion.md
+vpk pack --packId SpaceSharp --packVersion 1.4.1 --packDir .\publish\velopack --mainExe SpaceSharp.exe --packTitle SpaceSharp --packAuthors ClearanceClarence --icon .\SpaceSharp\Assets\SpaceSharp.ico --splashImage .\SpaceSharp\Assets\SpaceSharp-256.png --msi --instLocation Either --instWelcome .\installer\welcome.md --instLicense .\installer\license.txt --instConclusion .\installer\conclusion.md
 .\installer\brand-msi.ps1
 ```
 
@@ -489,7 +501,7 @@ Nothing is written anywhere else, and nothing leaves the machine except the upda
 ## Credits
 
 - Squarified treemap layout: Mark Bruls, Kees Huizing and Jarke J. van Wijk, *Squarified Treemaps* (2000)
-- Inspired by [SpaceMonger](https://en.wikipedia.org/wiki/SpaceMonger)
+- Inspired by [SpaceMonger](https://www.stardock.com/products/spacemonger/) by Sixty-Five Software, now published by Stardock
 - Interface icons: Segoe Fluent Icons / Segoe MDL2 Assets, built into Windows
 - Color-blind safe palette: Masataka Okabe and Kei Ito
 
@@ -497,4 +509,4 @@ Nothing is written anywhere else, and nothing leaves the machine except the upda
 
 SpaceSharp is released under the [MIT License](LICENSE). You're free to use, modify and share it, including in commercial projects, as long as the copyright notice is kept.
 
-Made by ClearanceClarence.
+Made by ClearanceClarence.

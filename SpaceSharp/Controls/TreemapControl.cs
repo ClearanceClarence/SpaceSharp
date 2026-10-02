@@ -36,9 +36,13 @@ public sealed partial class TreemapControl : FrameworkElement
     private const double ClassicHeaderHeight = 17;
     private const double MinHeaderWidth = 60;   // folders smaller than this get no title bar
     private const double MinHeaderHeight = 44;
-    private const double MinChildSize = 4;       // smaller children are not drawn (the parent's color shows)
-    private const double MinFolderContent = 12;
-    private const double GroupBelowArea = 30 * 22;  // children smaller than this many pixels are grouped  // don't subdivide folders with less room than this
+    private const double BaseMinChildSize = 4;       // smaller children are not drawn (the parent's color shows)
+    private const double MinFolderContent = 12;      // don't subdivide folders with less room than this
+    private const double BaseGroupBelowArea = 30 * 22;  // children smaller than this many pixels are grouped
+
+    // Density scales the two thresholds above.
+    private double MinChildSize => _density switch { MapDensity.Sparse => BaseMinChildSize * 2, MapDensity.Dense => 2, MapDensity.Maximum or MapDensity.Everything => 1, _ => BaseMinChildSize };
+    private double GroupBelowArea => _density switch { MapDensity.Sparse => BaseGroupBelowArea * 2.5, MapDensity.Dense => BaseGroupBelowArea * 0.4, MapDensity.Maximum => BaseGroupBelowArea * 0.12, _ => BaseGroupBelowArea };
     private const double TextSize = 11;
     private const double WheelStep = 1.25;
     private const double DragThreshold = 4;
@@ -65,7 +69,6 @@ public sealed partial class TreemapControl : FrameworkElement
     private ColorScheme _scheme = Palette.Default;
     private SizeMeasure _measure = SizeMeasure.FileSize;
     private bool _mergeChains = true;
-    private bool _groupSmall = true;
     private bool _rebuildPending;
 
     public TreemapControl()
@@ -275,7 +278,39 @@ public sealed partial class TreemapControl : FrameworkElement
         _ => Math.Min(bounds.Width, bounds.Height) >= 40 ? 2 : 1
     };
 
-    private double Gap => _mapStyle switch { MapStyle.Tiles => 3, MapStyle.Cards => 2, MapStyle.Soft => 3, _ => 0 };
+    private double Gap => _mapStyle switch { MapStyle.Tiles => 3, MapStyle.Cards => 2, MapStyle.Soft => 3, _ => 0 } + _padding;
+
+    // ---- treemap options (Settings › Treemap)
+    private MapDensity _density = MapDensity.Normal;
+    private double _bias;            // -1 horizontal … 0 equal … +1 vertical
+    private double _padding;         // extra pixels around every box
+    private double _borderThickness = 1;
+    private string _fontFamily = "Segoe UI";
+    private bool _fileCenterNames = true, _fileShowSizes = true, _folderCenterNames, _folderShowSizes = true, _folderShowCounts;
+
+    /// <summary>How many small items are drawn before grouping or hiding them; Everything turns grouping off.</summary>
+    private bool _groupSmall => _density != MapDensity.Everything;
+    public MapDensity Density { get => _density; set { if (_density == value) return; _density = value; InvalidateLayout(); } }
+
+    /// <summary>-1 favors wide boxes, +1 tall boxes, 0 is the plain squarified layout.</summary>
+    public double Bias { get => _bias; set { value = Math.Clamp(value, -1, 1); if (_bias == value) return; _bias = value; InvalidateLayout(); } }
+
+    /// <summary>Extra space around every box, 0 to 6 px.</summary>
+    public double Padding { get => _padding; set { value = Math.Clamp(value, 0, 6); if (_padding == value) return; _padding = value; InvalidateLayout(); } }
+
+    /// <summary>Border line width for the styles that draw one (Classic, Flat, Bands), 0 to 3 px.</summary>
+    public double BorderThickness { get => _borderThickness; set { value = Math.Clamp(value, 0, 3); if (_borderThickness == value) return; _borderThickness = value; RebuildPens(); Invalidate(); } }
+
+    /// <summary>Font family for every label on the map.</summary>
+    public string FontFamilyName { get => _fontFamily; set { if (string.IsNullOrWhiteSpace(value) || _fontFamily == value) return; _fontFamily = value; RebuildTypefaces(); InvalidateLayout(); } }
+
+    public bool FileCenterNames { get => _fileCenterNames; set { if (_fileCenterNames == value) return; _fileCenterNames = value; Invalidate(); } }
+    public bool FileShowSizes { get => _fileShowSizes; set { if (_fileShowSizes == value) return; _fileShowSizes = value; Invalidate(); } }
+    public bool FolderCenterNames { get => _folderCenterNames; set { if (_folderCenterNames == value) return; _folderCenterNames = value; Invalidate(); } }
+    public bool FolderShowSizes { get => _folderShowSizes; set { if (_folderShowSizes == value) return; _folderShowSizes = value; Invalidate(); } }
+    public bool FolderShowCounts { get => _folderShowCounts; set { if (_folderShowCounts == value) return; _folderShowCounts = value; Invalidate(); } }
+
+    private double OrientationBias => Math.Pow(3, _bias);
     private double Radius => _mapStyle switch { MapStyle.Tiles => 4, MapStyle.Cards => 5, MapStyle.Soft => 6, _ => 0 };
 
     /// <summary>Fly to folders instead of jumping (FocusOn with animate: true).</summary>
@@ -289,18 +324,6 @@ public sealed partial class TreemapControl : FrameworkElement
         {
             if (_mergeChains == value) return;
             _mergeChains = value;
-            InvalidateLayout();
-        }
-    }
-
-    /// <summary>Replace children too small to see with a single "N files" box.</summary>
-    public bool GroupSmallItems
-    {
-        get => _groupSmall;
-        set
-        {
-            if (_groupSmall == value) return;
-            _groupSmall = value;
             InvalidateLayout();
         }
     }

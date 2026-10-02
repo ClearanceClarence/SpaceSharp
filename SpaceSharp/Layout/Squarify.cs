@@ -10,7 +10,11 @@ namespace SpaceSharp.Layout;
 public static class Squarify
 {
     /// <param name="nodes">Nodes sorted by the measure, largest first. Zero-sized nodes are ignored.</param>
-    public static void Layout(IReadOnlyList<FsNode> nodes, Rect bounds, SizeMeasure measure, Action<FsNode, Rect> emit)
+    /// <param name="orientationBias">
+    /// How strongly the layout leans to one direction. 1 is the plain algorithm. Above 1 favors vertical strips
+    /// (tall boxes), below 1 favors horizontal strips (wide boxes); the layout stays squarified either way.
+    /// </param>
+    public static void Layout(IReadOnlyList<FsNode> nodes, Rect bounds, SizeMeasure measure, Action<FsNode, Rect> emit, double orientationBias = 1)
     {
         int count = 0;
         double total = 0;
@@ -47,7 +51,7 @@ public static class Squarify
                 j++;
             }
 
-            if (w >= h)
+            if (w * orientationBias >= h)
             {
                 // Row becomes a vertical strip on the left.
                 double thickness = rowSum / h;

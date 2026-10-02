@@ -119,17 +119,6 @@
             </DockPanel>
         </Border>
 
-        <!-- ============================================================ update notice -->
-        <Border x:Name="UpdateBar" DockPanel.Dock="Top" Visibility="Collapsed" Background="{DynamicResource Panel}"
-                BorderBrush="{DynamicResource Accent}" BorderThickness="4,0,0,1" Padding="12,6">
-            <DockPanel>
-                <Button DockPanel.Dock="Right" Style="{StaticResource ToolButton}" Tag="&#xE711;" Height="28"
-                        ToolTip="{u:T Main_NotNow}" Click="CloseUpdateBar_Click" />
-                <Button x:Name="InstallUpdateButton" DockPanel.Dock="Right" Style="{StaticResource AccentButton}" Height="28"
-                        Margin="12,0,6,0" Tag="&#xE896;" Content="{u:T Main_InstallAndRestart}" Click="InstallUpdate_Click" />
-                <TextBlock x:Name="UpdateText" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
-            </DockPanel>
-        </Border>
 
         <!-- ============================================================ breadcrumb -->
         <Border DockPanel.Dock="Top" Background="{DynamicResource Bg}" BorderBrush="{DynamicResource Stroke}"
@@ -383,34 +372,37 @@
                 </controls:TreemapControl.ContextMenu>
             </controls:TreemapControl>
 
-            <StackPanel x:Name="EmptyHint" HorizontalAlignment="Center" VerticalAlignment="Center" Width="460">
-                <Image Source="/Assets/SpaceSharp-256.png" Width="88" Height="88" HorizontalAlignment="Center"
-                       RenderOptions.BitmapScalingMode="HighQuality" IsHitTestVisible="False" />
-                <TextBlock Text="{u:T Main_ClickADriveOn}" HorizontalAlignment="Center"
-                           Foreground="{DynamicResource TextDim}" FontSize="15" Margin="0,14,0,0" IsHitTestVisible="False" />
-
-                <!-- fast NTFS scan needs administrator rights; shown until the user decides -->
-                <Border x:Name="FastScanCard" Visibility="Collapsed" Margin="0,32,0,0" Padding="18,16" CornerRadius="10"
-                        Background="{DynamicResource Panel}" BorderBrush="{DynamicResource Stroke}" BorderThickness="1">
-                    <StackPanel>
-                        <DockPanel>
-                            <TextBlock DockPanel.Dock="Left" Text="&#xE945;" FontFamily="{StaticResource IconFont}" FontSize="22"
-                                       Foreground="{DynamicResource Accent}" VerticalAlignment="Top" Margin="0,2,14,0" />
-                            <StackPanel>
-                                <TextBlock Text="{u:T Main_MapAWholeDrive}" FontSize="15" FontWeight="SemiBold" />
-                                <TextBlock Foreground="{DynamicResource TextDim}" TextWrapping="Wrap" Margin="0,4,0,0" LineHeight="19"
-                                           Text="{u:T Main_SpaceSharpCanReadThe}" />
-                            </StackPanel>
-                        </DockPanel>
-                        <DockPanel Margin="0,14,0,0">
-                            <Button DockPanel.Dock="Right" Style="{StaticResource AccentButton}" Height="32" MinWidth="150"
-                                    Tag="&#xE7EF;" Content="{u:T Main_RestartAsAdministrator}" Click="FastScanRestart_Click" />
-                            <Button DockPanel.Dock="Right" Style="{StaticResource ToolButton}" Height="32" Margin="0,0,8,0"
-                                    Content="{u:T Main_NotNow}" ToolTip="{u:T Main_AskAgainNextTime}" Click="FastScanLater_Click" />
-                        </DockPanel>
+            <!-- start screen: pick a drive, or pick up where you left off (recent saved scans); the administrator offer is one footer line -->
+            <Grid x:Name="EmptyHint">
+                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Width="520">
+                    <DockPanel>
+                        <Image Source="/Assets/SpaceSharp-256.png" Width="44" Height="44" Margin="0,0,14,0" VerticalAlignment="Center"
+                               RenderOptions.BitmapScalingMode="HighQuality" />
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock x:Name="EmptyTitle" Text="{u:T Start_PickADrive}" FontSize="18" FontWeight="SemiBold" TextWrapping="Wrap" />
+                            <TextBlock x:Name="EmptySubtitle" Text="{u:T Start_RecentHint}" Foreground="{DynamicResource TextDim}" FontSize="12.5" Margin="0,3,0,0" TextWrapping="Wrap" />
+                        </StackPanel>
+                    </DockPanel>
+                    <Border x:Name="RecentCard" Margin="0,18,0,0" Background="{DynamicResource Panel}" BorderBrush="{DynamicResource Stroke}"
+                            BorderThickness="1" CornerRadius="10" SnapsToDevicePixels="True" Visibility="Collapsed">
+                        <StackPanel x:Name="RecentRows" />
+                    </Border>
+                    <StackPanel Orientation="Horizontal" Margin="0,14,0,0">
+                        <Button Style="{StaticResource ToolButton}" Tag="&#xE838;" Content="{u:T Start_ScanAFolder}" Click="ScanFolder_Click" />
+                        <Button Style="{StaticResource ToolButton}" Tag="&#xE8E5;" Content="{u:T Start_OpenASavedScan}" Margin="8,0,0,0" Click="MenuOpenScan_Click" />
                     </StackPanel>
+                </StackPanel>
+
+                <Border x:Name="FastScanLine" VerticalAlignment="Bottom" BorderBrush="{DynamicResource Stroke}" BorderThickness="0,1,0,0" Padding="16,10">
+                    <DockPanel>
+                        <TextBlock DockPanel.Dock="Left" Text="&#xE945;" FontFamily="{StaticResource IconFont}" FontSize="14" Foreground="{DynamicResource Accent}"
+                                   VerticalAlignment="Center" Margin="0,0,10,0" />
+                        <Button DockPanel.Dock="Right" Style="{StaticResource LinkButton}" Content="{u:T Main_NotNow}" Click="FastScanLater_Click" Foreground="{DynamicResource TextDim}" />
+                        <Button DockPanel.Dock="Right" Style="{StaticResource LinkButton}" Content="{u:T Main_RestartAsAdministrator}" Click="FastScanRestart_Click" Margin="0,0,16,0" />
+                        <TextBlock Text="{u:T Start_FastScanLine}" Foreground="{DynamicResource TextDim}" FontSize="12.5" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+                    </DockPanel>
                 </Border>
-            </StackPanel>
+            </Grid>
 
             <Popup x:Name="HoverTip" Placement="Relative" PlacementTarget="{Binding ElementName=Treemap}"
                    AllowsTransparency="True" IsHitTestVisible="False" StaysOpen="True" Focusable="False">

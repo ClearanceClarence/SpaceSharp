@@ -21,6 +21,42 @@ public static class Dialog
     public static void Info(Window? owner, string title, string message) =>
         Show(owner, title, message, Strings.Get("Dialog_Ok"), null, false, "\uE946");
 
+    /// <summary>A bare themed dialog window; add content with <see cref="Finish"/>.</summary>
+    public static Window CreateWindow(Window? owner, string title, double width)
+    {
+        var window = new Window
+        {
+            Title = title,
+            Width = width,
+            SizeToContent = SizeToContent.Height,
+            ResizeMode = ResizeMode.NoResize,
+            ShowInTaskbar = false,
+            WindowStartupLocation = owner is null ? WindowStartupLocation.CenterScreen : WindowStartupLocation.CenterOwner,
+            Owner = owner,
+            FontFamily = new FontFamily("Segoe UI"),
+            FontSize = 13,
+            UseLayoutRounding = true,
+            Icon = Application.Current?.MainWindow?.Icon
+        };
+        window.SetResourceReference(Control.BackgroundProperty, "Bg");
+        window.SetResourceReference(Control.ForegroundProperty, "Text");
+        TitleBarTheme.Attach(window);
+        return window;
+    }
+
+    /// <summary>Lays out body and footer in the dialog chrome: footer band at the bottom with the top rule.</summary>
+    public static void Finish(Window window, UIElement body, UIElement footerContent)
+    {
+        var footer = new Border { Padding = new Thickness(24, 12, 24, 12), BorderThickness = new Thickness(0, 1, 0, 0), Child = footerContent };
+        footer.SetResourceReference(Border.BackgroundProperty, "Panel");
+        footer.SetResourceReference(Border.BorderBrushProperty, "Stroke");
+        var root = new DockPanel();
+        DockPanel.SetDock(footer, Dock.Bottom);
+        root.Children.Add(footer);
+        root.Children.Add(body);
+        window.Content = root;
+    }
+
     private static bool? Show(Window? owner, string title, string message, string primary, string? secondary, bool danger, string glyph)
     {
         var window = new Window

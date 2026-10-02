@@ -165,7 +165,7 @@ public sealed partial class TreemapControl
         {
             normalized[index++] = new Rect(rect.X / content.Width, rect.Y / content.Height,
                 rect.Width / content.Width, rect.Height / content.Height);
-        });
+        }, OrientationBias);
         // Zero-sized children get no rectangle from squarify.
         for (; index < normalized.Length; index++) normalized[index] = Rect.Empty;
 

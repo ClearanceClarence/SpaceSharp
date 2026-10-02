@@ -282,8 +282,20 @@ def logo():
     return im.resize((493, 312), Image.LANCZOS)
 
 
+def stamp_version():
+    """Writes the project version into the title bars of the screenshot mockup and the website's previewer."""
+    import re
+    version = re.search(r'<Version>([^<]+)</Version>', (ROOT / 'SpaceSharp' / 'SpaceSharp.csproj').read_text(encoding='utf-8')).group(1)
+    for rel in ('tools/screenshot-mockup.html', 'docs/index.html'):
+        p = ROOT / rel
+        text = p.read_bytes().decode('utf-8')
+        new = re.sub(r'SpaceSharp \d+\.\d+\.\d+', f'SpaceSharp {version}', text)
+        if new != text: p.write_bytes(new.encode('utf-8'))
+
+
 def main():
     ensure_fonts()
+    stamp_version()
     assets = ROOT / "SpaceSharp" / "Assets"
     docs = ROOT / "docs"
     inst = ROOT / "installer"

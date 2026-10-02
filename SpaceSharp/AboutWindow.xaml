@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:u="clr-namespace:SpaceSharp.Util"
         Title="{u:T About_AboutSpaceSharp}"
-        Width="720" SizeToContent="Height" ResizeMode="NoResize"
+        Width="520" SizeToContent="Height" ResizeMode="NoResize"
         WindowStartupLocation="CenterOwner" ShowInTaskbar="False"
         Icon="/Assets/SpaceSharp.ico"
         Background="{DynamicResource Bg}" Foreground="{DynamicResource Text}"
@@ -15,45 +15,28 @@
             <DockPanel>
                 <Button DockPanel.Dock="Right" Style="{StaticResource AccentButton}" Content="{u:T About_Close}"
                         IsDefault="True" IsCancel="True" Click="Close_Click" />
-                <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
-                    <Button Style="{StaticResource ToolButton}" Tag="&#xE8C8;" Content="{u:T About_CopyVersionInfo}"
-                            Click="CopyInfo_Click" />
-                    <Button x:Name="UpdateButton" Style="{StaticResource ToolButton}" Tag="&#xE895;"
-                            Content="{u:T About_CheckForUpdates}" Margin="6,0,0,0" Click="CheckUpdates_Click" />
-                </StackPanel>
+                <Button Style="{StaticResource ToolButton}" Tag="&#xE8C8;" Content="{u:T About_CopyVersionInfo}"
+                        HorizontalAlignment="Left" Click="CopyInfo_Click" />
             </DockPanel>
         </Border>
 
-        <StackPanel Margin="28,26,28,24">
+        <StackPanel Margin="24,26,24,18">
             <DockPanel>
-                <Image Source="/Assets/SpaceSharp-256.png" Width="96" Height="96" Margin="0,0,22,0"
-                       VerticalAlignment="Top" RenderOptions.BitmapScalingMode="HighQuality" />
+                <Image Source="/Assets/SpaceSharp-256.png" Width="64" Height="64" Margin="0,0,18,0"
+                       VerticalAlignment="Center" RenderOptions.BitmapScalingMode="HighQuality" />
                 <StackPanel VerticalAlignment="Center">
-                    <TextBlock Text="SpaceSharp" FontSize="28" FontWeight="SemiBold" />
-                    <TextBlock x:Name="VersionText" Foreground="{DynamicResource TextDim}" Margin="0,2,0,0" />
-                    <TextBlock x:Name="DescriptionText" TextWrapping="Wrap" Margin="0,10,0,0" LineHeight="20" />
+                    <TextBlock Text="SpaceSharp" FontSize="24" FontWeight="SemiBold" />
+                    <TextBlock x:Name="TaglineText" Foreground="{DynamicResource TextDim}" Margin="0,5,0,0" />
                 </StackPanel>
             </DockPanel>
 
-            <TextBlock Text="{u:T About_Shortcuts}" FontSize="15" FontWeight="SemiBold" Margin="0,26,0,8" />
-            <Grid x:Name="ShortcutGrid" />
+            <!-- the list: one row per thing About can do; rows are built in code so the icon, title and sub-line stay aligned -->
+            <Border Margin="0,20,0,0" Background="{DynamicResource Panel}" BorderBrush="{DynamicResource Stroke}"
+                    BorderThickness="1" CornerRadius="10" SnapsToDevicePixels="True">
+                <StackPanel x:Name="Rows" />
+            </Border>
 
-            <TextBlock Text="{u:T About_System}" FontSize="15" FontWeight="SemiBold" Margin="0,22,0,6" />
-            <TextBlock x:Name="SystemText" Foreground="{DynamicResource TextDim}" TextWrapping="Wrap" />
-
-            <TextBlock Text="{u:T About_Credits}" FontSize="15" FontWeight="SemiBold" Margin="0,22,0,6" />
-            <TextBlock Foreground="{DynamicResource TextDim}" TextWrapping="Wrap" LineHeight="20" Text="{u:T About_CreditsText}" />
-
-            <TextBlock Text="{u:T About_Feedback}" FontSize="15" FontWeight="SemiBold" Margin="0,22,0,6" />
-            <TextBlock Foreground="{DynamicResource TextDim}" TextWrapping="Wrap" LineHeight="20"
-                       Text="{u:T About_FoundAProblemOr}" />
-            <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
-                <Button Style="{StaticResource ToolButton}" Tag="&#xEBE8;" Content="{u:T About_ReportABug}" Click="ReportBug_Click" />
-                <Button Style="{StaticResource ToolButton}" Tag="&#xEA80;" Content="{u:T About_SuggestAFeature}" Margin="6,0,0,0" Click="SuggestFeature_Click" />
-                <Button Style="{StaticResource ToolButton}" Tag="&#xE774;" Content="GitHub" Margin="6,0,0,0" Click="OpenGitHub_Click" />
-            </StackPanel>
-
-            <TextBlock x:Name="CopyrightText" Foreground="{DynamicResource TextDim}" Margin="0,22,0,0" />
+            <TextBlock x:Name="CopyrightText" Foreground="{DynamicResource TextDim}" FontSize="11.5" Margin="0,14,0,0" />
         </StackPanel>
     </DockPanel>
 </Window>

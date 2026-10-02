@@ -49,6 +49,17 @@ if (-not $SkipDelta) {
     if ($LASTEXITCODE) { Write-Warning "Could not download the previous release; building without a delta package." }
 }
 
+"== Release notes"
+# The version's CHANGELOG section travels inside the Velopack package, so the update prompt's "What's new"
+# can show it without a network call.
+$lines = Get-Content .\CHANGELOG.md
+$start = ($lines | Select-String -Pattern "^## $version\b" | Select-Object -First 1).LineNumber
+if (-not $start) { throw "CHANGELOG.md has no '## $version' section; add one before releasing." }
+$notes = @()
+for ($i = $start; $i -lt $lines.Count; $i++) { if ($lines[$i] -match '^## ') { break }; $notes += $lines[$i] }
+New-Item -ItemType Directory -Force .\Releases | Out-Null
+$notes -join "`n" | Set-Content -Path .\Releases\notes.md -Encoding utf8
+
 "== vpk pack"
 vpk pack `
     --packId SpaceSharp `
@@ -63,8 +74,10 @@ vpk pack `
     --instLocation Either `
     --instWelcome .\installer\welcome.md `
     --instLicense .\installer\license.txt `
-    --instConclusion .\installer\conclusion.md
+    --instConclusion .\installer\conclusion.md `
+    --releaseNotes .\Releases\notes.md
 if ($LASTEXITCODE) { throw "vpk pack failed" }
+Remove-Item .\Releases\notes.md -ErrorAction SilentlyContinue
 
 "== Naming the MSI"
 # vpk names the MSI after its own rules (they have changed between versions); the release, the website and

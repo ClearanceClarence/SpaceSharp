@@ -2,6 +2,20 @@
 
 All notable changes to SpaceSharp. The newest release is at the top.
 
+## Unreleased
+
+### Treemap options
+- A new Treemap section in Settings: **Density** (Sparse to Maximum, how many small items are drawn before grouping), **Bias** (a slider from Horizontal through Equal to Vertical, steering the squarified layout toward wide or tall boxes), **Padding**, **Border** width, label **Font**, and what file boxes and folder titles show (center names, sizes, file counts). All take effect immediately. The separate "Group small items" setting is gone: Density › Everything is the no-grouping choice, and G now switches between your density and Everything.
+
+### Changes
+- Sliders are drawn in the app's style: a thin track, amber up to the thumb, a round amber thumb. Destructive buttons that are not the main action (Delete all saved scans) are outlined in red text.
+- Settings › Scanning › Keep saved scans for: a slider from a week to forever (default 90 days); older automatic saves are deleted at startup, and a button deletes them all now. Files you saved yourself are never touched.
+- The start screen shows your recent saved scans: one click reopens yesterday's map, compared with the scan before it. Scan a folder and Open a saved scan sit under the list, and the administrator offer for the fast scan is one line at the bottom of the map area instead of a card.
+- About is a short list instead of a page: version with a Check button, What's new, Keyboard shortcuts, Report a bug, Suggest a feature, Source on GitHub, Credits, each one row. The shortcut reference moved to its own window, grouped into Navigate, Select and act, View and files.
+- Leave out is a list of chips instead of a text box: add a name or pattern with Enter, remove one with its ×, and the common ones (node_modules, $Recycle.Bin, *.tmp, .git, System Volume Information) are one click away.
+- Settings is split into tabs: General (language, updates, safety, Windows), Appearance, Treemap, Map and Scanning. Same options, one page at a time.
+- The update notice is a dialog instead of a bar across the window: install and restart, **What's new**, or later. What's new shows a short version of the release notes (carried inside the update package, with the GitHub release as fallback) and links to the full changelog on GitHub. The About window's Check for updates opens the same dialog.
+
 ## 1.4.0
 
 ### Translations

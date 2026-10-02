@@ -10,33 +10,6 @@ namespace SpaceSharp;
 
 public partial class AboutWindow : Window
 {
-    private static readonly (string Keys, string Action)[] Shortcuts =
-    {
-        ("Double-click / Enter", Strings.Get("Key_ZoomToFolder")),
-        ("Wheel / + / −", Strings.Get("Key_ZoomInOut")),
-        ("Drag", Strings.Get("Key_Pan")),
-        ("Backspace / Mouse back", Strings.Get("Key_Up")),
-        ("Home / Ctrl+0", Strings.Get("Key_WholeMap")),
-        ("F5", Strings.Get("Key_Rescan")),
-        ("Ctrl+click", Strings.Get("Key_AddSelection")),
-        ("Shift+click", Strings.Get("Key_SelectRange")),
-        ("Ctrl+F", Strings.Get("Key_Filter")),
-        ("Ctrl+A", Strings.Get("Key_SelectMatches")),
-        ("L", Strings.Get("Key_Panel")),
-        ("Ctrl+C", Strings.Get("Key_Copy")),
-        ("Ctrl+I", Strings.Get("Key_Inspect")),
-        ("Ctrl+S", Strings.Get("Key_SaveScan")),
-        ("Ctrl+O", Strings.Get("Key_OpenScan")),
-        ("Alt+Enter", Strings.Get("Key_Properties")),
-        ("Del", Strings.Get("Key_Delete")),
-        ("S", Strings.Get("Key_NextStyle")),
-        ("K", Strings.Get("Key_NextColor")),
-        ("G", Strings.Get("Key_Grouping")),
-        ("Esc", Strings.Get("Key_CancelScan")),
-        ("Ctrl+,", Strings.Get("Key_Settings")),
-        ("F1", Strings.Get("Key_About"))
-    };
-
     private readonly string _version;
 
     public AboutWindow()
@@ -46,69 +19,87 @@ public partial class AboutWindow : Window
 
         var assembly = Assembly.GetExecutingAssembly();
         _version = AppInfo.Version;
+        TaglineText.Text = Strings.Get("About_Tagline");
+        CopyrightText.Text = $"{assembly.GetCustomAttribute<AssemblyCopyrightAttribute>()?.Copyright ?? string.Empty}  ·  {SystemDescription()}";
 
-        VersionText.Text = Strings.Format("About_Version", _version) + (Updater.Instance.IsInstalled ? string.Empty : Strings.Get("About_Portable"));
-        UpdateButton.Visibility = Updater.Instance.IsInstalled ? Visibility.Visible : Visibility.Collapsed;
-        DescriptionText.Text = Strings.Get("About_Description");
-        CopyrightText.Text = assembly.GetCustomAttribute<AssemblyCopyrightAttribute>()?.Copyright ?? string.Empty;
-        SystemText.Text = SystemDescription();
+        BuildRows();
+    }
 
-        BuildShortcuts();
+    // ------------------------------------------------------------ rows
+
+    private Button? _checkButton;
+
+    private void BuildRows()
+    {
+        Rows.Children.Clear();
+        bool installed = Updater.Instance.IsInstalled;
+
+        _checkButton = installed ? new Button { Style = (Style)FindResource("ToolButton"), Content = Strings.Get("About_Check"), Height = 30 } : null;
+        if (_checkButton is not null) _checkButton.Click += CheckUpdates_Click;
+        Row("\uE895", Strings.Format("About_Version", _version), installed ? Strings.Get("About_InstalledCheck") : Strings.Get("About_PortableNoUpdates"), _checkButton, null);
+        Row("\uE7C3", Strings.Get("Update_WhatsNew"), Strings.Get("About_WhatsNewSub"), null, () => UpdateWindow.ShowWhatsNew(this, _version));
+        Row("\uE765", Strings.Get("About_Shortcuts"), Strings.Get("About_ShortcutsSub"), null, () => new ShortcutsWindow { Owner = this }.ShowDialog());
+        Row("\uEBE8", Strings.Get("About_ReportABug"), Strings.Get("About_ReportSub"), null, () => ReportBug_Click(this, new RoutedEventArgs()));
+        Row("\uEA80", Strings.Get("About_SuggestAFeature"), null, null, () => SuggestFeature_Click(this, new RoutedEventArgs()));
+        Row("\uE774", Strings.Get("About_Source"), Strings.Get("About_SourceSub"), null, () => OpenUrl(Repository));
+        Row("\uE8F1", Strings.Get("About_Credits"), Strings.Get("About_CreditsSub"), null, () => Dialog.Info(this, Strings.Get("About_Credits"), Strings.Get("About_CreditsText")));
+    }
+
+    /// <summary>One list row: glyph, title, optional sub-line; either a button at the right or the whole row is a button with a chevron.</summary>
+    private void Row(string glyph, string title, string? sub, Button? action, Action? onClick)
+    {
+        var grid = new Grid { Margin = new Thickness(14, 0, 12, 0), MinHeight = 48 };
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+
+        var icon = new TextBlock { Text = glyph, FontFamily = (FontFamily)FindResource("IconFont"), FontSize = 16, VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(0, 0, 14, 0) };
+        icon.SetResourceReference(TextBlock.ForegroundProperty, "TextDim");
+        var text = new StackPanel { VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(0, 9, 0, 9) };
+        text.Children.Add(new TextBlock { Text = title, FontSize = 13.5 });
+        if (!string.IsNullOrEmpty(sub))
+        {
+            var subText = new TextBlock { Text = sub, FontSize = 12, Margin = new Thickness(0, 2, 0, 0), TextWrapping = TextWrapping.Wrap };
+            subText.SetResourceReference(TextBlock.ForegroundProperty, "TextDim");
+            text.Children.Add(subText);
+        }
+        Grid.SetColumn(text, 1);
+        grid.Children.Add(icon); grid.Children.Add(text);
+
+        if (action is not null)
+        {
+            action.VerticalAlignment = VerticalAlignment.Center;
+            Grid.SetColumn(action, 2);
+            grid.Children.Add(action);
+        }
+        else if (onClick is not null)
+        {
+            var chevron = new TextBlock { Text = "\uE76C", FontFamily = (FontFamily)FindResource("IconFont"), FontSize = 11, VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(10, 0, 2, 0) };
+            chevron.SetResourceReference(TextBlock.ForegroundProperty, "TextDim");
+            Grid.SetColumn(chevron, 2);
+            grid.Children.Add(chevron);
+        }
+
+        FrameworkElement content = grid;
+        if (onClick is not null)
+        {
+            var button = new Button { Content = grid, Style = (Style)FindResource("ListRowButton"), HorizontalContentAlignment = HorizontalAlignment.Stretch };
+            button.Click += (_, _) => onClick();
+            content = button;
+        }
+
+        if (Rows.Children.Count > 0)
+        {
+            var rule = new Border { Height = 1, Margin = new Thickness(14, 0, 0, 0) };
+            rule.SetResourceReference(Border.BackgroundProperty, "Stroke");
+            Rows.Children.Add(rule);
+        }
+        Rows.Children.Add(content);
     }
 
     private static string SystemDescription() =>
         Strings.Format("About_SystemLine", RuntimeInformation.FrameworkDescription, RuntimeInformation.OSDescription) + " " +
         $"({RuntimeInformation.ProcessArchitecture.ToString().ToLowerInvariant()})";
-
-    private void BuildShortcuts()
-    {
-        // Two columns of key / action pairs.
-        ShortcutGrid.ColumnDefinitions.Clear();
-        foreach (var width in new[] { GridLength.Auto, new GridLength(1, GridUnitType.Star), new GridLength(24), GridLength.Auto, new GridLength(1, GridUnitType.Star) })
-            ShortcutGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = width });
-
-        int rows = (Shortcuts.Length + 1) / 2;
-        for (int r = 0; r < rows; r++) ShortcutGrid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
-
-        for (int i = 0; i < Shortcuts.Length; i++)
-        {
-            var (keys, action) = Shortcuts[i];
-            int row = i % rows;
-            int column = i < rows ? 0 : 3;
-
-            var caps = new WrapPanel { VerticalAlignment = VerticalAlignment.Center };
-            foreach (var key in keys.Split(" / "))
-            {
-                var cap = new Border
-                {
-                    BorderThickness = new Thickness(1, 1, 1, 2),
-                    CornerRadius = new CornerRadius(5),
-                    Padding = new Thickness(7, 1, 7, 2),
-                    Margin = new Thickness(0, 3, 6, 3),
-                    Child = new TextBlock { Text = key, FontSize = 12 }
-                };
-                cap.SetResourceReference(Border.BackgroundProperty, "Control");
-                cap.SetResourceReference(Border.BorderBrushProperty, "Stroke");
-                caps.Children.Add(cap);
-            }
-
-            var description = new TextBlock
-            {
-                Text = action,
-                Margin = new Thickness(12, 0, 0, 0),
-                VerticalAlignment = VerticalAlignment.Center,
-                TextWrapping = TextWrapping.Wrap,
-                FontSize = 12.5
-            };
-
-            Grid.SetRow(caps, row);
-            Grid.SetColumn(caps, column);
-            Grid.SetRow(description, row);
-            Grid.SetColumn(description, column + 1);
-            ShortcutGrid.Children.Add(caps);
-            ShortcutGrid.Children.Add(description);
-        }
-    }
 
     private void CopyInfo_Click(object sender, RoutedEventArgs e)
     {
@@ -124,31 +115,22 @@ public partial class AboutWindow : Window
 
     private async void CheckUpdates_Click(object sender, RoutedEventArgs e)
     {
-        UpdateButton.IsEnabled = false;
-        UpdateButton.Content = Strings.Get("About_Checking");
+        if (_checkButton is null) return;
+        _checkButton.IsEnabled = false;
+        _checkButton.Content = Strings.Get("About_Checking");
         var update = await Updater.Instance.CheckAsync();
         if (update is null)
         {
-            UpdateButton.Content = Strings.Get("About_UpToDate");
+            _checkButton.Content = Strings.Get("About_UpToDate");
             return;
         }
 
-        UpdateButton.Content = Strings.Format("About_InstallAndRestart", Updater.Instance.AvailableVersion ?? string.Empty);
-        UpdateButton.IsEnabled = true;
-        UpdateButton.Click -= CheckUpdates_Click;
-        UpdateButton.Click += async (_, _) =>
-        {
-            UpdateButton.IsEnabled = false;
-            try
-            {
-                await Updater.Instance.InstallAndRestartAsync(p => Dispatcher.BeginInvoke(() => UpdateButton.Content = $"Downloading… {p}%"));
-            }
-            catch (Exception ex)
-            {
-                Dialog.Error(this, Strings.Get("About_UpdateFailed"), ex.Message);
-                UpdateButton.IsEnabled = true;
-            }
-        };
+        // Same prompt as at startup: install, read what's new, or later.
+        _checkButton.Content = Strings.Format("About_InstallAndRestart", Updater.Instance.AvailableVersion ?? string.Empty);
+        _checkButton.IsEnabled = true;
+        _checkButton.Click -= CheckUpdates_Click;
+        _checkButton.Click += (_, _) => UpdateWindow.Show(this);
+        UpdateWindow.Show(this);
     }
 
     private const string Repository = "https://github.com/ClearanceClarence/SpaceSharp";

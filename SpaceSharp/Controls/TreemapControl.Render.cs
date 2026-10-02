@@ -13,14 +13,29 @@ namespace SpaceSharp.Controls;
 /// <summary>Part of <see cref="TreemapControl"/>. TreemapControl.cs has the overview.</summary>
 public sealed partial class TreemapControl
 {
-    private static readonly Typeface NormalFace = new(new FontFamily("Segoe UI"), FontStyles.Normal, FontWeights.Normal, FontStretches.Normal);
-    private static readonly Typeface HeaderFace = new(new FontFamily("Segoe UI"), FontStyles.Normal, FontWeights.SemiBold, FontStretches.Normal);
+    private Typeface NormalFace = new(new FontFamily("Segoe UI"), FontStyles.Normal, FontWeights.Normal, FontStretches.Normal);
+    private Typeface HeaderFace = new(new FontFamily("Segoe UI"), FontStyles.Normal, FontWeights.SemiBold, FontStretches.Normal);
+
+    private void RebuildTypefaces()
+    {
+        var family = new FontFamily(_fontFamily);
+        NormalFace = new Typeface(family, FontStyles.Normal, FontWeights.Normal, FontStretches.Normal);
+        HeaderFace = new Typeface(family, FontStyles.Normal, FontWeights.SemiBold, FontStretches.Normal);
+        CaptionFace = new Typeface(family, FontStyles.Normal, FontWeights.SemiBold, FontStretches.Normal);
+        BoldFace = new Typeface(family, FontStyles.Normal, FontWeights.Bold, FontStretches.Normal);
+    }
+
+    private void RebuildPens()
+    {
+        BorderPen = _borderThickness <= 0 ? null : Frozen(new Pen(new SolidColorBrush(Color.FromArgb(0xB0, 0x10, 0x10, 0x14)), _borderThickness));
+        FaintPen = _borderThickness <= 0 ? null : Frozen(new Pen(new SolidColorBrush(Color.FromArgb(0x38, 0x00, 0x00, 0x00)), _borderThickness));
+    }
 
     private static readonly Brush BackgroundBrush = Frozen(new SolidColorBrush(Color.FromRgb(0x0D, 0x11, 0x17)));
     private static readonly Brush HeaderShade = Frozen(new SolidColorBrush(Color.FromArgb(0x30, 0x00, 0x00, 0x00)));
     private static readonly Brush TextBrush = Frozen(new SolidColorBrush(Color.FromRgb(0x14, 0x14, 0x18)));
     private static readonly Brush HoverFill = Frozen(new SolidColorBrush(Color.FromArgb(0x40, 0xFF, 0xFF, 0xFF)));
-    private static readonly Pen BorderPen = Frozen(new Pen(new SolidColorBrush(Color.FromArgb(0xB0, 0x10, 0x10, 0x14)), 1));
+    private Pen? BorderPen = Frozen(new Pen(new SolidColorBrush(Color.FromArgb(0xB0, 0x10, 0x10, 0x14)), 1));
     private static readonly Pen HoverPen = Frozen(new Pen(Brushes.White, 2));
     private static readonly Pen HoverOutlinePen = Frozen(new Pen(new SolidColorBrush(Color.FromArgb(0x99, 0, 0, 0)), 4)); // keeps the hover frame visible on light fills
     private static readonly Brush FreeSpaceBrush = Frozen(new SolidColorBrush(Color.FromRgb(0x4E, 0x4E, 0x5A)));
@@ -42,7 +57,7 @@ public sealed partial class TreemapControl
 
     // =============================================================== drawing
 
-    private static readonly Pen FaintPen = Frozen(new Pen(new SolidColorBrush(Color.FromArgb(0x38, 0x00, 0x00, 0x00)), 1));
+    private Pen? FaintPen = Frozen(new Pen(new SolidColorBrush(Color.FromArgb(0x38, 0x00, 0x00, 0x00)), 1));
     private static readonly Brush CardShadowNear = Frozen(new SolidColorBrush(Color.FromArgb(0x22, 0x00, 0x00, 0x00)));
     private static readonly Brush CardShadowFar = Frozen(new SolidColorBrush(Color.FromArgb(0x16, 0x00, 0x00, 0x00)));
     private static readonly Brush SoftSheen = Frozen(new LinearGradientBrush(
@@ -51,8 +66,8 @@ public sealed partial class TreemapControl
             new(Color.FromArgb(0x2E, 0xFF, 0xFF, 0xFF), 0.0),
             new(Color.FromArgb(0x1A, 0x00, 0x00, 0x00), 1.0)
         }, new Point(0, 0), new Point(0, 1)));
-    private static readonly Typeface CaptionFace = new(new FontFamily("Segoe UI"), FontStyles.Normal, FontWeights.SemiBold, FontStretches.Normal);
-    private static readonly Typeface BoldFace = new(new FontFamily("Segoe UI"), FontStyles.Normal, FontWeights.Bold, FontStretches.Normal);
+    private Typeface CaptionFace = new(new FontFamily("Segoe UI"), FontStyles.Normal, FontWeights.SemiBold, FontStretches.Normal);
+    private Typeface BoldFace = new(new FontFamily("Segoe UI"), FontStyles.Normal, FontWeights.Bold, FontStretches.Normal);
 
     private void DrawItem(DrawingContext dc, TreemapItem item, double pixelsPerDip)
     {
@@ -131,23 +146,23 @@ public sealed partial class TreemapControl
             {
                 case MapStyle.Classic:
                     dc.DrawRectangle(HeaderShade, null, header);
-                    DrawLabel(dc, HeaderText(item, header.Width - 8, pixelsPerDip, "  —  "), HeaderFace, textBrush, x + 4, full.Y + 1, header.Width - 8, TextAlignment.Left, pixelsPerDip);
+                    DrawLabel(dc, HeaderText(item, header.Width - 8, pixelsPerDip, "  —  "), HeaderFace, textBrush, x + 4, full.Y + 1, header.Width - 8, HeaderAlign, pixelsPerDip);
                     break;
                 case MapStyle.Bands:
                 {
                     var band = dimmed ? fill : Tint(fill, Colors.Black, 0.35, 5);
                     dc.DrawRectangle(band, null, header);
-                    DrawLabel(dc, HeaderText(item, header.Width - 8, pixelsPerDip, "  —  "), BoldFace, dimmed ? DimText : _scheme.LabelFor(band), x + 5, full.Y + 2, header.Width - 8, TextAlignment.Left, pixelsPerDip);
+                    DrawLabel(dc, HeaderText(item, header.Width - 8, pixelsPerDip, "  —  "), BoldFace, dimmed ? DimText : _scheme.LabelFor(band), x + 5, full.Y + 2, header.Width - 8, HeaderAlign, pixelsPerDip);
                     break;
                 }
                 case MapStyle.Cards:
-                    DrawLabel(dc, HeaderText(item, header.Width - 18, pixelsPerDip, "  ·  "), BoldFace, textBrush, x + 9, full.Y + 4, header.Width - 18, TextAlignment.Left, pixelsPerDip);
+                    DrawLabel(dc, HeaderText(item, header.Width - 18, pixelsPerDip, "  ·  "), BoldFace, textBrush, x + 9, full.Y + 4, header.Width - 18, HeaderAlign, pixelsPerDip);
                     break;
                 case MapStyle.Soft:
-                    DrawLabel(dc, HeaderText(item, header.Width - 18, pixelsPerDip, "  ·  "), HeaderFace, textBrush, x + 9, full.Y + 4, header.Width - 18, TextAlignment.Left, pixelsPerDip);
+                    DrawLabel(dc, HeaderText(item, header.Width - 18, pixelsPerDip, "  ·  "), HeaderFace, textBrush, x + 9, full.Y + 4, header.Width - 18, HeaderAlign, pixelsPerDip);
                     break;
                 default: // Tiles, Flat: a small caption, no strip
-                    DrawLabel(dc, HeaderText(item, header.Width - 10, pixelsPerDip, "   ", upper: _mapStyle == MapStyle.Tiles), CaptionFace, textBrush, x + 6, full.Y + 2, header.Width - 10, TextAlignment.Left, pixelsPerDip, 10.5);
+                    DrawLabel(dc, HeaderText(item, header.Width - 10, pixelsPerDip, "   ", upper: _mapStyle == MapStyle.Tiles), CaptionFace, textBrush, x + 6, full.Y + 2, header.Width - 10, HeaderAlign, pixelsPerDip, 10.5);
                     break;
             }
             return;
@@ -157,15 +172,16 @@ public sealed partial class TreemapControl
         double line = 15 * _labelScale;
         if (box.Width < 44 * _labelScale || box.Height < line + 1) return;
         double textWidth = box.Width - 6;
-        if (box.Height >= line * 2 + 4)
+        var align = _fileCenterNames ? TextAlignment.Center : TextAlignment.Left;
+        if (_fileShowSizes && box.Height >= line * 2 + 4)
         {
-            double y = box.Y + (box.Height - line * 2) / 2;
-            DrawLabel(dc, node.Name, NormalFace, textBrush, box.X + 3, y, textWidth, TextAlignment.Center, pixelsPerDip);
-            DrawLabel(dc, SizeFormatter.Format(node.SizeFor(_measure)), NormalFace, textBrush, box.X + 3, y + line, textWidth, TextAlignment.Center, pixelsPerDip);
+            double y = _fileCenterNames ? box.Y + (box.Height - line * 2) / 2 : box.Y + 2;
+            DrawLabel(dc, node.Name, NormalFace, textBrush, box.X + 3, y, textWidth, align, pixelsPerDip);
+            DrawLabel(dc, SizeFormatter.Format(node.SizeFor(_measure)), NormalFace, textBrush, box.X + 3, y + line, textWidth, align, pixelsPerDip);
         }
         else
         {
-            DrawLabel(dc, node.Name, NormalFace, textBrush, box.X + 3, box.Y + (box.Height - line) / 2, textWidth, TextAlignment.Center, pixelsPerDip);
+            DrawLabel(dc, node.Name, NormalFace, textBrush, box.X + 3, _fileCenterNames ? box.Y + (box.Height - line) / 2 : box.Y + 2, textWidth, align, pixelsPerDip);
         }
     }
 
@@ -192,7 +208,13 @@ public sealed partial class TreemapControl
         var node = item.Node;
         string size = SizeFormatter.Format(node.SizeFor(_measure));
         string Case(string text) => upper ? text.ToUpperInvariant() : text;
-        if (item.ChainTop is null) return $"{Case(node.Name)}{separator}{size}";
+        string Tail()
+        {
+            string t = _folderShowSizes ? separator + size : string.Empty;
+            if (_folderShowCounts && node.FileCount > 0) t += separator + Strings.Format("Group_FilesCount", node.FileCount);
+            return t;
+        }
+        if (item.ChainTop is null) return $"{Case(node.Name)}{Tail()}";
 
         var names = new List<string>();
         for (var n = node; n is not null; n = n.Parent)
@@ -205,12 +227,14 @@ public sealed partial class TreemapControl
         for (int skip = 0; skip < names.Count; skip++)
         {
             string path = Case(string.Join("  ›  ", names.Skip(skip)));
-            string text = (skip > 0 ? "…  ›  " : "") + $"{path}{separator}{size}";
+            string text = (skip > 0 ? "…  ›  " : "") + $"{path}{Tail()}";
             if (skip == names.Count - 1 || MeasureWidth(text, pixelsPerDip) <= maxWidth) return text;
         }
 
-        return $"{Case(node.Name)}{separator}{size}";
+        return $"{Case(node.Name)}{Tail()}";
     }
+
+    private TextAlignment HeaderAlign => _folderCenterNames ? TextAlignment.Center : TextAlignment.Left;
 
     private double MeasureWidth(string text, double pixelsPerDip) =>
         new FormattedText(text, CultureInfo.CurrentUICulture, FlowDirection.LeftToRight,

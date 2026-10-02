@@ -206,7 +206,7 @@
   <data name="Key_Copy" xml:space="preserve"><value>Kopier de valgte stiene</value></data>
   <data name="Key_Delete" xml:space="preserve"><value>Flytt det valgte til papirkurven</value></data>
   <data name="Key_Filter" xml:space="preserve"><value>Filtrer kartet</value></data>
-  <data name="Key_Grouping" xml:space="preserve"><value>Slå gruppering av små elementer av eller på</value></data>
+  <data name="Key_Grouping" xml:space="preserve"><value>Bytt tetthet til Alt (ingen gruppering) og tilbake</value></data>
   <data name="Key_Inspect" xml:space="preserve"><value>Undersøk utvalget</value></data>
   <data name="Key_NextColor" xml:space="preserve"><value>Neste fargemodus</value></data>
   <data name="Key_NextStyle" xml:space="preserve"><value>Neste kartstil</value></data>
@@ -377,7 +377,6 @@
   <data name="Scan_ReadingUsed" xml:space="preserve"><value>Leser {0} brukt plass. Kartet vises når det er ferdig.</value></data>
   <data name="Scan_Title" xml:space="preserve"><value>Skanner {0}</value></data>
   <data name="Scan_TitleMft" xml:space="preserve"><value>Skanner {0} fra filtabellen</value></data>
-  <data name="Setting_GroupingName" xml:space="preserve"><value>Gruppering av små elementer</value></data>
   <data name="SettingsWin_Close" xml:space="preserve"><value>Lukk</value></data>
   <data name="SettingsWin_ResetToDefaults" xml:space="preserve"><value>Tilbakestill til standard</value></data>
   <data name="SettingsWin_Settings" xml:space="preserve"><value>Innstillinger</value></data>
@@ -394,8 +393,6 @@
   <data name="Settings_CustomPalettes" xml:space="preserve"><value>Egne paletter</value></data>
   <data name="Settings_FastScan" xml:space="preserve"><value>Rask NTFS-skanning</value></data>
   <data name="Settings_FastScan_Desc" xml:space="preserve"><value>Leser stasjonens filtabell direkte, så en hel stasjon kartlegges på sekunder i stedet for minutter. Krever administratorrettigheter; uten dem, eller på andre filsystemer og enkeltmapper, brukes den vanlige skanningen. Harde lenker telles alltid én gang.</value></data>
-  <data name="Settings_GroupSmall" xml:space="preserve"><value>Grupper små elementer</value></data>
-  <data name="Settings_GroupSmall_Desc" xml:space="preserve"><value>Mapper med hundrevis av små filer viser én «312 filer»-boks i stedet for et rutenett av prikker. Zoom inn for å se dem enkeltvis. Hurtigtast: G.</value></data>
   <data name="Settings_HardLinks" xml:space="preserve"><value>Tell harde lenker én gang</value></data>
   <data name="Settings_HardLinks_Desc" xml:space="preserve"><value>Leser lenketallet for hver fil, slik at data med flere navn, som Windows-mappen WinSxS, telles én gang. Tregere på store stasjoner.</value></data>
   <data name="Settings_HoverDetails" xml:space="preserve"><value>Detaljer ved peking</value></data>
@@ -405,7 +402,7 @@
   <data name="Settings_LabelSize" xml:space="preserve"><value>Tekststørrelse</value></data>
   <data name="Settings_LabelSize_Desc" xml:space="preserve"><value>Tekststørrelse i kartet, fra Minst til Større. Tittellinjene følger med.</value></data>
   <data name="Settings_LeaveOut" xml:space="preserve"><value>Utelat</value></data>
-  <data name="Settings_LeaveOut_Desc" xml:space="preserve"><value>Navn som skal hoppes over, med alt innhold. Ett jokertegnmønster per linje, matchet mot fil- og mappenavn, ikke stier. Eksempler: node_modules, $Recycle.Bin, *.tmp</value></data>
+  <data name="Settings_LeaveOut_Desc" xml:space="preserve"><value>Navn som skal hoppes over, med alt innhold. Matches mot fil- og mappenavn, ikke stier; * og ? er jokertegn.</value></data>
   <data name="Settings_Map" xml:space="preserve"><value>Kart</value></data>
   <data name="Settings_MapStyle" xml:space="preserve"><value>Kartstil</value></data>
   <data name="Settings_MapStyle_Desc" xml:space="preserve"><value>Hvordan boksene tegnes. Klassisk: tittellinjer, rammer og myk skyggelegging. Flat: rene flater og tynne linjer. Fliser: flate, med mellomrom, avrundede. Kort: opphøyde mapper. Bånd: mørkt tittelbånd. Myk: avrundede pastellblokker.</value></data>
@@ -520,4 +517,82 @@
   <data name="Settings_CommandLine" xml:space="preserve"><value>Kommandolinje</value></data>
   <data name="Settings_CommandLine_Desc" xml:space="preserve"><value>Start SpaceSharp fra en snarvei, et skript eller Kjør-boksen med en stasjon, en mappe eller en lagret skanning.</value></data>
   <data name="Inspect_OnDisk" xml:space="preserve"><value>På disk</value></data>
+  <data name="Update_Title" xml:space="preserve"><value>Oppdatering tilgjengelig</value></data>
+  <data name="Update_Hint" xml:space="preserve"><value>Installasjonen tar omtrent et minutt og starter SpaceSharp på nytt. Innstillingene og de lagrede skanningene beholdes.</value></data>
+  <data name="Update_WhatsNew" xml:space="preserve"><value>Hva er nytt</value></data>
+  <data name="Update_Later" xml:space="preserve"><value>Senere</value></data>
+  <data name="WhatsNew_Title" xml:space="preserve"><value>Nytt i {0}</value></data>
+  <data name="WhatsNew_Loading" xml:space="preserve"><value>Henter utgivelsesnotatene…</value></data>
+  <data name="WhatsNew_Unavailable" xml:space="preserve"><value>Utgivelsesnotatene kunne ikke hentes. Hele listen finnes på GitHub.</value></data>
+  <data name="WhatsNew_SeeAll" xml:space="preserve"><value>Se alle endringer på GitHub</value></data>
+  <data name="Settings_Treemap" xml:space="preserve"><value>Trekart</value></data>
+  <data name="Settings_Treemap_Desc" xml:space="preserve"><value>Ingen av disse er nødvendige, men de endrer hvordan kartet leses.</value></data>
+  <data name="Treemap_Density" xml:space="preserve"><value>Tetthet</value></data>
+  <data name="Treemap_Density_Desc" xml:space="preserve"><value>Hvor mange små elementer kartet tegner før de samles i én «312 filer»-boks eller utelates. Glissen er rolig, Maksimal grupperer bare de aller minste, Alt grupperer aldri. Hurtigtast: G bytter til Alt og tilbake.</value></data>
+  <data name="Density_Sparse" xml:space="preserve"><value>Glissen</value></data>
+  <data name="Density_Normal" xml:space="preserve"><value>Normal</value></data>
+  <data name="Density_Dense" xml:space="preserve"><value>Tett</value></data>
+  <data name="Density_Maximum" xml:space="preserve"><value>Maksimal</value></data>
+  <data name="Treemap_Bias" xml:space="preserve"><value>Retning</value></data>
+  <data name="Treemap_Bias_Desc" xml:space="preserve"><value>Om utlegget foretrekker brede eller høye bokser. Lik er det vanlige kvadratiske utlegget.</value></data>
+  <data name="Treemap_Horizontal" xml:space="preserve"><value>Vannrett</value></data>
+  <data name="Treemap_Equal" xml:space="preserve"><value>Lik</value></data>
+  <data name="Treemap_Vertical" xml:space="preserve"><value>Loddrett</value></data>
+  <data name="Treemap_Padding" xml:space="preserve"><value>Luft</value></data>
+  <data name="Treemap_Padding_Desc" xml:space="preserve"><value>Ekstra avstand rundt hver boks, i tillegg til det stilen bruker.</value></data>
+  <data name="Treemap_Border" xml:space="preserve"><value>Ramme</value></data>
+  <data name="Treemap_Border_Desc" xml:space="preserve"><value>Strekbredde rundt boksene i stilene Klassisk, Flat og Bånd.</value></data>
+  <data name="Treemap_NoBorder" xml:space="preserve"><value>Ingen</value></data>
+  <data name="Unit_Pixels" xml:space="preserve"><value>{0} px</value></data>
+  <data name="Treemap_Font" xml:space="preserve"><value>Skrift</value></data>
+  <data name="Treemap_Font_Desc" xml:space="preserve"><value>Skrifttypen for all tekst i kartet. Tekststørrelsen settes under Utseende.</value></data>
+  <data name="Treemap_Files" xml:space="preserve"><value>Filer</value></data>
+  <data name="Treemap_Files_Desc" xml:space="preserve"><value>Hva en filboks viser.</value></data>
+  <data name="Treemap_Folders" xml:space="preserve"><value>Mapper</value></data>
+  <data name="Treemap_Folders_Desc" xml:space="preserve"><value>Hva en mappetittel viser.</value></data>
+  <data name="Treemap_CenterNames" xml:space="preserve"><value>Midtstill navn</value></data>
+  <data name="Treemap_ShowSizes" xml:space="preserve"><value>Vis størrelser</value></data>
+  <data name="Treemap_ShowCounts" xml:space="preserve"><value>Vis antall filer</value></data>
+  <data name="Group_FilesCount" xml:space="preserve"><value>{0:N0} filer</value></data>
+  <data name="Density_Everything" xml:space="preserve"><value>Alt (ingen gruppering)</value></data>
+  <data name="Status_Density" xml:space="preserve"><value>Tetthet: {0}</value></data>
+  <data name="SettingsTab_General" xml:space="preserve"><value>Generelt</value></data>
+  <data name="SettingsTab_Appearance" xml:space="preserve"><value>Utseende</value></data>
+  <data name="SettingsTab_Treemap" xml:space="preserve"><value>Trekart</value></data>
+  <data name="SettingsTab_Map" xml:space="preserve"><value>Kart</value></data>
+  <data name="SettingsTab_Scanning" xml:space="preserve"><value>Skanning</value></data>
+  <data name="About_Tagline" xml:space="preserve"><value>Se hvor diskplassen ble av.</value></data>
+  <data name="About_Check" xml:space="preserve"><value>Sjekk</value></data>
+  <data name="About_InstalledCheck" xml:space="preserve"><value>Installert. Se etter en nyere versjon.</value></data>
+  <data name="About_PortableNoUpdates" xml:space="preserve"><value>Portabel. Oppdateringer skjer ikke automatisk; nyeste versjon ligger på GitHub.</value></data>
+  <data name="About_WhatsNewSub" xml:space="preserve"><value>Endringer i denne versjonen</value></data>
+  <data name="About_ShortcutsSub" xml:space="preserve"><value>Alle taster og musehandlinger</value></data>
+  <data name="About_ReportSub" xml:space="preserve"><value>Åpner GitHub med versjon og system ferdig utfylt</value></data>
+  <data name="About_Source" xml:space="preserve"><value>Kildekode på GitHub</value></data>
+  <data name="About_SourceSub" xml:space="preserve"><value>MIT-lisens</value></data>
+  <data name="About_CreditsSub" xml:space="preserve"><value>Trekart-algoritme, SpaceMonger, ikoner</value></data>
+  <data name="Keys_Navigate" xml:space="preserve"><value>Naviger</value></data>
+  <data name="Keys_Select" xml:space="preserve"><value>Velg og gjør</value></data>
+  <data name="Keys_View" xml:space="preserve"><value>Visning og filer</value></data>
+  <data name="Start_PickADrive" xml:space="preserve"><value>Velg en stasjon til venstre</value></data>
+  <data name="Start_PickADriveOrContinue" xml:space="preserve"><value>Velg en stasjon til venstre, eller fortsett der du slapp</value></data>
+  <data name="Start_RecentHint" xml:space="preserve"><value>Lagrede skanninger åpnes med én gang og sammenlignes med den nye.</value></data>
+  <data name="Start_FirstHint" xml:space="preserve"><value>Hver fil og mappe blir en boks like stor som plassen den tar.</value></data>
+  <data name="Start_ScanAFolder" xml:space="preserve"><value>Skann en mappe</value></data>
+  <data name="Start_OpenASavedScan" xml:space="preserve"><value>Åpne en lagret skanning…</value></data>
+  <data name="Start_FastScanLine" xml:space="preserve"><value>Hele stasjoner på sekunder med administratorrettigheter.</value></data>
+  <data name="Settings_KeepScans" xml:space="preserve"><value>Behold lagrede skanninger i</value></data>
+  <data name="Settings_KeepScans_Desc" xml:space="preserve"><value>Automatiske lagringer eldre enn dette slettes når SpaceSharp starter. Skanninger du selv har lagret som filer, røres aldri.</value></data>
+  <data name="KeepScans_Days" xml:space="preserve"><value>{0} dager</value></data>
+  <data name="KeepScans_Months" xml:space="preserve"><value>{0} måneder</value></data>
+  <data name="KeepScans_OneYear" xml:space="preserve"><value>1 år</value></data>
+  <data name="KeepScans_Forever" xml:space="preserve"><value>For alltid</value></data>
+  <data name="KeepScans_DeleteAll" xml:space="preserve"><value>Slett alle lagrede skanninger</value></data>
+  <data name="KeepScans_NoneToDelete" xml:space="preserve"><value>Det finnes ingen lagrede skanninger.</value></data>
+  <data name="KeepScans_DeleteQuestion" xml:space="preserve"><value>Vil du slette {0} lagrede skanninger? Kartet på skjermen blir værende; sammenligning med tidligere skanninger blir ikke mulig før nye er laget.</value></data>
+  <data name="KeepScans_Deleted" xml:space="preserve"><value>Slettet {0} lagrede skanninger.</value></data>
+  <data name="Exclude_Placeholder" xml:space="preserve"><value>Navn eller mønster, f.eks. *.tmp</value></data>
+  <data name="Exclude_Add" xml:space="preserve"><value>Legg til</value></data>
+  <data name="Exclude_Remove" xml:space="preserve"><value>Fjern</value></data>
+  <data name="Exclude_Suggestions" xml:space="preserve"><value>Vanlige:</value></data>
 </root>

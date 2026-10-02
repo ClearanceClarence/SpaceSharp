@@ -42,4 +42,18 @@ public enum MapStyle
 }
 
 /// <param name="Branch">Index of the top-level folder this item belongs to (0 for the root itself).</param>
+/// <summary>How many small items the map draws before grouping or hiding them.</summary>
+public enum MapDensity
+{
+    /// <summary>Fewer, larger boxes; small items group early.</summary>
+    Sparse,
+    Normal,
+    /// <summary>More small boxes before grouping.</summary>
+    Dense,
+    /// <summary>Small items group only when truly tiny.</summary>
+    Maximum,
+    /// <summary>No grouping at all: every item that gets a pixel is its own box.</summary>
+    Everything
+}
+
 public readonly record struct TreemapItem(FsNode Node, Rect Bounds, int Depth, bool HasHeader, FsNode? ChainTop, int Branch);

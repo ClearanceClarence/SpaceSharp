@@ -111,6 +111,28 @@ public class SquarifyTests
     }
 
     [Fact]
+    public void BiasChangesTheFirstRowsDirection()
+    {
+        // A square: with no bias the first row is a vertical strip (w >= h); a horizontal bias flips it.
+        var root = TestTree.Dir(@"C:\");
+        TestTree.File(root, "a", 50); TestTree.File(root, "b", 50);
+        root.FinishDirectory();
+        var bounds = new Rect(0, 0, 200, 200);
+
+        var plain = new List<(FsNode, Rect)>();
+        Squarify.Layout(root.Children, bounds, SizeMeasure.FileSize, (n, r) => plain.Add((n, r)));
+        Assert.Equal(200, plain[0].Item2.Height, 6);   // vertical strip spans the full height
+
+        var wide = new List<(FsNode, Rect)>();
+        Squarify.Layout(root.Children, bounds, SizeMeasure.FileSize, (n, r) => wide.Add((n, r)), orientationBias: 1 / 3.0);
+        Assert.Equal(200, wide[0].Item2.Width, 6);     // horizontal strip spans the full width
+
+        // Areas are unchanged either way.
+        Assert.Equal(20000, plain[0].Item2.Width * plain[0].Item2.Height, 4);
+        Assert.Equal(20000, wide[0].Item2.Width * wide[0].Item2.Height, 4);
+    }
+
+    [Fact]
     public void UsesTheRequestedMeasure()
     {
         var root = TestTree.Dir(@"C:\");

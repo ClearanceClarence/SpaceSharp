@@ -46,6 +46,61 @@ public static class ScanFile
     /// <summary>The copy kept of the previous automatic save, used as the comparison baseline.</summary>
     public static string PreviousPathFor(string rootPath) => Path.ChangeExtension(AutoPathFor(rootPath), ".prev" + Extension);
 
+    /// <summary>The automatic saves, newest first, without the ".prev" copies kept for comparison.</summary>
+    public static List<ScanFileInfo> RecentAutoSaves(int max = 5)
+    {
+        var list = new List<ScanFileInfo>();
+        try
+        {
+            foreach (string file in Directory.EnumerateFiles(Folder, "*" + Extension))
+            {
+                if (file.EndsWith(".prev" + Extension, StringComparison.OrdinalIgnoreCase)) continue;
+                if (Peek(file) is { } info) list.Add(info);
+            }
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { }
+        return list.OrderByDescending(i => i.ScannedUtc).Take(max).ToList();
+    }
+
+    /// <summary>
+    /// Deletes automatic saves (and their .prev copies) whose scan is older than the given number of days.
+    /// 0 keeps everything. Returns how many files went. Files the user saved elsewhere are never touched.
+    /// </summary>
+    public static int Prune(int olderThanDays)
+    {
+        if (olderThanDays <= 0) return 0;
+        var cutoff = DateTime.UtcNow.AddDays(-olderThanDays);
+        int removed = 0;
+        try
+        {
+            foreach (string file in Directory.EnumerateFiles(Folder, "*" + Extension).ToList())
+            {
+                var when = Peek(file)?.ScannedUtc ?? File.GetLastWriteTimeUtc(file);
+                if (when >= cutoff) continue;
+                try { File.Delete(file); removed++; }
+                catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { }
+            }
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { }
+        return removed;
+    }
+
+    /// <summary>Deletes every automatic save. Returns how many files went.</summary>
+    public static int DeleteAll()
+    {
+        int removed = 0;
+        try
+        {
+            foreach (string file in Directory.EnumerateFiles(Folder, "*" + Extension).ToList())
+            {
+                try { File.Delete(file); removed++; }
+                catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { }
+            }
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { }
+        return removed;
+    }
+
     // ------------------------------------------------------------------ write
 
     public static void Save(FsNode root, string path, DateTime scannedUtc, string method)

@@ -207,7 +207,7 @@
   <data name="Key_Copy" xml:space="preserve"><value>Copy the selected paths</value></data>
   <data name="Key_Delete" xml:space="preserve"><value>Move the selected item to the Recycle Bin</value></data>
   <data name="Key_Filter" xml:space="preserve"><value>Filter the map</value></data>
-  <data name="Key_Grouping" xml:space="preserve"><value>Toggle grouping of small items</value></data>
+  <data name="Key_Grouping" xml:space="preserve"><value>Switch density to Everything (no grouping) and back</value></data>
   <data name="Key_Inspect" xml:space="preserve"><value>Inspect the selection</value></data>
   <data name="Key_NextColor" xml:space="preserve"><value>Next color mode</value></data>
   <data name="Key_NextStyle" xml:space="preserve"><value>Next map style</value></data>
@@ -378,7 +378,6 @@
   <data name="Scan_ReadingUsed" xml:space="preserve"><value>Reading {0} of used space. The map appears when it's done.</value></data>
   <data name="Scan_Title" xml:space="preserve"><value>Scanning {0}</value></data>
   <data name="Scan_TitleMft" xml:space="preserve"><value>Scanning {0} from the file table</value></data>
-  <data name="Setting_GroupingName" xml:space="preserve"><value>Grouping of small items</value></data>
   <data name="SettingsWin_Close" xml:space="preserve"><value>Close</value></data>
   <data name="SettingsWin_ResetToDefaults" xml:space="preserve"><value>Reset to defaults</value></data>
   <data name="SettingsWin_Settings" xml:space="preserve"><value>Settings</value></data>
@@ -395,8 +394,6 @@
   <data name="Settings_CustomPalettes" xml:space="preserve"><value>Custom palettes</value></data>
   <data name="Settings_FastScan" xml:space="preserve"><value>Fast NTFS scan</value></data>
   <data name="Settings_FastScan_Desc" xml:space="preserve"><value>Reads the drive's file table directly, so a whole drive is mapped in seconds instead of minutes. Needs administrator rights; without them, or on other file systems and single folders, the normal scan is used. Hard links are always counted once.</value></data>
-  <data name="Settings_GroupSmall" xml:space="preserve"><value>Group small items</value></data>
-  <data name="Settings_GroupSmall_Desc" xml:space="preserve"><value>Folders with hundreds of small files show one "312 files" box instead of a grid of specks. Zooming in shows them individually. Shortcut: G.</value></data>
   <data name="Settings_HardLinks" xml:space="preserve"><value>Count hard links once</value></data>
   <data name="Settings_HardLinks_Desc" xml:space="preserve"><value>Reads every file's link count so data with several names, such as Windows' WinSxS folder, is counted once. Slower on large drives.</value></data>
   <data name="Settings_HoverDetails" xml:space="preserve"><value>Hover details</value></data>
@@ -406,7 +403,7 @@
   <data name="Settings_LabelSize" xml:space="preserve"><value>Label size</value></data>
   <data name="Settings_LabelSize_Desc" xml:space="preserve"><value>Text size on the map, from Smallest to Larger. Title bars shrink and grow to match.</value></data>
   <data name="Settings_LeaveOut" xml:space="preserve"><value>Leave out</value></data>
-  <data name="Settings_LeaveOut_Desc" xml:space="preserve"><value>Names to skip, with everything inside them. One wildcard per line, matched against file and folder names, not paths. Examples: node_modules, $Recycle.Bin, *.tmp</value></data>
+  <data name="Settings_LeaveOut_Desc" xml:space="preserve"><value>Names to skip, with everything inside them. Matched against file and folder names, not paths; * and ? are wildcards.</value></data>
   <data name="Settings_Map" xml:space="preserve"><value>Map</value></data>
   <data name="Settings_MapStyle" xml:space="preserve"><value>Map style</value></data>
   <data name="Settings_MapStyle_Desc" xml:space="preserve"><value>How boxes are drawn. Classic: title bars, borders and soft shading. Flat: plain fills and thin lines. Tiles: flat, gapped, rounded. Cards: raised folders. Bands: dark title band. Soft: rounded pastel blocks.</value></data>
@@ -521,4 +518,82 @@
   <data name="Settings_CommandLine" xml:space="preserve"><value>Command line</value></data>
   <data name="Settings_CommandLine_Desc" xml:space="preserve"><value>Start SpaceSharp from a shortcut, a script or the Run box with a drive, a folder or a saved scan.</value></data>
   <data name="Inspect_OnDisk" xml:space="preserve"><value>On disk</value></data>
+  <data name="Update_Title" xml:space="preserve"><value>Update available</value></data>
+  <data name="Update_Hint" xml:space="preserve"><value>Installing takes about a minute and restarts SpaceSharp. Your settings and saved scans are kept.</value></data>
+  <data name="Update_WhatsNew" xml:space="preserve"><value>What's new</value></data>
+  <data name="Update_Later" xml:space="preserve"><value>Later</value></data>
+  <data name="WhatsNew_Title" xml:space="preserve"><value>What's new in {0}</value></data>
+  <data name="WhatsNew_Loading" xml:space="preserve"><value>Loading the release notes…</value></data>
+  <data name="WhatsNew_Unavailable" xml:space="preserve"><value>The release notes could not be loaded. The full list is on GitHub.</value></data>
+  <data name="WhatsNew_SeeAll" xml:space="preserve"><value>See all changes on GitHub</value></data>
+  <data name="Settings_Treemap" xml:space="preserve"><value>Treemap</value></data>
+  <data name="Settings_Treemap_Desc" xml:space="preserve"><value>None of these are essential, but they change how the map reads.</value></data>
+  <data name="Treemap_Density" xml:space="preserve"><value>Density</value></data>
+  <data name="Treemap_Density_Desc" xml:space="preserve"><value>How many small items the map draws before they are grouped into one "312 files" box or left out. Sparse is calm, Maximum groups only the tiniest, Everything never groups. Shortcut: G switches to Everything and back.</value></data>
+  <data name="Density_Sparse" xml:space="preserve"><value>Sparse</value></data>
+  <data name="Density_Normal" xml:space="preserve"><value>Normal</value></data>
+  <data name="Density_Dense" xml:space="preserve"><value>Dense</value></data>
+  <data name="Density_Maximum" xml:space="preserve"><value>Maximum</value></data>
+  <data name="Treemap_Bias" xml:space="preserve"><value>Bias</value></data>
+  <data name="Treemap_Bias_Desc" xml:space="preserve"><value>Whether the layout favors wide boxes or tall ones. Equal is the plain squarified layout.</value></data>
+  <data name="Treemap_Horizontal" xml:space="preserve"><value>Horizontal</value></data>
+  <data name="Treemap_Equal" xml:space="preserve"><value>Equal</value></data>
+  <data name="Treemap_Vertical" xml:space="preserve"><value>Vertical</value></data>
+  <data name="Treemap_Padding" xml:space="preserve"><value>Padding</value></data>
+  <data name="Treemap_Padding_Desc" xml:space="preserve"><value>Extra space around every box, on top of what the style uses.</value></data>
+  <data name="Treemap_Border" xml:space="preserve"><value>Border</value></data>
+  <data name="Treemap_Border_Desc" xml:space="preserve"><value>Line width around boxes in the Classic, Flat and Bands styles.</value></data>
+  <data name="Treemap_NoBorder" xml:space="preserve"><value>None</value></data>
+  <data name="Unit_Pixels" xml:space="preserve"><value>{0} px</value></data>
+  <data name="Treemap_Font" xml:space="preserve"><value>Font</value></data>
+  <data name="Treemap_Font_Desc" xml:space="preserve"><value>The typeface for every label on the map. Label size is set under Appearance.</value></data>
+  <data name="Treemap_Files" xml:space="preserve"><value>Files</value></data>
+  <data name="Treemap_Files_Desc" xml:space="preserve"><value>What a file box shows.</value></data>
+  <data name="Treemap_Folders" xml:space="preserve"><value>Folders</value></data>
+  <data name="Treemap_Folders_Desc" xml:space="preserve"><value>What a folder title shows.</value></data>
+  <data name="Treemap_CenterNames" xml:space="preserve"><value>Center names</value></data>
+  <data name="Treemap_ShowSizes" xml:space="preserve"><value>Show sizes</value></data>
+  <data name="Treemap_ShowCounts" xml:space="preserve"><value>Show file counts</value></data>
+  <data name="Group_FilesCount" xml:space="preserve"><value>{0:N0} files</value></data>
+  <data name="Density_Everything" xml:space="preserve"><value>Everything (no grouping)</value></data>
+  <data name="Status_Density" xml:space="preserve"><value>Density: {0}</value></data>
+  <data name="SettingsTab_General" xml:space="preserve"><value>General</value></data>
+  <data name="SettingsTab_Appearance" xml:space="preserve"><value>Appearance</value></data>
+  <data name="SettingsTab_Treemap" xml:space="preserve"><value>Treemap</value></data>
+  <data name="SettingsTab_Map" xml:space="preserve"><value>Map</value></data>
+  <data name="SettingsTab_Scanning" xml:space="preserve"><value>Scanning</value></data>
+  <data name="About_Tagline" xml:space="preserve"><value>See where your disk space went.</value></data>
+  <data name="About_Check" xml:space="preserve"><value>Check</value></data>
+  <data name="About_InstalledCheck" xml:space="preserve"><value>Installed. Check for a newer version.</value></data>
+  <data name="About_PortableNoUpdates" xml:space="preserve"><value>Portable. Updates are not automatic; the newest version is on GitHub.</value></data>
+  <data name="About_WhatsNewSub" xml:space="preserve"><value>Changes in this version</value></data>
+  <data name="About_ShortcutsSub" xml:space="preserve"><value>Every key and mouse action</value></data>
+  <data name="About_ReportSub" xml:space="preserve"><value>Opens GitHub with your version and system filled in</value></data>
+  <data name="About_Source" xml:space="preserve"><value>Source on GitHub</value></data>
+  <data name="About_SourceSub" xml:space="preserve"><value>MIT license</value></data>
+  <data name="About_CreditsSub" xml:space="preserve"><value>Treemap algorithm, SpaceMonger, icons</value></data>
+  <data name="Keys_Navigate" xml:space="preserve"><value>Navigate</value></data>
+  <data name="Keys_Select" xml:space="preserve"><value>Select and act</value></data>
+  <data name="Keys_View" xml:space="preserve"><value>View and files</value></data>
+  <data name="Start_PickADrive" xml:space="preserve"><value>Pick a drive on the left</value></data>
+  <data name="Start_PickADriveOrContinue" xml:space="preserve"><value>Pick a drive on the left, or pick up where you left off</value></data>
+  <data name="Start_RecentHint" xml:space="preserve"><value>Saved scans open instantly and are compared with the new one.</value></data>
+  <data name="Start_FirstHint" xml:space="preserve"><value>Every file and folder becomes a box sized by the space it takes.</value></data>
+  <data name="Start_ScanAFolder" xml:space="preserve"><value>Scan a folder</value></data>
+  <data name="Start_OpenASavedScan" xml:space="preserve"><value>Open a saved scan…</value></data>
+  <data name="Start_FastScanLine" xml:space="preserve"><value>Whole drives in seconds with administrator rights.</value></data>
+  <data name="Settings_KeepScans" xml:space="preserve"><value>Keep saved scans for</value></data>
+  <data name="Settings_KeepScans_Desc" xml:space="preserve"><value>Automatic saves older than this are deleted when SpaceSharp starts. Scans you saved as files yourself are never touched.</value></data>
+  <data name="KeepScans_Days" xml:space="preserve"><value>{0} days</value></data>
+  <data name="KeepScans_Months" xml:space="preserve"><value>{0} months</value></data>
+  <data name="KeepScans_OneYear" xml:space="preserve"><value>1 year</value></data>
+  <data name="KeepScans_Forever" xml:space="preserve"><value>Forever</value></data>
+  <data name="KeepScans_DeleteAll" xml:space="preserve"><value>Delete all saved scans</value></data>
+  <data name="KeepScans_NoneToDelete" xml:space="preserve"><value>There are no saved scans.</value></data>
+  <data name="KeepScans_DeleteQuestion" xml:space="preserve"><value>Delete {0} saved scans? The map on screen stays; comparisons with earlier scans will not be possible until new ones are made.</value></data>
+  <data name="KeepScans_Deleted" xml:space="preserve"><value>Deleted {0} saved scans.</value></data>
+  <data name="Exclude_Placeholder" xml:space="preserve"><value>Name or pattern, e.g. *.tmp</value></data>
+  <data name="Exclude_Add" xml:space="preserve"><value>Add</value></data>
+  <data name="Exclude_Remove" xml:space="preserve"><value>Remove</value></data>
+  <data name="Exclude_Suggestions" xml:space="preserve"><value>Common:</value></data>
 </root>
