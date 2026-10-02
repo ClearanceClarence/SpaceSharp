@@ -2,7 +2,7 @@
 
 All notable changes to SpaceSharp. The newest release is at the top.
 
-## Unreleased
+## 1.5.0
 
 ### Treemap options
 - A new Treemap section in Settings: **Density** (Sparse to Maximum, how many small items are drawn before grouping), **Bias** (a slider from Horizontal through Equal to Vertical, steering the squarified layout toward wide or tall boxes), **Padding**, **Border** width, label **Font**, and what file boxes and folder titles show (center names, sizes, file counts). All take effect immediately. The separate "Group small items" setting is gone: Density › Everything is the no-grouping choice, and G now switches between your density and Everything.

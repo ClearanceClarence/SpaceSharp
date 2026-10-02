@@ -322,7 +322,7 @@
 <div class="fit"><div class="fit-inner" id="fitInner"><div class="stage" id="stage">
   <div class="win" id="win">
     <div class="titlebar">
-      <div class="app"><span id="titleIcon"></span>SpaceSharp 1.4.1</div>
+      <div class="app"><span id="titleIcon"></span>SpaceSharp 1.5.0</div>
       <div class="caption"><span><svg viewBox="0 0 10 10"><path d="M0 5.5h10"/></svg></span><span><svg viewBox="0 0 10 10"><rect x=".5" y=".5" width="9" height="9"/></svg></span><span><svg viewBox="0 0 10 10"><path d="M0 0l10 10M10 0L0 10"/></svg></span></div>
     </div>
     <div class="toolbar">
@@ -544,6 +544,7 @@
   ICONS.idea = '<path d="M6 13h4M6.5 11h3a4.5 4.5 0 1 0-3 0z" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>';
   ICONS.globe = '<circle cx="8" cy="8" r="6" fill="none" stroke="currentColor" stroke-width="1.3"/><path d="M2 8h12M8 2c2 2 2 10 0 12M8 2c-2 2-2 10 0 12" fill="none" stroke="currentColor" stroke-width="1.3"/>';
   ICONS.book = '<path d="M3 2.5h6l3 3v8H3z" fill="none" stroke="currentColor" stroke-width="1.3"/><path d="M9 2.5v3h3M5.5 8.5h5M5.5 11h5" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>';
+  const APP_VERSION = (document.querySelector(".app").textContent.match(/\d+\.\d+\.\d+/) || ["0.0.0"])[0];
   const setIcon = (el, name) => { el.setAttribute("viewBox", "0 0 16 16"); el.innerHTML = ICONS[name]; };
   document.querySelectorAll("svg[data-i]").forEach(el => setIcon(el, el.dataset.i));
   document.getElementById("titleIcon").innerHTML = `<svg viewBox="0 0 100 100"><rect width="100" height="100" rx="22" fill="#161B22"/><rect x="16" y="16" width="28" height="28" rx="3" fill="#F5B82E"/><rect x="48" y="16" width="18" height="28" rx="3" fill="#F5B82E" opacity=".55"/><rect x="70" y="16" width="14" height="28" rx="3" fill="#F5B82E" opacity=".3"/><rect x="16" y="48" width="28" height="18" rx="3" fill="#F5B82E" opacity=".55"/><rect x="48" y="48" width="18" height="18" rx="3" fill="#F5B82E" opacity=".3"/><rect x="70" y="48" width="14" height="18" rx="3" fill="#F5B82E" opacity=".18"/><rect x="16" y="70" width="28" height="14" rx="3" fill="#F5B82E" opacity=".3"/><rect x="48" y="70" width="18" height="14" rx="3" fill="#F5B82E" opacity=".18"/><rect x="70" y="70" width="14" height="14" rx="3" fill="#F5B82E" opacity=".12"/></svg>`;
@@ -1033,7 +1034,7 @@
     document.getElementById("statusScan").style.visibility = state.scene === "start" ? "hidden" : "";
     if (state.scene === "start") { document.getElementById("startMark").innerHTML = document.getElementById("titleIcon").innerHTML.replace('width="16" height="16"', 'width="44" height="44"'); }
     if (state.scene === "about") {
-      const rows = [["info","Version 1.4.1","Portable. Updates are not automatic; the newest version is on GitHub.",false],["file","What's new","Changes in this version",true],["keyboard","Shortcuts","Every key and mouse action",true],["bug","Report a bug","Opens GitHub with your version and system filled in",true],["idea","Suggest a feature","",true],["globe","Source on GitHub","MIT license",true],["book","Credits","Treemap algorithm, SpaceMonger, icons",true]];
+      const rows = [["info","Version " + APP_VERSION,"Portable. Updates are not automatic; the newest version is on GitHub.",false],["file","What's new","Changes in this version",true],["keyboard","Shortcuts","Every key and mouse action",true],["bug","Report a bug","Opens GitHub with your version and system filled in",true],["idea","Suggest a feature","",true],["globe","Source on GitHub","MIT license",true],["book","Credits","Treemap algorithm, SpaceMonger, icons",true]];
       document.getElementById("dialog").className = "dialog about";
       document.getElementById("dialog").innerHTML = `
         <div class="dt"><span id="dlgIcon"></span>About SpaceSharp<span class="x">✕</span></div>
@@ -1047,15 +1048,15 @@
       scrim.hidden = false;
     }
     if (state.scene === "update" || state.scene === "whatsnew") {
-      const next = "1.4.1", cur = "1.4.0";
-      const notes = `WHAT'S NEW
-•  The update notice is a dialog instead of a bar across the window: install and restart, What's new, or later.
-•  What's new shows a short version of the release notes and links to the full changelog on GitHub.
-•  The About window's Check for updates opens the same dialog.
+      const next = APP_VERSION, cur = APP_VERSION.replace(/\.(\d+)\.(\d+)$/, (m, a, b) => `.${Math.max(0, +a - 1)}.0`);
+      const notes = `TREEMAP OPTIONS
+•  Density, Bias, Padding, Border, Font, and what file boxes and folder titles show, on a Treemap page in Settings.
 
-FIXES
-•  Hover and selection frames follow the map style's rounded corners.
-•  The release MSI always carries the same file name.
+CHANGES
+•  Settings is split into tabs. About is a short list with the shortcuts in their own window.
+•  The start screen lists your recent saved scans; one click reopens yesterday's map.
+•  Saved scans are kept for a period you choose, 3 months by default.
+•  The update notice is a dialog with What's new and the release notes inside.
 …`;
       document.getElementById("dialog").className = "dialog " + (state.scene === "update" ? "update" : "notes");
       document.getElementById("dialog").innerHTML = state.scene === "update" ? `

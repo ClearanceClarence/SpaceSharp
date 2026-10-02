@@ -113,7 +113,8 @@ public class SquarifyTests
     [Fact]
     public void BiasChangesTheFirstRowsDirection()
     {
-        // A square: with no bias the first row is a vertical strip (w >= h); a horizontal bias flips it.
+        // A square: with no bias the row goes into a vertical strip (w >= h), so its two items stack and each spans the
+        // full width; a horizontal bias puts the row in a horizontal strip, so they sit side by side at full height.
         var root = TestTree.Dir(@"C:\");
         TestTree.File(root, "a", 50); TestTree.File(root, "b", 50);
         root.FinishDirectory();
@@ -121,11 +122,11 @@ public class SquarifyTests
 
         var plain = new List<(FsNode, Rect)>();
         Squarify.Layout(root.Children, bounds, SizeMeasure.FileSize, (n, r) => plain.Add((n, r)));
-        Assert.Equal(200, plain[0].Item2.Height, 6);   // vertical strip spans the full height
+        Assert.Equal(200, plain[0].Item2.Width, 6);    // stacked: full width, half height
 
         var wide = new List<(FsNode, Rect)>();
         Squarify.Layout(root.Children, bounds, SizeMeasure.FileSize, (n, r) => wide.Add((n, r)), orientationBias: 1 / 3.0);
-        Assert.Equal(200, wide[0].Item2.Width, 6);     // horizontal strip spans the full width
+        Assert.Equal(200, wide[0].Item2.Height, 6);    // side by side: full height, half width
 
         // Areas are unchanged either way.
         Assert.Equal(20000, plain[0].Item2.Width * plain[0].Item2.Height, 4);
