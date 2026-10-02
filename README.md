@@ -488,7 +488,7 @@ Nothing is written anywhere else, and nothing leaves the machine except the upda
 
 - Duplicate file finder, tied into filter and batch delete
 - Command-line arguments and an Explorer context-menu entry
-- Norwegian translation, once the strings move to resource files
+- More translations
 
 ## Feedback
 
@@ -509,4 +509,4 @@ Nothing is written anywhere else, and nothing leaves the machine except the upda
 
 SpaceSharp is released under the [MIT License](LICENSE). You're free to use, modify and share it, including in commercial projects, as long as the copyright notice is kept.
 
-Made by ClearanceClarence.
+Made by ClearanceClarence.
